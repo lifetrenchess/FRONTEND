@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Search, Filter, RefreshCw, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Filter, RefreshCw, MapPin, Calendar, DollarSign, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { getApiUrl } from '@/lib/apiConfig';
+import { getApiUrl, uploadImages } from '@/lib/apiConfig';
 
 interface Package {
   packageId: number;
@@ -21,6 +21,8 @@ interface Package {
   includedServices: string;
   status: string;
   availableSeats?: number;
+  mainImage?: string;
+  images?: string;
 }
 
 const PackageManagement = () => {
@@ -46,6 +48,13 @@ const PackageManagement = () => {
     includedServices: '',
     availableSeats: ''
   });
+
+  // Image upload states
+  const [mainImage, setMainImage] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string>('');
+  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
+  const [additionalImagesPreview, setAdditionalImagesPreview] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   // Load all packages
   const loadPackages = async () => {
@@ -102,7 +111,82 @@ const PackageManagement = () => {
     loadPackages();
   }, []);
 
-  // Handle form submission
+  // Handle main image upload
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+
+      setMainImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setMainImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle additional images upload
+  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Validate files
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not a valid image file`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} is too large. Please select files under 5MB`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length + additionalImages.length > 5) {
+      toast.error('Maximum 5 additional images allowed');
+      return;
+    }
+
+    setAdditionalImages(prev => [...prev, ...validFiles]);
+
+    // Create previews
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAdditionalImagesPreview(prev => [...prev, e.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Remove additional image
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImages(prev => prev.filter((_, i) => i !== index));
+    setAdditionalImagesPreview(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Clear main image
+  const clearMainImage = () => {
+    setMainImage(null);
+    setMainImagePreview('');
+  };
+
+
+
+  // Handle form submission with images in single request
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,18 +195,39 @@ const PackageManagement = () => {
       return;
     }
 
-    const packageData = {
-      title: formData.title,
-      description: formData.description,
-      destination: formData.destination,
-      duration: formData.duration,
-      price: parseFloat(formData.price),
-      includedServices: formData.includedServices,
-      availableSeats: formData.availableSeats ? parseInt(formData.availableSeats) : null,
-      status: 'Active'
-    };
+    setUploading(true);
 
     try {
+      // Create FormData with package data and images in single request
+      const formDataToSend = new FormData();
+      
+      // Add package data as JSON string
+      const packageData = {
+        title: formData.title,
+        description: formData.description,
+        destination: formData.destination,
+        duration: formData.duration,
+        price: parseFloat(formData.price),
+        includedServices: formData.includedServices,
+        availableSeats: formData.availableSeats ? parseInt(formData.availableSeats) : null,
+        status: 'Active',
+        mainImage: editingPackage?.mainImage || '',
+        images: editingPackage?.images || ''
+      };
+      
+      formDataToSend.append('packageData', JSON.stringify(packageData));
+      
+      // Add images if provided
+      if (mainImage) {
+        formDataToSend.append('mainImage', mainImage);
+      }
+      
+      if (additionalImages.length > 0) {
+        additionalImages.forEach((image) => {
+          formDataToSend.append('additionalImages', image);
+        });
+      }
+
       const url = editingPackage 
         ? getApiUrl('PACKAGE_SERVICE', `/packages/${editingPackage.packageId}`)
         : getApiUrl('PACKAGE_SERVICE', '/packages');
@@ -131,10 +236,7 @@ const PackageManagement = () => {
       
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(packageData),
+        body: formDataToSend, // Send as FormData, not JSON
       });
 
       if (!response.ok) {
@@ -158,6 +260,8 @@ const PackageManagement = () => {
       resetForm();
     } catch (err: any) {
       toast.error(`Failed to save package: ${err.message}`);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -172,6 +276,10 @@ const PackageManagement = () => {
       includedServices: '',
       availableSeats: ''
     });
+    setMainImage(null);
+    setMainImagePreview('');
+    setAdditionalImages([]);
+    setAdditionalImagesPreview([]);
     setEditingPackage(null);
     setIsCreating(false);
   };
@@ -188,6 +296,23 @@ const PackageManagement = () => {
       includedServices: pkg.includedServices,
       availableSeats: pkg.availableSeats?.toString() || ''
     });
+    
+    // Set existing images
+    if (pkg.mainImage) {
+      setMainImagePreview(pkg.mainImage);
+    }
+    
+    if (pkg.images) {
+      try {
+        const additionalImages = JSON.parse(pkg.images);
+        if (Array.isArray(additionalImages)) {
+          setAdditionalImagesPreview(additionalImages);
+        }
+      } catch (e) {
+        console.error('Error parsing images JSON:', e);
+      }
+    }
+    
     setIsCreating(true);
   };
 
@@ -370,7 +495,7 @@ const PackageManagement = () => {
       {/* Create/Edit Package Modal */}
       {isCreating && (
         <AlertDialog open={isCreating} onOpenChange={setIsCreating}>
-          <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <AlertDialogHeader>
               <AlertDialogTitle>
                 {editingPackage ? 'Edit Package' : 'Create New Package'}
@@ -380,7 +505,8 @@ const PackageManagement = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="title">Package Title *</Label>
@@ -461,14 +587,110 @@ const PackageManagement = () => {
                   placeholder="e.g., 20"
                 />
               </div>
+
+              {/* Image Upload Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800">Package Images</h3>
+                
+                {/* Main Image Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="mainImage">Main Image *</Label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <Input
+                        id="mainImage"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleMainImageChange}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Upload a main image for the package (Max 5MB)</p>
+                    </div>
+                    {mainImagePreview && (
+                      <div className="relative">
+                        <img
+                          src={mainImagePreview}
+                          alt="Main image preview"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearMainImage}
+                          className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-500 text-white hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Additional Images Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="additionalImages">Additional Images (Optional)</Label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <Input
+                        id="additionalImages"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleAdditionalImagesChange}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Upload up to 5 additional images (Max 5MB each)</p>
+                    </div>
+                  </div>
+                  
+                  {/* Additional Images Preview */}
+                  {additionalImagesPreview.length > 0 && (
+                    <div className="grid grid-cols-5 gap-2 mt-2">
+                      {additionalImagesPreview.map((preview, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={preview}
+                            alt={`Additional image ${index + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAdditionalImage(index)}
+                            className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-500 text-white hover:bg-red-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </form>
 
             <AlertDialogFooter>
               <AlertDialogCancel onClick={resetForm}>
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction onClick={handleSubmit} className="bg-palette-orange hover:bg-palette-orange/90">
-                {editingPackage ? 'Update Package' : 'Create Package'}
+              <AlertDialogAction 
+                onClick={handleSubmit} 
+                className="bg-palette-orange hover:bg-palette-orange/90"
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    {editingPackage ? 'Updating...' : 'Creating...'}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    {editingPackage ? 'Update Package' : 'Create Package'}
+                  </>
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -515,6 +737,12 @@ const PackageManagement = () => {
                           </span>
                           {pkg.availableSeats && (
                             <span>Available Seats: {pkg.availableSeats}</span>
+                          )}
+                          {pkg.mainImage && (
+                            <span className="flex items-center text-blue-600">
+                              <ImageIcon className="w-4 h-4 mr-1" />
+                              Has Images
+                            </span>
                           )}
                         </div>
                         

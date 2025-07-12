@@ -47,17 +47,22 @@ const Header = () => {
   };
 
   const handleDashboardClick = () => {
+    console.log('Dashboard click - Current user role:', currentUser?.role);
     // Navigate to role-specific dashboard
-    switch (currentUser?.role) {
+    switch (currentUser?.role?.toUpperCase()) {
       case 'ADMIN':
+        console.log('Navigating to admin dashboard');
         navigate('/admin');
         break;
       case 'TRAVEL_AGENT':
+      case 'AGENT':
+        console.log('Navigating to agent dashboard');
         navigate('/agent');
         break;
       case 'USER':
       default:
-    navigate('/dashboard');
+        console.log('Navigating to user dashboard');
+        navigate('/dashboard');
         break;
     }
   };

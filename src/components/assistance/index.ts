@@ -1,0 +1,1 @@
+export { default as AssistancePage } from './AssistancePage'; 

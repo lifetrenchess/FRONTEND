@@ -11,7 +11,7 @@ const userApi = axios.create({
 
 // Configure axios interceptor to include auth token
 userApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem(API_CONFIG.AUTH.TOKEN_KEY);
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -26,11 +26,11 @@ userApi.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token is invalid or expired
-      localStorage.removeItem(API_CONFIG.AUTH.TOKEN_KEY);
-      localStorage.removeItem(API_CONFIG.AUTH.USER_KEY);
-      localStorage.removeItem(API_CONFIG.AUTH.CURRENT_USER_KEY);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('currentUser');
       // Redirect to login page
-      window.location.href = '/login';
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }
@@ -67,7 +67,7 @@ export interface UserProfileDto {
 
 export const registerUser = async (userData: User): Promise<void> => {
   try {
-    const response = await userApi.post(getApiUrl('USER_SERVICE', API_CONFIG.USER_SERVICE.ENDPOINTS.REGISTER), userData);
+    const response = await userApi.post(getApiUrl('USER_SERVICE', '/users/register'), userData);
     return response.data;
   } catch (error: any) {
     if (error.response?.data?.message) {
@@ -79,7 +79,7 @@ export const registerUser = async (userData: User): Promise<void> => {
 
 export const loginUser = async (loginData: LoginRequest): Promise<string> => {
   try {
-    const response = await userApi.post(getApiUrl('USER_SERVICE', API_CONFIG.USER_SERVICE.ENDPOINTS.LOGIN), loginData);
+    const response = await userApi.post(getApiUrl('USER_SERVICE', '/auth/login'), loginData);
     // Backend returns token directly as string, not wrapped in object
     return response.data;
   } catch (error: any) {
@@ -92,7 +92,7 @@ export const loginUser = async (loginData: LoginRequest): Promise<string> => {
 
 export const getCurrentUser = async (): Promise<UserResponse> => {
   try {
-    const response = await userApi.get(getApiUrl('USER_SERVICE', API_CONFIG.USER_SERVICE.ENDPOINTS.PROFILE));
+    const response = await userApi.get(getApiUrl('USER_SERVICE', '/users/profile'));
     return response.data;
   } catch (error: any) {
     if (error.response?.data?.message) {
@@ -104,7 +104,7 @@ export const getCurrentUser = async (): Promise<UserResponse> => {
 
 export const getUserById = async (userId: number): Promise<UserResponse> => {
   try {
-    const response = await userApi.get(getApiUrl('USER_SERVICE', API_CONFIG.USER_SERVICE.ENDPOINTS.BY_ID(userId)));
+    const response = await userApi.get(getApiUrl('USER_SERVICE', `/users/${userId}`));
     return response.data;
   } catch (error: any) {
     if (error.response?.data?.message) {
@@ -116,7 +116,7 @@ export const getUserById = async (userId: number): Promise<UserResponse> => {
 
 export const updateUserProfile = async (userId: number, userData: UserProfileDto): Promise<UserResponse> => {
   try {
-    const response = await userApi.put(getApiUrl('USER_SERVICE', API_CONFIG.USER_SERVICE.ENDPOINTS.UPDATE_PROFILE(userId)), userData);
+    const response = await userApi.put(getApiUrl('USER_SERVICE', `/users/${userId}/profile`), userData);
     return response.data;
   } catch (error: any) {
     if (error.response?.data?.message) {
@@ -128,7 +128,7 @@ export const updateUserProfile = async (userId: number, userData: UserProfileDto
 
 export const getAllUsers = async (): Promise<UserResponse[]> => {
   try {
-    const response = await userApi.get(getApiUrl('USER_SERVICE', API_CONFIG.USER_SERVICE.ENDPOINTS.ALL));
+    const response = await userApi.get(getApiUrl('USER_SERVICE', '/users'));
     return response.data;
   } catch (error: any) {
     if (error.response?.data?.message) {
@@ -139,21 +139,21 @@ export const getAllUsers = async (): Promise<UserResponse[]> => {
 };
 
 export const logout = (): void => {
-  localStorage.removeItem(API_CONFIG.AUTH.TOKEN_KEY);
-  localStorage.removeItem(API_CONFIG.AUTH.USER_KEY);
-  localStorage.removeItem(API_CONFIG.AUTH.CURRENT_USER_KEY);
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('currentUser');
 };
 
 export const isAuthenticated = (): boolean => {
-  return !!localStorage.getItem(API_CONFIG.AUTH.TOKEN_KEY);
+  return !!localStorage.getItem('token');
 };
 
 export const getStoredUser = (): UserResponse | null => {
-  const userStr = localStorage.getItem(API_CONFIG.AUTH.USER_KEY);
+  const userStr = localStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 };
 
 export const getStoredCurrentUser = (): { fullName: string; email: string; isAuthenticated: boolean; role: string } | null => {
-  const currentUserStr = localStorage.getItem(API_CONFIG.AUTH.CURRENT_USER_KEY);
+  const currentUserStr = localStorage.getItem('currentUser');
   return currentUserStr ? JSON.parse(currentUserStr) : null;
 }; 

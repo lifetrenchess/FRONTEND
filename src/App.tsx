@@ -15,6 +15,7 @@ import AssistancePage from './pages/AssistancePage';
 import ReviewPage from './pages/ReviewPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AgentDashboard from './pages/AgentDashboard';
+import TestDashboard from './pages/TestDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/test" element={<TestDashboard />} />
           <Route element={<ProtectedRoute allowedRoles={['USER']} />}>
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>

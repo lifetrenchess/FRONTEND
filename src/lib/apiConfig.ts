@@ -1,14 +1,14 @@
-// API Configuration for all backend services
+// API Configuration for all backend services through API Gateway
 export const API_CONFIG = {
-  // Gateway API (main entry point)
+  // Gateway API (main entry point for all services)
   GATEWAY: {
-    BASE_URL: 'http://localhost:9999/api',
+    BASE_URL: 'http://localhost:9999',
   },
   
-  // Individual microservices
+  // Individual microservices (all requests go through gateway)
   SERVICES: {
     USER_SERVICE: {
-      BASE_URL: 'http://localhost:9001/api',
+      BASE_URL: 'http://localhost:9999/user-api',
       ENDPOINTS: {
         USERS: '/users',
         AUTH: '/auth',
@@ -17,45 +17,45 @@ export const API_CONFIG = {
     },
     
     PACKAGE_SERVICE: {
-      BASE_URL: 'http://localhost:9002/api',
+      BASE_URL: 'http://localhost:9999/api/packages',
       ENDPOINTS: {
-        PACKAGES: '/packages',
+        PACKAGES: '',
         DESTINATIONS: '/destinations',
         SEARCH: '/search',
       }
     },
     
     BOOKING_SERVICE: {
-      BASE_URL: 'http://localhost:9003/api',
+      BASE_URL: 'http://localhost:9999/api/bookings',
       ENDPOINTS: {
-        BOOKINGS: '/bookings',
+        BOOKINGS: '',
         PAYMENTS: '/payments',
         PAYMENT_VERIFICATION: '/payments/verifyPayment',
       }
     },
     
     INSURANCE_SERVICE: {
-      BASE_URL: 'http://localhost:9004/api',
+      BASE_URL: 'http://localhost:9999/api/insurance',
       ENDPOINTS: {
-        INSURANCE: '/insurance',
+        INSURANCE: '',
         PLANS: '/plans',
         CLAIMS: '/claims',
       }
     },
     
     ASSISTANCE_SERVICE: {
-      BASE_URL: 'http://localhost:9005/api',
+      BASE_URL: 'http://localhost:9999/api/assistance',
       ENDPOINTS: {
-        ASSISTANCE: '/assistance',
+        ASSISTANCE: '',
         REQUESTS: '/requests',
         RESOLVE: '/resolve',
       }
     },
     
     REVIEW_SERVICE: {
-      BASE_URL: 'http://localhost:8083/api',
+      BASE_URL: 'http://localhost:9999/api/reviews',
       ENDPOINTS: {
-        REVIEWS: '/reviews',
+        REVIEWS: '',
         RATINGS: '/ratings',
         FEEDBACK: '/feedback',
       }
@@ -69,22 +69,27 @@ export const API_CONFIG = {
   },
   
   // Timeout settings
-  TIMEOUT: 10000, // 10 seconds
+  TIMEOUT: 10000, // 10 seconds for regular requests
+  UPLOAD_TIMEOUT: 30000, // 30 seconds for file uploads
 };
 
-// Helper function to get full URL for a service endpoint
+// Helper function to get full URL for a service endpoint through API Gateway
 export const getApiUrl = (service: keyof typeof API_CONFIG.SERVICES, endpoint: string): string => {
   const serviceConfig = API_CONFIG.SERVICES[service];
-  return `${serviceConfig.BASE_URL}${endpoint}`;
+  const fullUrl = `${serviceConfig.BASE_URL}${endpoint}`;
+  console.log(`API Gateway URL generated for ${service}: ${fullUrl}`);
+  return fullUrl;
 };
 
 // Helper function to get headers with authentication
 export const getAuthHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('token');
-  return {
+  const headers = {
     ...API_CONFIG.HEADERS,
     ...(token && { 'Authorization': `Bearer ${token}` }),
   };
+  console.log('Auth headers generated:', headers);
+  return headers;
 };
 
 // Helper function for API requests with error handling
@@ -92,6 +97,7 @@ export const apiRequest = async (
   url: string, 
   options: RequestInit = {}
 ): Promise<Response> => {
+  console.log(`Making API Gateway request to: ${url}`);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
@@ -106,9 +112,11 @@ export const apiRequest = async (
     });
 
     clearTimeout(timeoutId);
+    console.log(`API Gateway response status: ${response.status} for ${url}`);
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
+    console.error(`API Gateway request failed for ${url}:`, error);
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Request timeout');
     }
@@ -128,4 +136,6 @@ export const authenticatedApiRequest = async (
       ...options.headers,
     },
   });
-}; 
+};
+
+ 
