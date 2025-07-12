@@ -1,0 +1,175 @@
+/* src/styles/PaymentPage.module.css */
+
+.paymentPageContainer {
+    max-width: 600px; /* Adjust based on Figma width */
+    margin: 40px auto; /* Center the container with some top/bottom margin */
+    padding: 30px;
+    background-color: #ffffff; /* Or whatever background color Figma uses */
+    border-radius: 8px; /* Match Figma border-radius */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow if in Figma */
+    font-family: 'Arial', sans-serif; /* Use your project's font */
+  }
+  
+  .pageTitle {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .totalAmountDisplay {
+    font-size: 18px;
+    color: #555;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 600;
+  }
+  
+  .paymentMethods {
+    display: flex;
+    border: 1px solid #ddd; /* Example border for the segmented look */
+    border-radius: 6px;
+    overflow: hidden; /* Ensures inner buttons respect parent border-radius */
+    margin-bottom: 25px;
+  }
+  
+  .paymentMethodButton {
+    flex: 1; /* Makes buttons take equal width */
+    padding: 12px 0;
+    border: none; /* Remove individual button borders */
+    background-color: #f0f0f0; /* Default background */
+    color: #555;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-align: center;
+  }
+  
+  .paymentMethodButton:first-child {
+    border-right: 1px solid #ddd; /* Separator between buttons */
+  }
+  
+  .paymentMethodButton.active {
+    background-color: #007bff; /* Active background color */
+    color: #ffffff; /* Active text color */
+    font-weight: bold;
+  }
+  
+  .paymentForm {
+    margin-bottom: 30px;
+  }
+  
+  .cardLogos {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Or center, depending on Figma */
+    gap: 15px; /* Spacing between logos */
+    margin-bottom: 20px;
+  }
+  
+  .cardLogo {
+    height: 30px; /* Adjust size based on Figma */
+    width: auto;
+    object-fit: contain; /* Ensure images scale correctly */
+  }
+  
+  .formGroup {
+    margin-bottom: 15px;
+  }
+  
+  .formGroup label {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  .formGroup input[type="text"] {
+    width: calc(100% - 20px); /* Full width minus padding */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  }
+  
+  .formGroup input[type="text"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+  
+  .row {
+    display: flex;
+    gap: 20px; /* Spacing between Expiry Date and CVV sections */
+    margin-bottom: 15px;
+  }
+  
+  .row .formGroup {
+    flex: 1; /* Make them take equal space */
+    margin-bottom: 0; /* Remove extra margin from inner form groups */
+  }
+  
+  .expiryCvv {
+    display: flex;
+    gap: 5px; /* Spacing between MM / YY inputs */
+    align-items: center;
+  }
+  
+  .expiryCvv input {
+    flex: 1; /* Make MM and YY inputs take equal space */
+    text-align: center; /* Center text in MM/YY */
+  }
+  
+  .separator {
+    font-size: 18px;
+    color: #555;
+    font-weight: bold;
+  }
+  
+  .securityMessage {
+    text-align: center;
+    font-size: 14px;
+    color: #777;
+    margin-bottom: 30px;
+  }
+  
+  .buttonContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .goBackButton {
+    padding: 12px 25px;
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .goBackButton:hover {
+    background-color: #d0d0d0;
+  }
+  
+  .payButton {
+    padding: 15px 30px; /* Larger padding for a prominent button */
+    background-color: #007bff; /* Primary button color */
+    color: #ffffff;
+    border: none;
+    border-radius: 8px; /* More rounded corners */
+    font-size: 18px; /* Larger font size */
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .payButton:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px); /* Slight lift effect */
+  }

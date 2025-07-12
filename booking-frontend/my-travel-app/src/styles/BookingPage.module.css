@@ -1,0 +1,420 @@
+/* src/styles/BookingPage.module.css */
+
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #f7f9fc; /* Light background */
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+  
+  .bookingPage {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1200px; /* Max width for content */
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+  
+  .header {
+    padding: 25px 40px;
+    border-bottom: 1px solid #eee;
+    background-color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .header h1 {
+    font-size: 1.8em;
+    color: #333;
+    margin: 0;
+  }
+  
+  .progressBar {
+    display: flex;
+    gap: 25px; /* Increased gap */
+    font-size: 0.9em;
+    color: #888;
+    position: relative; /* For the connecting line */
+  }
+  
+  .progressBar::before { /* Connecting line */
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background-color: #e0e0e0;
+    transform: translateY(-50%);
+    z-index: 0;
+  }
+  
+  .progressStep {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    font-weight: normal;
+    z-index: 1; /* Above the connecting line */
+    background-color: #fff; /* To cover the line */
+    padding: 0 5px; /* Small padding to ensure line coverage */
+  }
+  
+  /* Numbering circles */
+  .progressStep::before {
+    content: counter(step-counter);
+    counter-increment: step-counter;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    color: #fff;
+    font-size: 0.8em;
+    font-weight: bold;
+  }
+  
+  .progressStep.active {
+    color: #007bff; /* Active text color */
+    font-weight: bold;
+  }
+  
+  .progressStep.active::before { /* Active number circle */
+    background-color: #007bff;
+  }
+  
+  /* Set up counter for progress bar */
+  .progressBar {
+    counter-reset: step-counter;
+  }
+  
+  
+  .contentWrapper {
+    display: flex;
+    flex-direction: column; /* Default to column for mobile */
+    padding: 40px;
+    gap: 40px;
+  }
+  
+  @media (min-width: 900px) {
+    .contentWrapper {
+      flex-direction: row; /* Two columns for larger screens */
+    }
+  }
+  
+  .mainContent {
+    flex: 2; /* Takes more space */
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .section {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  }
+  
+  .section h2 {
+    font-size: 1.4em;
+    color: #444;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .formGroup {
+    margin-bottom: 15px;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+    font-size: 0.9em;
+  }
+  
+  .formGroup input[type="text"],
+  .formGroup input[type="email"],
+  .formGroup input[type="tel"] {
+    width: calc(100% - 20px); /* Account for padding */
+    padding: 12px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1em;
+    color: #333;
+    transition: border-color 0.2s ease;
+  }
+  
+  .formGroup input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
+  
+  .checkboxGroup {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 0.95em;
+    color: #555;
+  }
+  
+  .checkboxGroup input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2); /* Make checkbox slightly larger */
+  }
+  
+  .checkboxGroup a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .checkboxGroup a:hover {
+    text-decoration: underline;
+  }
+  
+  .termsCheckbox {
+      margin-top: 25px;
+      margin-bottom: 30px;
+  }
+  
+  .sidebar {
+    flex: 1; /* Takes less space */
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    align-self: flex-start; /* Stick to top */
+    position: sticky; /* Sticky sidebar */
+    top: 20px; /* Distance from top */
+  }
+  
+  .sidebar h2 {
+    font-size: 1.4em;
+    color: #444;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .packageSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  
+  .packageSummary img {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  
+  .summaryDetail {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #555;
+  }
+  
+  .priceBreakdown {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .priceItem {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95em;
+    color: #444;
+  }
+  
+  .priceItem.total {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #222;
+    margin-top: 15px;
+  }
+  
+  .buttonContainer {
+    padding: 30px 40px;
+    border-top: 1px solid #eee;
+    background-color: #fff;
+    display: flex;
+    justify-content: flex-end; /* Align to right */
+  }
+  
+  .primaryButton {
+    background-color: #28a745; /* Changed to a shade of green */
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2); /* Shadow with new color */
+  }
+  
+  .primaryButton:hover {
+    background-color: #218838; /* Darker green on hover */
+    transform: translateY(-2px);
+  }
+  
+  .primaryButton:disabled {
+    background-color: #6c8147;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  
+  
+  /* --- react-datepicker overrides --- */
+  .datePickerContainer {
+      /* flexbox for centering or alignment if needed */
+      display: flex;
+      justify-content: center;
+      /* Optional: Max width for the date picker if it gets too wide */
+      max-width: 700px; /* Adjust based on desired layout */
+      margin: 0 auto;
+  }
+  
+  /* Custom styles for the react-datepicker itself */
+  .react-datepicker {
+      font-family: inherit; /* Use global font */
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      background-color: #fff;
+      padding: 10px;
+  }
+  
+  /* Header (Month/Year Navigation) */
+  .react-datepicker__header {
+      background-color: #f7f7f7;
+      border-bottom: 1px solid #eee;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+  }
+  
+  .react-datepicker__current-month,
+  .react-datepicker-time__header,
+  .react-datepicker-year-header {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #333;
+  }
+  
+  .react-datepicker__navigation--previous,
+  .react-datepicker__navigation--next {
+      top: 15px;
+      line-height: 1.7em;
+      border: none;
+      background: none;
+  }
+  
+  .react-datepicker__navigation--previous::before,
+  .react-datepicker__navigation--next::before {
+      font-size: 24px; /* Larger arrows */
+      color: #555;
+  }
+  
+  /* Weekday names */
+  .react-datepicker__day-names {
+      background-color: #fcfcfc;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+      margin-bottom: 5px;
+  }
+  
+  .react-datepicker__day-name {
+      color: #777;
+      font-size: 0.85em;
+      font-weight: bold;
+  }
+  
+  /* Days */
+  .react-datepicker__day {
+      width: 2.2em; /* Adjust day cell size */
+      height: 2.2em;
+      line-height: 2.2em;
+      margin: 2px;
+      border-radius: 50%; /* Make days round */
+      transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  .react-datepicker__day--outside-month {
+      color: #ccc;
+  }
+  
+  .react-datepicker__day--selected,
+  .react-datepicker__day--in-selecting-range,
+  .react-datepicker__day--in-range {
+      background-color: #007bff; /* Primary selection color */
+      color: white;
+      border-radius: 50%;
+  }
+  
+  .react-datepicker__day--keyboard-selected {
+      background-color: #0056b3; /* Darker blue for keyboard navigation */
+      color: white;
+  }
+  
+  .react-datepicker__day:hover {
+      background-color: #e6f7ff; /* Light blue on hover */
+      color: #007bff;
+  }
+  
+  .react-datepicker__day--today {
+      font-weight: bold;
+      color: #007bff;
+  }
+  
+  /* Range selection styles */
+  .react-datepicker__day--in-selecting-range:not(.react-datepicker__day--in-range) {
+      background-color: #e6f7ff; /* Background for selected range */
+      color: #333;
+      border-radius: 0; /* Remove roundness within range */
+  }
+  
+  /* First day in range */
+  .react-datepicker__day--range-start {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+  }
+  
+  /* Last day in range */
+  .react-datepicker__day--range-end {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+  }
+  
+  /* To make sure start/end of range are rounded */
+  .react-datepicker__day--range-start.react-datepicker__day--range-end {
+      border-radius: 50%;
+  }
+  
+  /* Month container when showing multiple months */
+  .react-datepicker__month-container {
+      width: auto; /* Allow natural width */
+  }
