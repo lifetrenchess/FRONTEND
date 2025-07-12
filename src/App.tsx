@@ -8,6 +8,11 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import PackageDetails from './pages/PackageDetails';
 import BookingPage from './pages/BookingPage';
+import PaymentPage from './pages/PaymentPage';
+import InsurancePage from './pages/InsurancePage';
+import ConfirmationPage from './pages/ConfirmationPage';
+import AssistancePage from './pages/AssistancePage';
+import ReviewPage from './pages/ReviewPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AgentDashboard from './pages/AgentDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -34,6 +39,11 @@ const App = () => (
           <Route path="/packages/:id" element={<PackageDetails />} />
           <Route element={<ProtectedRoute allowedRoles={['USER']} />}>
             <Route path="/booking/:id" element={<BookingPage />} />
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/insurance" element={<InsurancePage />} />
+            <Route path="/confirmation" element={<ConfirmationPage />} />
+            <Route path="/assistance" element={<AssistancePage />} />
+            <Route path="/reviews" element={<ReviewPage />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

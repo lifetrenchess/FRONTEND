@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Package, Calendar, MessageSquare, Users, Plus, TrendingUp, Settings } from 'lucide-react';
+import { Home, Package, Calendar, MessageSquare, Users, Plus, TrendingUp, Settings, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AgentOverview from '@/components/dashboard/agent/AgentOverview';
 import PackageManagement from '@/components/dashboard/agent/PackageManagement';
 import BookingManagement from '@/components/dashboard/agent/BookingManagement';
 import CustomerInquiries from '@/components/dashboard/agent/CustomerInquiries';
+import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
 import AgentProfile from '@/components/dashboard/agent/AgentProfile';
 
 interface UserData {
@@ -47,6 +48,12 @@ const AgentDashboard = () => {
       description: 'Manage bookings'
     },
     {
+      id: 'reviews',
+      label: 'Review Management',
+      icon: Star,
+      description: 'Respond to reviews'
+    },
+    {
       id: 'inquiries',
       label: 'Customer Inquiries',
       icon: MessageSquare,
@@ -73,6 +80,14 @@ const AgentDashboard = () => {
       <Button
         variant="outline"
         size="sm"
+        className="w-full justify-start space-x-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
+      >
+        <Star className="w-4 h-4" />
+        <span>Manage Reviews</span>
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
         className="w-full justify-start space-x-2 text-palette-teal border-palette-teal hover:bg-palette-teal hover:text-white"
       >
         <TrendingUp className="w-4 h-4" />
@@ -94,9 +109,11 @@ const AgentDashboard = () => {
       case 'overview':
         return <AgentOverview user={currentUser} />;
       case 'packages':
-        return <PackageManagement user={currentUser} />;
+        return <PackageManagement />;
       case 'bookings':
-        return <BookingManagement user={currentUser} />;
+        return <BookingManagement />;
+      case 'reviews':
+        return <ReviewManagement />;
       case 'inquiries':
         return <CustomerInquiries user={currentUser} />;
       case 'profile':

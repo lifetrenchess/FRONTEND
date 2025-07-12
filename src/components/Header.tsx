@@ -95,6 +95,12 @@ const Header = () => {
             <a href="#contact" className="text-gray-700 hover:text-palette-teal transition-colors">
               Contact
             </a>
+            <a href="/assistance" className="text-gray-700 hover:text-palette-teal transition-colors">
+              Support
+            </a>
+            <a href="/reviews" className="text-gray-700 hover:text-palette-teal transition-colors">
+              Reviews
+            </a>
           </nav>
 
           <div className="flex items-center space-x-4">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Users, Package, FileText, BarChart3, CreditCard, BookOpen, Settings } from 'lucide-react';
+import { Home, Users, Package, FileText, BarChart3, CreditCard, BookOpen, Settings, MessageCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AdminOverview from '@/components/dashboard/admin/AdminOverview';
@@ -7,6 +7,9 @@ import UserManagement from '@/components/dashboard/admin/UserManagement';
 import PackageManagement from '@/components/dashboard/admin/PackageManagement';
 import Analytics from '@/components/dashboard/admin/Analytics';
 import Payments from '@/components/dashboard/admin/SystemSettings';
+import AssistanceManagement from '@/components/dashboard/admin/AssistanceManagement';
+import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
+import BookingManagement from '@/components/dashboard/agent/BookingManagement';
 
 interface UserData {
   fullName: string;
@@ -53,6 +56,18 @@ const AdminDashboard = () => {
       description: 'All bookings'
     },
     {
+      id: 'assistance',
+      label: 'Assistance',
+      icon: MessageCircle,
+      description: 'Customer support'
+    },
+    {
+      id: 'reviews',
+      label: 'Reviews',
+      icon: Star,
+      description: 'Manage reviews'
+    },
+    {
       id: 'payments',
       label: 'Payments',
       icon: CreditCard,
@@ -74,10 +89,18 @@ const AdminDashboard = () => {
         <Package className="w-4 h-4" />
         <span>Manage Packages</span>
       </Button>
-      <Button variant="outline" size="sm" className="w-full justify-start space-x-2 text-gray-700 border-gray-300 hover:bg-gray-200">
-        <FileText className="w-4 h-4" />
-        <span>Generate Reports</span>
-      </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start space-x-2 text-purple-600 border-purple-600 hover:bg-purple-600 hover:text-white">
+          <MessageCircle className="w-4 h-4" />
+          <span>Assistance Requests</span>
+        </Button>
+        <Button variant="outline" size="sm" className="w-full justify-start space-x-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white">
+          <Star className="w-4 h-4" />
+          <span>Manage Reviews</span>
+        </Button>
+        <Button variant="outline" size="sm" className="w-full justify-start space-x-2 text-gray-700 border-gray-300 hover:bg-gray-200">
+          <FileText className="w-4 h-4" />
+          <span>Generate Reports</span>
+        </Button>
     </>
   );
 
@@ -86,11 +109,15 @@ const AdminDashboard = () => {
       case 'dashboard':
         return <AdminOverview user={currentUser} />;
       case 'users':
-        return <UserManagement user={currentUser} />;
+        return <UserManagement />;
       case 'packages':
-        return <PackageManagement user={currentUser} />;
+        return <PackageManagement />;
       case 'bookings':
-        return <Analytics />;
+        return <BookingManagement />;
+      case 'assistance':
+        return <AssistanceManagement />;
+      case 'reviews':
+        return <ReviewManagement />;
       case 'payments':
         return <Payments />;
       default:

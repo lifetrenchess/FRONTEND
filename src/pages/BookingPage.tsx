@@ -1,222 +1,584 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar, Users, CreditCard, ArrowLeft } from 'lucide-react';
-import { fetchPackageById, TravelPackageDto } from '@/lib/packagesApi';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Calendar, Users, CreditCard, Shield, CheckCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { getApiUrl } from '@/lib/apiConfig';
+import InsuranceOptions from '@/components/InsuranceOptions';
 
-const BookingPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
+interface TravelPackageSummary {
+  image: string;
+  title: string;
+  duration: string;
+  selectedDates: string;
+}
+
+interface PriceBreakdown {
+  packagePrice: number;
+  travelInsurance: number;
+  taxesFees: number;
+  totalAmount: number;
+}
+
+interface BookingDTO {
+  userId: number;
+  packageId: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  travelers: {
+    adults: number;
+    children: number;
+    infants: number;
+    contact: {
+      fullName: string;
+      email: string;
+      phoneNumber: string;
+    };
+    names: string[];
+  };
+  hasInsurance: boolean;
+  insurancePlan?: string;
+}
+
+const BookingPage = () => {
   const navigate = useNavigate();
-  const [pkg, setPkg] = useState<TravelPackageDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [bookingData, setBookingData] = useState({
-    numberOfPeople: 1,
-    startDate: '',
-    endDate: '',
-    specialRequests: ''
+  const { id } = useParams();
+  
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [adults, setAdults] = useState<number>(1);
+  const [children, setChildren] = useState<number>(0);
+  const [infants, setInfants] = useState<number>(0);
+  const [fullName, setFullName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [travelerNames, setTravelerNames] = useState<string[]>(['']);
+  const [hasInsurance, setHasInsurance] = useState<boolean>(false);
+  const [selectedInsurancePlan, setSelectedInsurancePlan] = useState<string>('');
+  const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
+
+  const [packageSummary, setPackageSummary] = useState<TravelPackageSummary>({
+    image: 'https://via.placeholder.com/200x150',
+    title: 'Mystical Bali Retreat',
+    duration: '7 Days / 6 Nights',
+    selectedDates: 'Please select dates',
   });
 
+  const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown>({
+    packagePrice: 1500.00,
+    travelInsurance: 0.00,
+    taxesFees: 50.00,
+    totalAmount: 1550.00,
+  });
+
+  const formatIndianRupees = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   useEffect(() => {
-    if (!id) {
-      navigate('/');
+    const basePricePerAdult = 1500;
+    const basePricePerChild = 750;
+    const basePricePerInfant = 0;
+
+    let currentPackagePrice = (adults * basePricePerAdult) + (children * basePricePerChild) + (infants * basePricePerInfant);
+    
+    // Calculate insurance cost based on selected plan
+    let currentInsuranceCost = 0;
+    if (hasInsurance && selectedInsurancePlan) {
+      const insurancePlans = {
+        'basic': 15,
+        'standard': 25,
+        'premium': 40
+      };
+      const planPrice = insurancePlans[selectedInsurancePlan as keyof typeof insurancePlans] || 0;
+      currentInsuranceCost = planPrice * (adults + children);
+    }
+    
+    let currentTaxesFees = 50;
+
+    const newTotalAmount = currentPackagePrice + currentInsuranceCost + currentTaxesFees;
+
+    setPriceBreakdown({
+      packagePrice: currentPackagePrice,
+      travelInsurance: currentInsuranceCost,
+      taxesFees: currentTaxesFees,
+      totalAmount: newTotalAmount,
+    });
+  }, [adults, children, infants, hasInsurance, selectedInsurancePlan]);
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      const startStr = format(startDate, 'MMM dd');
+      const endStr = format(endDate, 'MMM dd, yyyy');
+      setPackageSummary((prev) => ({
+        ...prev,
+        selectedDates: `${startStr} - ${endStr}`,
+      }));
+    } else {
+      setPackageSummary((prev) => ({
+        ...prev,
+        selectedDates: 'Please select dates',
+      }));
+    }
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    const totalTravelers = adults + children;
+    setTravelerNames(prevNames => {
+      const newNames = Array(totalTravelers).fill('').map((_, i) => prevNames[i] || '');
+      return newNames;
+    });
+  }, [adults, children]);
+
+  const handleTravelerNameChange = (index: number, name: string) => {
+    setTravelerNames(prevNames => {
+      const newNames = [...prevNames];
+      newNames[index] = name;
+      return newNames;
+    });
+  };
+
+  const handleSubmitBooking = async () => {
+    if (!startDate || !endDate || !agreedToTerms || fullName === '' || email === '' || phoneNumber === '' || adults === 0 || travelerNames.slice(0, adults + children).some(name => name.trim() === '')) {
+      alert('Please fill all required fields, select dates, and agree to terms.');
       return;
     }
 
-    fetchPackageById(Number(id))
-      .then((data) => {
-        setPkg(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        navigate('/');
+    if (hasInsurance && !selectedInsurancePlan) {
+      alert('Please select an insurance plan or uncheck the insurance option.');
+      return;
+    }
+
+    const userId = 123; // This userId is hardcoded for now, would typically come from authentication
+    const packageId = parseInt(id || '456');
+
+    const bookingPayload: BookingDTO = {
+      userId: userId,
+      packageId: packageId,
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
+      status: 'PENDING',
+      travelers: {
+        adults: adults,
+        children: children,
+        infants: infants,
+        contact: {
+          fullName: fullName,
+          email: email,
+          phoneNumber: phoneNumber,
+        },
+        names: travelerNames.filter(name => name.trim() !== ''),
+      },
+      hasInsurance: hasInsurance,
+      insurancePlan: selectedInsurancePlan,
+    };
+
+    console.log('Booking Payload:', bookingPayload);
+
+    try {
+      const response = await fetch(getApiUrl('BOOKING_SERVICE', '/bookings'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingPayload),
       });
-  }, [id, navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setBookingData({
-      ...bookingData,
-      [e.target.name]: e.target.value
-    });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Backend error response:', errorData);
+        throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.message || response.statusText}`);
+      }
+
+      const bookingConfirmation = await response.json();
+      console.log('Booking created:', bookingConfirmation);
+      alert('Booking initiated successfully!');
+
+      if (hasInsurance) {
+        navigate('/insurance', {
+          state: {
+            bookingId: bookingConfirmation.bookingId,
+            totalAmount: priceBreakdown.totalAmount,
+            userId: userId
+          }
+        });
+      } else {
+        navigate('/payment', {
+          state: {
+            bookingId: bookingConfirmation.bookingId,
+            totalAmount: priceBreakdown.totalAmount,
+            userId: userId
+          }
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Error creating booking:', error);
+      alert(`Failed to initiate booking. Please try again. Error: ${error.message || 'Unknown error'}`);
+    }
   };
 
-  const calculateTotalPrice = () => {
-    if (!pkg) return 0;
-    return pkg.price * bookingData.numberOfPeople;
-  };
-
-  const handleBooking = async () => {
-    // TODO: Implement booking API call
-    console.log('Booking data:', {
-      packageId: pkg?.packageId,
-      ...bookingData,
-      totalPrice: calculateTotalPrice()
-    });
-    
-    // For now, just show success message
-    alert('Booking submitted successfully! You will receive a confirmation email shortly.');
-    navigate('/dashboard');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-palette-teal mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading booking details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!pkg) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h2 className="text-3xl font-bold mb-4">Package Not Found</h2>
-        <Button onClick={() => navigate('/')} className="bg-palette-teal text-white">
-          Go Home
+  const QuantitySelector = ({ label, value, onChange, min = 0, max = Infinity }: {
+    label: string;
+    value: number;
+    onChange: (value: number) => void;
+    min?: number;
+    max?: number;
+  }) => (
+    <div className="flex items-center justify-between p-4 border rounded-lg">
+      <Label className="text-sm font-medium">{label}</Label>
+      <div className="flex items-center space-x-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onChange(value - 1)}
+          disabled={value <= min}
+          className="w-8 h-8 p-0"
+        >
+          -
+        </Button>
+        <span className="w-8 text-center font-medium">{value}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onChange(value + 1)}
+          disabled={value >= max}
+          className="w-8 h-8 p-0"
+        >
+          +
         </Button>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-4xl mx-auto px-4">
-        <Button 
-          onClick={() => navigate(-1)} 
-          className="flex items-center text-palette-teal mb-6 hover:underline"
-          variant="ghost"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" /> Back
-        </Button>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Confirm Your Booking</h1>
+          <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span>Package Details</span>
+            </div>
+            <div className="w-8 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center space-x-2">
+              <CreditCard className="w-4 h-4 text-gray-400" />
+              <span>Confirm & Pay</span>
+            </div>
+            <div className="w-8 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-4 h-4 text-gray-400" />
+              <span>Confirmation</span>
+            </div>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Package Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-palette-teal" />
-                Package Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">{pkg.title}</h3>
-                  <p className="text-gray-600">{pkg.description}</p>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Duration:</span>
-                  <span className="font-semibold">{pkg.duration} days</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Price per person:</span>
-                  <span className="font-semibold text-palette-teal">₹{pkg.price?.toLocaleString()}</span>
-                </div>
-                
-                {pkg.highlights && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Date Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calendar className="w-5 h-5" />
+                  <span>Select Your Dates</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Highlights:</h4>
-                    <p className="text-gray-600 text-sm">{pkg.highlights}</p>
+                    <Label>Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={startDate}
+                          onSelect={setStartDate}
+                          initialFocus
+                          disabled={(date) => date < new Date()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label>End Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "PPP") : <span>Pick an end date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={endDate}
+                          onSelect={setEndDate}
+                          initialFocus
+                          disabled={(date) => date <= (startDate || new Date())}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Travelers */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="w-5 h-5" />
+                  <span>Who's Traveling?</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <QuantitySelector
+                  label="Adults (12+)"
+                  value={adults}
+                  onChange={setAdults}
+                  min={1}
+                />
+                <QuantitySelector
+                  label="Children (2-11)"
+                  value={children}
+                  onChange={setChildren}
+                />
+                <QuantitySelector
+                  label="Infants (under 2)"
+                  value={infants}
+                  onChange={setInfants}
+                />
+
+                <Separator />
+
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Contact Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="John Doe"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="john.doe@example.com"
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Input
+                        id="phoneNumber"
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="+1 (555) 123-4567"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {(adults + children) > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Traveler Names</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Array.from({ length: adults + children }).map((_, index) => (
+                        <div key={index}>
+                          <Label htmlFor={`traveler-name-${index}`}>Traveler {index + 1} Name</Label>
+                          <Input
+                            id={`traveler-name-${index}`}
+                            value={travelerNames[index] || ''}
+                            onChange={(e) => handleTravelerNameChange(index, e.target.value)}
+                            placeholder={`Traveler ${index + 1} Full Name`}
+                            required
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Booking Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-palette-teal" />
-                Booking Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div>
-                  <Label htmlFor="numberOfPeople">Number of People</Label>
-                  <Input
-                    id="numberOfPeople"
-                    name="numberOfPeople"
-                    type="number"
-                    min="1"
-                    value={bookingData.numberOfPeople}
-                    onChange={handleInputChange}
-                    className="mt-1"
-                  />
+            {/* Insurance */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="w-5 h-5" />
+                  <span>Enhance Your Trip</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="addInsurance"
+                      checked={hasInsurance}
+                      onCheckedChange={(checked) => {
+                        setHasInsurance(checked as boolean);
+                        if (!checked) {
+                          setSelectedInsurancePlan('');
+                        } else if (!selectedInsurancePlan) {
+                          setSelectedInsurancePlan('standard');
+                        }
+                      }}
+                    />
+                    <Label htmlFor="addInsurance" className="text-sm font-medium">
+                      Add Travel Insurance
+                    </Label>
+                  </div>
+                  
+                  {hasInsurance && (
+                    <InsuranceOptions
+                      selectedPlan={selectedInsurancePlan}
+                      onPlanSelect={setSelectedInsurancePlan}
+                      travelers={adults + children}
+                    />
+                  )}
                 </div>
+              </CardContent>
+            </Card>
 
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    name="startDate"
-                    type="date"
-                    value={bookingData.startDate}
-                    onChange={handleInputChange}
-                    className="mt-1"
+            {/* Terms */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="agreeTerms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                     required
                   />
+                  <Label htmlFor="agreeTerms" className="text-sm">
+                    I have read and agree to the{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-palette-teal hover:underline">
+                      Terms & Conditions
+                    </a>{' '}
+                    and{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-palette-teal hover:underline">
+                      Privacy Policy
+                    </a>
+                    .
+                  </Label>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    name="endDate"
-                    type="date"
-                    value={bookingData.endDate}
-                    onChange={handleInputChange}
-                    className="mt-1"
-                    required
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Booking Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex space-x-4">
+                  <img 
+                    src={packageSummary.image} 
+                    alt={packageSummary.title} 
+                    className="w-20 h-16 object-cover rounded-lg"
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="specialRequests">Special Requests (Optional)</Label>
-                  <textarea
-                    id="specialRequests"
-                    name="specialRequests"
-                    value={bookingData.specialRequests}
-                    onChange={handleInputChange}
-                    className="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-palette-teal focus:border-transparent"
-                    rows={3}
-                    placeholder="Any special requests or dietary requirements..."
-                  />
-                </div>
-
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Price per person:</span>
-                    <span>₹{pkg.price?.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Number of people:</span>
-                    <span>{bookingData.numberOfPeople}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-lg font-bold">
-                    <span>Total Price:</span>
-                    <span className="text-palette-teal">₹{calculateTotalPrice().toLocaleString()}</span>
+                  <div>
+                    <h3 className="font-medium">{packageSummary.title}</h3>
+                    <p className="text-sm text-gray-600">{packageSummary.duration}</p>
+                    <p className="text-sm text-gray-600">{packageSummary.selectedDates}</p>
                   </div>
                 </div>
+                
+                <div className="text-sm">
+                  <p><strong>Travelers:</strong> {adults} Adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants !== 1 ? 's' : ''}` : ''}</p>
+                </div>
+              </CardContent>
+            </Card>
 
-                <Button 
-                  type="button"
-                  onClick={handleBooking}
-                  className="w-full bg-palette-teal hover:bg-palette-teal/90 text-white py-3"
-                >
-                  Confirm Booking
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Price Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span>Package Price:</span>
+                  <span>{formatIndianRupees(priceBreakdown.packagePrice)}</span>
+                </div>
+                {hasInsurance && (
+                  <div className="flex justify-between">
+                    <span>Travel Insurance:</span>
+                    <span>{formatIndianRupees(priceBreakdown.travelInsurance)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>Taxes & Fees:</span>
+                  <span>{formatIndianRupees(priceBreakdown.taxesFees)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total Amount:</span>
+                  <span>{formatIndianRupees(priceBreakdown.totalAmount)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button
+              className="w-full bg-palette-orange hover:bg-palette-orange/90"
+              onClick={handleSubmitBooking}
+              disabled={
+                !startDate || !endDate || !agreedToTerms ||
+                fullName === '' || email === '' || phoneNumber === '' ||
+                adults === 0 ||
+                travelerNames.slice(0, adults + children).some(name => name.trim() === '') ||
+                (hasInsurance && !selectedInsurancePlan)
+              }
+            >
+              Proceed to Payment
+            </Button>
+          </div>
         </div>
       </div>
     </div>

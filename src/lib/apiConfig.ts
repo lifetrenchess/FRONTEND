@@ -1,80 +1,131 @@
-// Standardized API Configuration for Travel Booking System
-// Centralized configuration for all API endpoints
-
-interface ServiceConfig {
-  BASE_URL: string;
-  ENDPOINTS: Record<string, any>;
-}
-
+// API Configuration for all backend services
 export const API_CONFIG = {
-  // API Gateway Configuration
-  GATEWAY_BASE_URL: 'http://localhost:9999',
-  
-  // User Service Configuration
-  USER_SERVICE: {
-    BASE_URL: 'http://localhost:9999/user-api/users',
-    ENDPOINTS: {
-      REGISTER: '',
-      LOGIN: '/login',
-      PROFILE: '/me',
-      BY_ID: (id: number) => `/${id}`,
-      UPDATE_PROFILE: (id: number) => `/${id}/profile`,
-      UPDATE_USER: (id: number) => `/${id}`,
-      DELETE: (id: number) => `/${id}`,
-      SEARCH: '/search',
-    }
-  } as ServiceConfig,
-  
-  // Package Service Configuration
-  PACKAGE_SERVICE: {
-    BASE_URL: 'http://localhost:9999/api/packages',
-    ENDPOINTS: {
-      ALL: '/',
-      BY_ID: (id: number) => `/${id}`,
-      CREATE: '/',
-      UPDATE: (id: number) => `/${id}`,
-      DELETE: (id: number) => `/${id}`,
-    }
-  } as ServiceConfig,
-  
-  // Authentication Configuration
-  AUTH: {
-    TOKEN_KEY: 'token',
-    USER_KEY: 'user',
-    CURRENT_USER_KEY: 'currentUser',
+  // Gateway API (main entry point)
+  GATEWAY: {
+    BASE_URL: 'http://localhost:9999/api',
   },
   
-  // Request Configuration
-  REQUEST: {
-    TIMEOUT: 10000,
-    HEADERS: {
-      'Content-Type': 'application/json',
+  // Individual microservices
+  SERVICES: {
+    USER_SERVICE: {
+      BASE_URL: 'http://localhost:9001/api',
+      ENDPOINTS: {
+        USERS: '/users',
+        AUTH: '/auth',
+        PROFILE: '/profile',
+      }
+    },
+    
+    PACKAGE_SERVICE: {
+      BASE_URL: 'http://localhost:9002/api',
+      ENDPOINTS: {
+        PACKAGES: '/packages',
+        DESTINATIONS: '/destinations',
+        SEARCH: '/search',
+      }
+    },
+    
+    BOOKING_SERVICE: {
+      BASE_URL: 'http://localhost:9003/api',
+      ENDPOINTS: {
+        BOOKINGS: '/bookings',
+        PAYMENTS: '/payments',
+        PAYMENT_VERIFICATION: '/payments/verifyPayment',
+      }
+    },
+    
+    INSURANCE_SERVICE: {
+      BASE_URL: 'http://localhost:9004/api',
+      ENDPOINTS: {
+        INSURANCE: '/insurance',
+        PLANS: '/plans',
+        CLAIMS: '/claims',
+      }
+    },
+    
+    ASSISTANCE_SERVICE: {
+      BASE_URL: 'http://localhost:9005/api',
+      ENDPOINTS: {
+        ASSISTANCE: '/assistance',
+        REQUESTS: '/requests',
+        RESOLVE: '/resolve',
+      }
+    },
+    
+    REVIEW_SERVICE: {
+      BASE_URL: 'http://localhost:8083/api',
+      ENDPOINTS: {
+        REVIEWS: '/reviews',
+        RATINGS: '/ratings',
+        FEEDBACK: '/feedback',
+      }
+    },
+  },
+  
+  // Common headers
+  HEADERS: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  
+  // Timeout settings
+  TIMEOUT: 10000, // 10 seconds
+};
+
+// Helper function to get full URL for a service endpoint
+export const getApiUrl = (service: keyof typeof API_CONFIG.SERVICES, endpoint: string): string => {
+  const serviceConfig = API_CONFIG.SERVICES[service];
+  return `${serviceConfig.BASE_URL}${endpoint}`;
+};
+
+// Helper function to get headers with authentication
+export const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem('token');
+  return {
+    ...API_CONFIG.HEADERS,
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  };
+};
+
+// Helper function for API requests with error handling
+export const apiRequest = async (
+  url: string, 
+  options: RequestInit = {}
+): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...API_CONFIG.HEADERS,
+        ...options.headers,
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout');
     }
+    throw error;
   }
 };
 
-// Helper function to get full URL for an endpoint
-export const getApiUrl = (service: keyof typeof API_CONFIG, endpoint: string): string => {
-  const serviceConfig = API_CONFIG[service] as ServiceConfig;
-  if (serviceConfig && 'BASE_URL' in serviceConfig) {
-    return `${serviceConfig.BASE_URL}${endpoint}`;
-  }
-  throw new Error(`Invalid service: ${service}`);
-};
-
-// Helper function to get auth token
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem(API_CONFIG.AUTH.TOKEN_KEY);
-};
-
-// Helper function to set auth token
-export const setAuthToken = (token: string): void => {
-  localStorage.setItem(API_CONFIG.AUTH.TOKEN_KEY, token);
-};
-
-// Helper function to clear auth data
-export const clearAuthData = (): void => {
-  localStorage.removeItem(API_CONFIG.AUTH.TOKEN_KEY);
-  localStorage.removeItem(API_CONFIG.AUTH.USER_KEY);
-  localStorage.removeItem(API_CONFIG.AUTH.CURRENT_USER_KEY);
+// Helper function for authenticated API requests
+export const authenticatedApiRequest = async (
+  url: string, 
+  options: RequestInit = {}
+): Promise<Response> => {
+  return apiRequest(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+  });
 }; 
