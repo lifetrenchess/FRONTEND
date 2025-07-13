@@ -67,15 +67,8 @@ const PackageDetails: React.FC = () => {
     if (!pkg) return [];
     const images = [];
     if (pkg.mainImage) images.push(pkg.mainImage);
-    if (pkg.images) {
-      try {
-        const additionalImages = JSON.parse(pkg.images);
-        if (Array.isArray(additionalImages)) {
-          images.push(...additionalImages);
-        }
-      } catch (e) {
-        console.error('Error parsing images JSON:', e);
-      }
+    if (pkg.images && Array.isArray(pkg.images)) {
+      images.push(...pkg.images);
     }
     return images;
   };

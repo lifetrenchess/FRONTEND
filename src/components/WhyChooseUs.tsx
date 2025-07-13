@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, Star, Headphones, Globe } from 'lucide-react';
+import FlippingCard from './FlippingCard';
 
 const features = [
   {
@@ -47,24 +48,12 @@ const WhyChooseUs = () => {
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
-              <Card 
-                key={index} 
-                className="text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-none bg-white/70 backdrop-blur-sm"
-              >
-                <CardContent className="p-8">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 mx-auto bg-palette-cream rounded-full flex items-center justify-center">
-                      <IconComponent className={`w-8 h-8 ${feature.color}`} />
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+              <FlippingCard
+                key={index}
+                icon={<IconComponent className={`w-10 h-10 ${feature.color}`} />}
+                title={feature.title}
+                description={feature.description}
+              />
             );
           })}
         </div>

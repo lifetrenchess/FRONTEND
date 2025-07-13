@@ -91,7 +91,7 @@ export async function getAgentPackages(): Promise<AgentPackage[]> {
     }
     
     const userData = JSON.parse(currentUser);
-    const response = await packageApi.get(`/agent/${userData.userId || 1}`); // Default to 1 if not set
+    const response = await packageApi.get(`/agent/${userData.userId || 1}`); // Correct endpoint
     return response.data;
   } catch (error) {
     console.error('Failed to fetch agent packages:', error);

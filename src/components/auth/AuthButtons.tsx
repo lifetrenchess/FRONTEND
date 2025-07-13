@@ -8,6 +8,11 @@ interface AuthButtonsProps {
 }
 
 const AuthButtons = ({ onAuthSuccess }: AuthButtonsProps) => {
+  const handleRegisterSuccess = () => {
+    // Registration success - the login dialog will handle the actual auth success
+    console.log('Registration successful, login dialog will open');
+  };
+
   return (
     <div className="flex items-center gap-4">
       <LoginDialog onAuthSuccess={onAuthSuccess}>
@@ -16,7 +21,7 @@ const AuthButtons = ({ onAuthSuccess }: AuthButtonsProps) => {
         </Button>
       </LoginDialog>
       
-      <RegisterDialog onRegisterSuccess={() => console.log('Registration successful')}>
+      <RegisterDialog onRegisterSuccess={handleRegisterSuccess}>
         <Button className="bg-[#01E8B2] hover:bg-[#00d4a1] text-white">
           Sign Up
         </Button>

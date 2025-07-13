@@ -11,8 +11,9 @@ export const API_CONFIG = {
       BASE_URL: 'http://localhost:9999/user-api',
       ENDPOINTS: {
         USERS: '/users',
-        AUTH: '/auth',
-        PROFILE: '/profile',
+        LOGIN: '/users/login',
+        ME: '/users/me',
+        PROFILE: '/users/profile',
       }
     },
     
@@ -20,8 +21,12 @@ export const API_CONFIG = {
       BASE_URL: 'http://localhost:9999/api/packages',
       ENDPOINTS: {
         PACKAGES: '',
-        DESTINATIONS: '/destinations',
+        ALL_PACKAGES: '/all',
+        AGENT_PACKAGES: '/agent',
         SEARCH: '/search',
+        IMAGE: '/image',
+        IMAGES: '/images',
+        STATUS: '/status',
       }
     },
     
@@ -38,8 +43,11 @@ export const API_CONFIG = {
       BASE_URL: 'http://localhost:9999/api/insurance',
       ENDPOINTS: {
         INSURANCE: '',
-        PLANS: '/plans',
-        CLAIMS: '/claims',
+        PACKAGES: '/packages',
+        SELECT: '/select',
+        ADMIN_PACKAGE: '/admin/package',
+        SELECTIONS_BY_BOOKING: '/selections/booking',
+        SELECTIONS_BY_USER: '/selections/user',
       }
     },
     
@@ -47,7 +55,7 @@ export const API_CONFIG = {
       BASE_URL: 'http://localhost:9999/api/assistance',
       ENDPOINTS: {
         ASSISTANCE: '',
-        REQUESTS: '/requests',
+        USER_REQUESTS: '/user',
         RESOLVE: '/resolve',
       }
     },
@@ -56,8 +64,7 @@ export const API_CONFIG = {
       BASE_URL: 'http://localhost:9999/api/reviews',
       ENDPOINTS: {
         REVIEWS: '',
-        RATINGS: '/ratings',
-        FEEDBACK: '/feedback',
+        RESPONSE: '/response',
       }
     },
   },

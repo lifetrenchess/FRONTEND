@@ -52,18 +52,8 @@ const LoginDialog = ({ children, onAuthSuccess }: LoginDialogProps) => {
   };
 
   const redirectBasedOnRole = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
-        navigate('/admin');
-        break;
-      case 'TRAVEL_AGENT':
-        navigate('/agent');
-        break;
-      case 'USER':
-      default:
-        navigate('/dashboard');
-        break;
-    }
+    // Remove this function as we don't want to redirect to dashboard
+    // Users will stay on homepage and use the navbar button to access dashboard
   };
 
   const handleLogin = async () => {
@@ -106,8 +96,8 @@ const LoginDialog = ({ children, onAuthSuccess }: LoginDialogProps) => {
         
         setTimeout(() => {
           setIsOpen(false);
-          // Redirect to home page instead of dashboard
-          navigate('/');
+          // Stay on homepage - don't redirect to dashboard
+          // User will see their profile button in navbar and can click it to go to dashboard
         }, 1500);
         
       } catch (profileError) {
@@ -127,7 +117,7 @@ const LoginDialog = ({ children, onAuthSuccess }: LoginDialogProps) => {
         
         setTimeout(() => {
           setIsOpen(false);
-          navigate('/');
+          // Stay on homepage - don't redirect to dashboard
         }, 1500);
       }
       

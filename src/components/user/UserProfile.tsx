@@ -1,25 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Phone, Shield } from 'lucide-react';
-import { getCurrentUser, User as UserType } from '@/lib/userApi';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { User, Mail, Phone, Shield, Edit, Save, X } from 'lucide-react';
+import { getCurrentUser, updateUserProfile, User as UserType, UserProfileDto } from '@/lib/userApi';
 import { getCurrentUserFromStorage } from '@/lib/auth';
+import { toast } from 'sonner';
 
 const UserProfile = () => {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<UserProfileDto>({
+    userName: '',
+    userEmail: '',
+    userContactNumber: ''
+  });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const userData = await getCurrentUser();
         setUser(userData);
+        setEditForm({
+          userName: userData.userName,
+          userEmail: userData.userEmail,
+          userContactNumber: userData.userContactNumber
+        });
       } catch (err) {
         // Fallback to localStorage if API fails
         const storedUser = getCurrentUserFromStorage();
         if (storedUser) {
           setUser(storedUser);
+          setEditForm({
+            userName: storedUser.userName,
+            userEmail: storedUser.userEmail,
+            userContactNumber: storedUser.userContactNumber
+          });
         } else {
           setError('Failed to load user profile');
         }
@@ -30,6 +49,42 @@ const UserProfile = () => {
 
     fetchUserProfile();
   }, []);
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    // Reset form to original values
+    if (user) {
+      setEditForm({
+        userName: user.userName,
+        userEmail: user.userEmail,
+        userContactNumber: user.userContactNumber
+      });
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    try {
+      const updatedUser = await updateUserProfile(user.userId, editForm);
+      setUser(updatedUser);
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update profile');
+    }
+  };
+
+  const handleInputChange = (field: keyof UserProfileDto, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   if (loading) {
     return (
@@ -75,31 +130,56 @@ const UserProfile = () => {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-500">Full Name</label>
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-              <User className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-900">{user.userName}</span>
-            </div>
+            <Label className="text-sm font-medium text-gray-500">Full Name</Label>
+            {isEditing ? (
+              <Input
+                value={editForm.userName}
+                onChange={(e) => handleInputChange('userName', e.target.value)}
+                className="w-full"
+              />
+            ) : (
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                <User className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-900">{user.userName}</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-500">Email</label>
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-              <Mail className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-900">{user.userEmail}</span>
-            </div>
+            <Label className="text-sm font-medium text-gray-500">Email</Label>
+            {isEditing ? (
+              <Input
+                type="email"
+                value={editForm.userEmail}
+                onChange={(e) => handleInputChange('userEmail', e.target.value)}
+                className="w-full"
+              />
+            ) : (
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                <Mail className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-900">{user.userEmail}</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-500">Contact Number</label>
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-              <Phone className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-900">{user.userContactNumber}</span>
-            </div>
+            <Label className="text-sm font-medium text-gray-500">Contact Number</Label>
+            {isEditing ? (
+              <Input
+                value={editForm.userContactNumber}
+                onChange={(e) => handleInputChange('userContactNumber', e.target.value)}
+                className="w-full"
+              />
+            ) : (
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                <Phone className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-900">{user.userContactNumber}</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-500">Role</label>
+            <Label className="text-sm font-medium text-gray-500">Role</Label>
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
               <Shield className="w-4 h-4 text-gray-400" />
               <span className="text-gray-900">{getRoleDisplayName(user.userRole || 'USER')}</span>
@@ -108,12 +188,39 @@ const UserProfile = () => {
         </div>
 
         <div className="flex gap-2 pt-4">
-          <Button variant="outline" className="flex-1">
-            Edit Profile
-          </Button>
-          <Button variant="outline" className="flex-1">
-            Change Password
-          </Button>
+          {isEditing ? (
+            <>
+              <Button 
+                onClick={handleSaveProfile} 
+                className="flex-1 bg-[#01E8B2] hover:bg-[#00d4a1]"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+              <Button 
+                onClick={handleCancelEdit} 
+                variant="outline" 
+                className="flex-1"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                onClick={handleEditClick} 
+                variant="outline" 
+                className="flex-1"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
+              <Button variant="outline" className="flex-1">
+                Change Password
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

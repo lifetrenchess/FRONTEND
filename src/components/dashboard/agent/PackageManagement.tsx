@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Search, Filter, RefreshCw, MapPin, Calendar, DollarSign, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { getApiUrl, uploadImages } from '@/lib/apiConfig';
+import { getApiUrl } from '@/lib/apiConfig';
 
 interface Package {
   packageId: number;
@@ -22,7 +22,7 @@ interface Package {
   status: string;
   availableSeats?: number;
   mainImage?: string;
-  images?: string;
+  images?: string[];
 }
 
 const PackageManagement = () => {
@@ -56,24 +56,18 @@ const PackageManagement = () => {
   const [additionalImagesPreview, setAdditionalImagesPreview] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  // Load all packages
-  const loadPackages = async () => {
-    setLoading(true);
-    setError('');
-    
+  const fetchPackages = async () => {
     try {
-      const response = await fetch(getApiUrl('PACKAGE_SERVICE', '/packages'));
-      
-      if (!response.ok) {
-        throw new Error('Failed to load packages');
-      }
-      
-      const data: Package[] = await response.json();
+    setLoading(true);
+      const response = await fetch(getApiUrl('PACKAGE_SERVICE', '/agent/1')); // Get agent packages
+      if (response.ok) {
+        const data = await response.json();
       setPackages(data);
-      setFilteredPackages(data);
-    } catch (err: any) {
-      setError(err.message);
-      toast.error('Failed to load packages');
+      } else {
+        console.error('Failed to fetch packages');
+      }
+    } catch (error) {
+      console.error('Error fetching packages:', error);
     } finally {
       setLoading(false);
     }
@@ -108,7 +102,7 @@ const PackageManagement = () => {
 
   // Load packages on component mount
   useEffect(() => {
-    loadPackages();
+    fetchPackages();
   }, []);
 
   // Handle main image upload
@@ -212,7 +206,7 @@ const PackageManagement = () => {
         availableSeats: formData.availableSeats ? parseInt(formData.availableSeats) : null,
         status: 'Active',
         mainImage: editingPackage?.mainImage || '',
-        images: editingPackage?.images || ''
+        images: editingPackage?.images || []
       };
       
       formDataToSend.append('packageData', JSON.stringify(packageData));
@@ -229,8 +223,8 @@ const PackageManagement = () => {
       }
 
       const url = editingPackage 
-        ? getApiUrl('PACKAGE_SERVICE', `/packages/${editingPackage.packageId}`)
-        : getApiUrl('PACKAGE_SERVICE', '/packages');
+        ? getApiUrl('PACKAGE_SERVICE', `/${editingPackage.packageId}`)
+        : getApiUrl('PACKAGE_SERVICE', '');
       
       const method = editingPackage ? 'PUT' : 'POST';
       
@@ -302,15 +296,8 @@ const PackageManagement = () => {
       setMainImagePreview(pkg.mainImage);
     }
     
-    if (pkg.images) {
-      try {
-        const additionalImages = JSON.parse(pkg.images);
-        if (Array.isArray(additionalImages)) {
-          setAdditionalImagesPreview(additionalImages);
-        }
-      } catch (e) {
-        console.error('Error parsing images JSON:', e);
-      }
+    if (pkg.images && Array.isArray(pkg.images)) {
+      setAdditionalImagesPreview(pkg.images);
     }
     
     setIsCreating(true);
@@ -319,7 +306,7 @@ const PackageManagement = () => {
   // Delete package
   const handleDelete = async (packageId: number) => {
     try {
-      const response = await fetch(getApiUrl('PACKAGE_SERVICE', `/packages/${packageId}`), {
+      const response = await fetch(getApiUrl('PACKAGE_SERVICE', `/${packageId}`), {
         method: 'DELETE',
       });
 
@@ -361,7 +348,7 @@ const PackageManagement = () => {
         <div className="text-center">
           <MapPin className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={loadPackages} variant="outline">
+          <Button onClick={fetchPackages} variant="outline">
             Try Again
           </Button>
         </div>
@@ -378,7 +365,7 @@ const PackageManagement = () => {
           <p className="text-gray-600">Create and manage travel packages</p>
         </div>
         <div className="flex space-x-2">
-          <Button onClick={loadPackages} variant="outline" size="sm">
+          <Button onClick={fetchPackages} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>

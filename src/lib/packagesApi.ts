@@ -38,7 +38,7 @@ export interface TravelPackageDto {
   excludeService?: string;
   highlights?: string;
   mainImage?: string;
-  images?: string; // JSON array of additional images
+  images?: string[]; // Array of additional image URLs
   active: boolean;
   createdByAgentId?: number;
   createdAt?: string;

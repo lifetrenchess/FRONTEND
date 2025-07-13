@@ -11,10 +11,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { registerUser, User } from '@/lib/userApi';
+import LoginDialog from './LoginDialog';
 
 interface RegisterDialogProps {
   children: React.ReactNode;
-  onRegisterSuccess?: () => void;
+  onRegisterSuccess?: (userData?: any) => void;
 }
 
 const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) => {
@@ -22,6 +23,7 @@ const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) =>
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [showLoginAfterRegister, setShowLoginAfterRegister] = useState(false);
   const [formData, setFormData] = useState({
     userName: '',
     userEmail: '',
@@ -101,15 +103,17 @@ const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) =>
       
       await registerUser(userData);
       
-      setMessage({ type: 'success', text: 'Registration successful! Please sign in.' });
+      setMessage({ type: 'success', text: 'Registration successful! Redirecting to login...' });
       
       if (onRegisterSuccess) onRegisterSuccess();
       
+      // Close registration dialog and open login dialog after 2 seconds
       setTimeout(() => {
         setIsOpen(false);
+        setShowLoginAfterRegister(true);
         setFormData({
           userName: '',
-          userEmail: formData.userEmail, // keep email for convenience
+          userEmail: '',
           userPassword: '',
           confirmPassword: '',
           userContactNumber: ''
@@ -132,6 +136,7 @@ const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) =>
   };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {children}
@@ -242,6 +247,14 @@ const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) =>
         </form>
       </DialogContent>
     </Dialog>
+
+      {/* Auto-open login dialog after successful registration */}
+      {showLoginAfterRegister && (
+        <LoginDialog onAuthSuccess={onRegisterSuccess}>
+          <div style={{ display: 'none' }} />
+        </LoginDialog>
+      )}
+    </>
   );
 };
 
