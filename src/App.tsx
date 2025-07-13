@@ -1,22 +1,24 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import PackageDetails from './pages/PackageDetails';
-import BookingPage from './pages/BookingPage';
-import PaymentPage from './pages/PaymentPage';
-import InsurancePage from './pages/InsurancePage';
-import ConfirmationPage from './pages/ConfirmationPage';
-import AssistancePage from './pages/AssistancePage';
-import ReviewPage from './pages/ReviewPage';
-import AdminDashboard from './pages/AdminDashboard';
-import AgentDashboard from './pages/AgentDashboard';
-import TestDashboard from './pages/TestDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
+import { Sonner } from 'sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import Index from '@/pages/Index';
+import TestDashboard from '@/pages/TestDashboard';
+import Dashboard from '@/pages/Dashboard';
+import AdminDashboard from '@/pages/AdminDashboard';
+import AgentDashboard from '@/pages/AgentDashboard';
+import PackageDetails from '@/pages/PackageDetails';
+import AllPackages from '@/pages/AllPackages';
+import BookingPage from '@/pages/BookingPage';
+import PaymentPage from '@/pages/PaymentPage';
+import InsurancePage from '@/pages/InsurancePage';
+import ConfirmationPage from '@/pages/ConfirmationPage';
+import AssistancePage from '@/pages/AssistancePage';
+import ReviewPage from '@/pages/ReviewPage';
+import NotFound from '@/pages/NotFound';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/test" element={<TestDashboard />} />
+          <Route path="/packages" element={<AllPackages />} />
           
           {/* Role-specific dashboards */}
           <Route element={<ProtectedRoute allowedRoles={['USER']} />}>

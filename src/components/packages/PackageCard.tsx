@@ -149,10 +149,10 @@ const PackageCard = ({ pkg }: PackageCardProps) => {
           </span>
           <span className="text-gray-500 text-sm">per person</span>
         </div>
-        <Link to={`/packages/${pkg.packageId}`}>
+        <Link to="/packages">
           <Button className="bg-gradient-to-r from-[#01E8B2] to-[#00d4a1] hover:from-[#00d4a1] hover:to-[#01E8B2] text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group-hover:scale-110">
             <Eye className="w-4 h-4 mr-2" />
-            View Package
+            View Packages
           </Button>
         </Link>
       </CardFooter>

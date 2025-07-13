@@ -15,20 +15,41 @@ export function getUserRole(): 'USER' | 'ADMIN' | 'TRAVEL_AGENT' | null {
   
   let role: string | undefined;
   
+  // First try to get role from user data (from backend)
   if (user?.userRole) {
     role = user.userRole;
     console.log('getUserRole - using role from user:', role);
-  } else if (currentUser) {
-    const currentUserData = JSON.parse(currentUser);
-    role = currentUserData.role;
-    console.log('getUserRole - using role from currentUser:', role);
+  } 
+  // Then try to get role from currentUser data (frontend state)
+  else if (currentUser) {
+    try {
+      const currentUserData = JSON.parse(currentUser);
+      role = currentUserData.role;
+      console.log('getUserRole - using role from currentUser:', role);
+    } catch (error) {
+      console.error('Error parsing currentUser:', error);
+    }
   }
   
-  console.log('getUserRole - final role:', role);
+  console.log('getUserRole - final role before normalization:', role);
   
-  if (role === 'USER' || role === 'ADMIN' || role === 'TRAVEL_AGENT') {
-    return role;
+  // Normalize role names to match expected values
+  if (role) {
+    const normalizedRole = role.toUpperCase().trim();
+    console.log('getUserRole - normalized role:', normalizedRole);
+    
+    if (normalizedRole === 'USER' || normalizedRole === 'ADMIN' || normalizedRole === 'TRAVEL_AGENT') {
+      console.log('getUserRole - returning normalized role:', normalizedRole);
+      return normalizedRole as 'USER' | 'ADMIN' | 'TRAVEL_AGENT';
+    }
+    // Handle potential variations
+    if (normalizedRole === 'AGENT') {
+      console.log('getUserRole - converting AGENT to TRAVEL_AGENT');
+      return 'TRAVEL_AGENT';
+    }
   }
+  
+  console.log('getUserRole - no valid role found, returning null');
   return null;
 }
 

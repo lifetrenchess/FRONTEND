@@ -22,19 +22,93 @@ const Header = () => {
 
   useEffect(() => {
     // Check for authenticated user on component mount
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      setCurrentUser(JSON.parse(user));
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Try to get user data from both sources
+      const currentUserFromStorage = localStorage.getItem('currentUser');
+      const userFromStorage = localStorage.getItem('user');
+      
+      if (currentUserFromStorage) {
+        try {
+          const currentUserData = JSON.parse(currentUserFromStorage);
+          setCurrentUser(currentUserData);
+        } catch (error) {
+          console.error('Error parsing currentUser:', error);
+        }
+      } else if (userFromStorage) {
+        // If currentUser doesn't exist but user does, create currentUser from user data
+        try {
+          const userData = JSON.parse(userFromStorage);
+          const currentUserData = {
+            fullName: userData.userName,
+            email: userData.userEmail,
+            isAuthenticated: true,
+            role: userData.userRole || 'USER'
+          };
+          localStorage.setItem('currentUser', JSON.stringify(currentUserData));
+          setCurrentUser(currentUserData);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+    } else {
+      // No token, clear any existing user data
+      setCurrentUser(null);
     }
+
+    // Listen for storage changes (when user logs in/out in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token' || e.key === 'currentUser' || e.key === 'user') {
+        const newToken = localStorage.getItem('token');
+        if (newToken) {
+          const currentUserFromStorage = localStorage.getItem('currentUser');
+          if (currentUserFromStorage) {
+            try {
+              const currentUserData = JSON.parse(currentUserFromStorage);
+              setCurrentUser(currentUserData);
+            } catch (error) {
+              console.error('Error parsing currentUser from storage event:', error);
+            }
+          }
+        } else {
+          setCurrentUser(null);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const handleAuthSuccess = (userData: UserData) => {
-    setCurrentUser(userData);
-    // Ensure role is set for the booking auth hook
+    console.log('Header - handleAuthSuccess called with:', userData);
+    
+    // Ensure role is set - try to get it from user storage if not provided
+    let role = userData.role;
+    if (!role) {
+      const userFromStorage = localStorage.getItem('user');
+      if (userFromStorage) {
+        try {
+          const userDataFromStorage = JSON.parse(userFromStorage);
+          role = userDataFromStorage.userRole || 'USER';
+        } catch (error) {
+          console.error('Error parsing user from storage:', error);
+          role = 'USER';
+        }
+      } else {
+        role = 'USER';
+      }
+    }
+    
     const userDataWithRole = {
       ...userData,
-      role: userData.role || 'USER'
+      role: role
     };
+    
+    console.log('Header - Setting currentUser with role:', userDataWithRole);
+    setCurrentUser(userDataWithRole);
+    
+    // Ensure role is set for the booking auth hook
     onAuthSuccess(userDataWithRole);
   };
 
@@ -46,12 +120,67 @@ const Header = () => {
     navigate('/');
   };
 
+  const debugAuthState = () => {
+    console.log('=== AUTH DEBUG INFO ===');
+    console.log('Token:', localStorage.getItem('token'));
+    console.log('User:', localStorage.getItem('user'));
+    console.log('CurrentUser:', localStorage.getItem('currentUser'));
+    console.log('Current user state:', currentUser);
+    
+    const userFromStorage = localStorage.getItem('user');
+    const currentUserFromStorage = localStorage.getItem('currentUser');
+    
+    if (userFromStorage) {
+      try {
+        const userData = JSON.parse(userFromStorage);
+        console.log('Parsed user data:', userData);
+        console.log('User role from storage:', userData.userRole);
+      } catch (error) {
+        console.error('Error parsing user:', error);
+      }
+    }
+    
+    if (currentUserFromStorage) {
+      try {
+        const currentUserData = JSON.parse(currentUserFromStorage);
+        console.log('Parsed currentUser data:', currentUserData);
+        console.log('CurrentUser role from storage:', currentUserData.role);
+      } catch (error) {
+        console.error('Error parsing currentUser:', error);
+      }
+    }
+    
+    console.log('=== END AUTH DEBUG ===');
+  };
+
   const handleDashboardClick = () => {
     console.log('Dashboard click - Current user role:', currentUser?.role);
     console.log('Current user data:', currentUser);
     
+    // Get role from both sources to ensure we have the correct role
+    const userFromStorage = localStorage.getItem('user');
+    const currentUserFromStorage = localStorage.getItem('currentUser');
+    
+    console.log('User from storage:', userFromStorage);
+    console.log('CurrentUser from storage:', currentUserFromStorage);
+    
+    let role = currentUser?.role;
+    
+    // If role is not available from currentUser, try to get it from user storage
+    if (!role && userFromStorage) {
+      try {
+        const userData = JSON.parse(userFromStorage);
+        role = userData.userRole;
+        console.log('Using role from user storage:', role);
+      } catch (error) {
+        console.error('Error parsing user from storage:', error);
+      }
+    }
+    
+    console.log('Final role for navigation:', role);
+    
     // Navigate to role-specific dashboard
-    switch (currentUser?.role?.toUpperCase()) {
+    switch (role?.toUpperCase()) {
       case 'ADMIN':
         console.log('Navigating to admin dashboard');
         navigate('/admin');
@@ -87,7 +216,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/">
-              <AventraLogo size={120} />
+            <AventraLogo size={120} />
             </Link>
           </div>
           
@@ -113,6 +242,14 @@ const Header = () => {
             {currentUser ? (
               // Authenticated user view
               <>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={debugAuthState}
+                  className="hidden md:flex text-gray-500 hover:bg-gray-100"
+                >
+                  Debug
+                </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 

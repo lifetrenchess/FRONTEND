@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import PackageCard from './PackageCard';
 
@@ -117,11 +120,23 @@ const PackageGrid = ({
             <p className="text-gray-500">No packages available at the moment.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {packages.map((pkg) => (
-              <PackageCard key={pkg.packageId} pkg={pkg} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {packages.map((pkg) => (
+                <PackageCard key={pkg.packageId} pkg={pkg} />
+              ))}
+            </div>
+            
+            {/* View All Packages Button */}
+            <div className="text-center mt-12">
+              <Link to="/packages">
+                <Button className="bg-gradient-to-r from-[#01E8B2] to-[#00d4a1] hover:from-[#00d4a1] hover:to-[#01E8B2] text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  View All Packages
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </>
         )}
       </div>
     </section>

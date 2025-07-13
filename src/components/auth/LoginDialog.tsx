@@ -90,6 +90,9 @@ const LoginDialog = ({ children, onAuthSuccess }: LoginDialogProps) => {
         };
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
+        console.log('LoginDialog - User role from backend:', user.userRole);
+        console.log('LoginDialog - Created currentUser:', currentUser);
+        
         if (onAuthSuccess) onAuthSuccess(currentUser);
         
         setMessage({ type: 'success', text: `Login successful! Welcome back, ${currentUser.fullName}!` });
