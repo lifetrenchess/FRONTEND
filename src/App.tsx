@@ -29,6 +29,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/test" element={<TestDashboard />} />
+          
+          {/* Role-specific dashboards */}
           <Route element={<ProtectedRoute allowedRoles={['USER']} />}>
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>
@@ -38,8 +40,14 @@ const App = () => (
           <Route element={<ProtectedRoute allowedRoles={['TRAVEL_AGENT']} />}>
             <Route path="/agent" element={<AgentDashboard />} />
           </Route>
+          
+          {/* Public routes */}
           <Route path="/packages/:id" element={<PackageDetails />} />
-          <Route element={<ProtectedRoute allowedRoles={['USER']} />}>
+          <Route path="/about" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">About Us</h1><p>Coming soon...</p></div>} />
+          <Route path="/contact" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">Contact Us</h1><p>Coming soon...</p></div>} />
+          
+          {/* Protected routes for all authenticated users */}
+          <Route element={<ProtectedRoute allowedRoles={['USER', 'ADMIN', 'TRAVEL_AGENT']} />}>
             <Route path="/booking/:id" element={<BookingPage />} />
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/insurance" element={<InsurancePage />} />
@@ -47,6 +55,7 @@ const App = () => (
             <Route path="/assistance" element={<AssistancePage />} />
             <Route path="/reviews" element={<ReviewPage />} />
           </Route>
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import AventraLogo from './AventraLogo';
 import AuthButtons from './auth/AuthButtons';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,8 @@ const Header = () => {
 
   const handleDashboardClick = () => {
     console.log('Dashboard click - Current user role:', currentUser?.role);
+    console.log('Current user data:', currentUser);
+    
     // Navigate to role-specific dashboard
     switch (currentUser?.role?.toUpperCase()) {
       case 'ADMIN':
@@ -84,28 +86,27 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <AventraLogo size={120} />
+            <Link to="/">
+              <AventraLogo size={120} />
+            </Link>
           </div>
           
           <nav className="hidden md:flex space-x-8">
-            <a href="#destinations" className="text-gray-700 hover:text-palette-teal transition-colors">
-              Destinations
-            </a>
-            <a href="#packages" className="text-gray-700 hover:text-palette-teal transition-colors">
+            <Link to="/#packages" className="text-gray-700 hover:text-palette-teal transition-colors">
               Packages
-            </a>
-            <a href="#about" className="text-gray-700 hover:text-palette-teal transition-colors">
+            </Link>
+            <Link to="/about" className="text-gray-700 hover:text-palette-teal transition-colors">
               About
-            </a>
-            <a href="#contact" className="text-gray-700 hover:text-palette-teal transition-colors">
+            </Link>
+            <Link to="/contact" className="text-gray-700 hover:text-palette-teal transition-colors">
               Contact
-            </a>
-            <a href="/assistance" className="text-gray-700 hover:text-palette-teal transition-colors">
+            </Link>
+            <Link to="/assistance" className="text-gray-700 hover:text-palette-teal transition-colors">
               Support
-            </a>
-            <a href="/reviews" className="text-gray-700 hover:text-palette-teal transition-colors">
+            </Link>
+            <Link to="/reviews" className="text-gray-700 hover:text-palette-teal transition-colors">
               Reviews
-            </a>
+            </Link>
           </nav>
 
           <div className="flex items-center space-x-4">

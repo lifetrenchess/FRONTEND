@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Home, User, Calendar, MapPin, CreditCard, MessageCircle, Star, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
@@ -14,6 +15,7 @@ interface UserData {
 }
 
 const UserDashboard = () => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('overview');
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
 
@@ -80,7 +82,7 @@ const UserDashboard = () => {
         variant="outline"
         size="sm"
         className="w-full justify-start space-x-2 text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
-        onClick={() => window.location.href = '/assistance'}
+        onClick={() => navigate('/assistance')}
       >
         <MessageCircle className="w-4 h-4" />
         <span>Get Support</span>
@@ -88,8 +90,8 @@ const UserDashboard = () => {
       <Button
         variant="outline"
         size="sm"
-        className="w-full justify-start space-x-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
-        onClick={() => window.location.href = '/reviews'}
+        className="w-full justify-start space-x-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-yellow-600"
+        onClick={() => navigate('/reviews')}
       >
         <Star className="w-4 h-4" />
         <span>Write Review</span>
@@ -111,7 +113,7 @@ const UserDashboard = () => {
             <h2 className="text-2xl font-bold mb-4">Customer Support</h2>
             <p className="text-gray-600 mb-6">Need help with your bookings or have questions? Our support team is here to help.</p>
             <Button 
-              onClick={() => window.location.href = '/assistance'}
+              onClick={() => navigate('/assistance')}
               className="bg-palette-teal hover:bg-palette-teal/90"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
@@ -125,7 +127,7 @@ const UserDashboard = () => {
             <h2 className="text-2xl font-bold mb-4">Share Your Experience</h2>
             <p className="text-gray-600 mb-6">Help other travelers by sharing your feedback about our services.</p>
             <Button 
-              onClick={() => window.location.href = '/reviews'}
+              onClick={() => navigate('/reviews')}
               className="bg-palette-orange hover:bg-palette-orange/90"
             >
               <Star className="w-4 h-4 mr-2" />

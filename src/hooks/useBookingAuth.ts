@@ -29,11 +29,19 @@ export const useBookingAuth = (): UseBookingAuthReturn => {
       // User is logged in, proceed with booking
       const userData = JSON.parse(currentUser);
       if (userData.isAuthenticated) {
-        // Redirect to booking page or general bookings
+        // Redirect to booking page or packages section
         if (packageId) {
           navigate(`/booking/${packageId}`);
         } else {
-          navigate('/bookings');
+          // Navigate to packages section on homepage
+          navigate('/');
+          // Scroll to packages section after navigation
+          setTimeout(() => {
+            const packagesSection = document.getElementById('packages');
+            if (packagesSection) {
+              packagesSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 100);
         }
         return;
       }

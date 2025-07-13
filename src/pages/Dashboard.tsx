@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserDashboard from './UserDashboard';
-import AdminDashboard from './AdminDashboard';
-import AgentDashboard from './AgentDashboard';
 
 interface UserData {
   fullName: string;
@@ -49,17 +47,8 @@ const Dashboard = () => {
     return null; // Will redirect to home page
   }
 
-  // Render appropriate dashboard based on user role
-  switch (currentUser.role?.toLowerCase()) {
-    case 'admin':
-      return <AdminDashboard />;
-    case 'travel_agent':
-    case 'agent':
-      return <AgentDashboard />;
-    case 'user':
-    default:
-      return <UserDashboard />;
-  }
+  // Render UserDashboard since this route is only for USER role
+  return <UserDashboard />;
 };
 
 export default Dashboard; 
