@@ -38,7 +38,7 @@ export interface SystemActivity {
 
 // Updated to use API Gateway
 const api = axios.create({
-  baseURL: 'http://localhost:9999/user-api', // Using Gateway port 9999
+  baseURL: 'http://localhost:9999/api/users', // Using Gateway port 9999
   timeout: 10000,
 });
 

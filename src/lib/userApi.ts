@@ -68,11 +68,14 @@ export interface UserProfileDto {
 export const registerUser = async (userData: User): Promise<void> => {
   try {
     // Updated to match new controller endpoint
-    const response = await userApi.post(getApiUrl('USER_SERVICE', '/users'), userData);
+    const response = await userApi.post(getApiUrl('USER_SERVICE', ''), userData);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Registration failed. Please try again.');
   }
@@ -81,12 +84,15 @@ export const registerUser = async (userData: User): Promise<void> => {
 export const loginUser = async (loginData: LoginRequest): Promise<string> => {
   try {
     // Updated to match new controller endpoint
-    const response = await userApi.post(getApiUrl('USER_SERVICE', '/users/login'), loginData);
+    const response = await userApi.post(getApiUrl('USER_SERVICE', '/login'), loginData);
     // Backend returns token directly as string, not wrapped in object
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Login failed. Please check your credentials.');
   }
@@ -95,11 +101,14 @@ export const loginUser = async (loginData: LoginRequest): Promise<string> => {
 export const getCurrentUser = async (): Promise<UserResponse> => {
   try {
     // Updated to match new controller endpoint
-    const response = await userApi.get(getApiUrl('USER_SERVICE', '/users/me'));
+    const response = await userApi.get(getApiUrl('USER_SERVICE', '/me'));
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to fetch user profile.');
   }
@@ -107,11 +116,14 @@ export const getCurrentUser = async (): Promise<UserResponse> => {
 
 export const getUserById = async (userId: number): Promise<UserResponse> => {
   try {
-    const response = await userApi.get(getApiUrl('USER_SERVICE', `/users/${userId}`));
+    const response = await userApi.get(getApiUrl('USER_SERVICE', `/${userId}`));
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to fetch user.');
   }
@@ -119,11 +131,14 @@ export const getUserById = async (userId: number): Promise<UserResponse> => {
 
 export const updateUserProfile = async (userId: number, userData: UserProfileDto): Promise<UserResponse> => {
   try {
-    const response = await userApi.put(getApiUrl('USER_SERVICE', `/users/${userId}/profile`), userData);
+    const response = await userApi.put(getApiUrl('USER_SERVICE', `/${userId}/profile`), userData);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to update profile.');
   }
@@ -131,11 +146,14 @@ export const updateUserProfile = async (userId: number, userData: UserProfileDto
 
 export const getAllUsers = async (): Promise<UserResponse[]> => {
   try {
-    const response = await userApi.get(getApiUrl('USER_SERVICE', '/users'));
+    const response = await userApi.get(getApiUrl('USER_SERVICE', ''));
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to fetch users.');
   }
@@ -143,11 +161,14 @@ export const getAllUsers = async (): Promise<UserResponse[]> => {
 
 export const createUserByAdmin = async (userData: User): Promise<UserResponse> => {
   try {
-    const response = await userApi.post(getApiUrl('USER_SERVICE', '/users/admin/create'), userData);
+    const response = await userApi.post(getApiUrl('USER_SERVICE', '/admin/create'), userData);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to create user.');
   }
@@ -155,11 +176,14 @@ export const createUserByAdmin = async (userData: User): Promise<UserResponse> =
 
 export const updateUser = async (userId: number, userData: Partial<User>): Promise<UserResponse> => {
   try {
-    const response = await userApi.put(getApiUrl('USER_SERVICE', `/users/${userId}`), userData);
+    const response = await userApi.put(getApiUrl('USER_SERVICE', `/${userId}`), userData);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to update user.');
   }
@@ -167,11 +191,14 @@ export const updateUser = async (userId: number, userData: Partial<User>): Promi
 
 export const deleteUser = async (userId: number): Promise<string> => {
   try {
-    const response = await userApi.delete(getApiUrl('USER_SERVICE', `/users/${userId}`));
+    const response = await userApi.delete(getApiUrl('USER_SERVICE', `/${userId}`));
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to delete user.');
   }
@@ -179,11 +206,14 @@ export const deleteUser = async (userId: number): Promise<string> => {
 
 export const searchUsers = async (searchCriteria: { userName?: string; userEmail?: string; userRole?: string }): Promise<UserResponse[]> => {
   try {
-    const response = await userApi.post(getApiUrl('USER_SERVICE', '/users/search'), searchCriteria);
+    const response = await userApi.post(getApiUrl('USER_SERVICE', '/search'), searchCriteria);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      if (apiError.response?.data?.message) {
+        throw new Error(apiError.response.data.message);
+      }
     }
     throw new Error('Failed to search users.');
   }

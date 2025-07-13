@@ -46,7 +46,7 @@ const packageApi = axios.create({
 });
 
 const userApi = axios.create({
-  baseURL: 'http://localhost:9999/user-api', // User service through gateway
+  baseURL: 'http://localhost:9999/api/users', // User service through gateway
   timeout: 10000,
 });
 

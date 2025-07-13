@@ -47,7 +47,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit review');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to submit review');
       }
 
       toast.success("Review submitted successfully!");
@@ -57,9 +58,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       if (onReviewSubmitted) {
         onReviewSubmitted();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting feedback:', error);
-      toast.error("Failed to submit review. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit review. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

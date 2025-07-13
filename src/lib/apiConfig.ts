@@ -8,12 +8,12 @@ export const API_CONFIG = {
   // Individual microservices (all requests go through gateway)
   SERVICES: {
     USER_SERVICE: {
-      BASE_URL: 'http://localhost:9999/user-api',
+      BASE_URL: 'http://localhost:9999/api/users',
       ENDPOINTS: {
-        USERS: '/users',
-        LOGIN: '/users/login',
-        ME: '/users/me',
-        PROFILE: '/users/profile',
+        USERS: '',
+        LOGIN: '/login',
+        ME: '/me',
+        PROFILE: '/profile',
       }
     },
     
@@ -131,6 +131,15 @@ export const apiRequest = async (
   }
 };
 
+// Centralized error handler for API responses
+export const handleApiResponse = async (response: Response): Promise<any> => {
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `HTTP error! Status: ${response.status}`);
+  }
+  return response.json();
+};
+
 // Helper function for authenticated API requests
 export const authenticatedApiRequest = async (
   url: string, 
@@ -138,10 +147,7 @@ export const authenticatedApiRequest = async (
 ): Promise<Response> => {
   return apiRequest(url, {
     ...options,
-    headers: {
-      ...getAuthHeaders(),
-      ...options.headers,
-    },
+    headers: getAuthHeaders(),
   });
 };
 

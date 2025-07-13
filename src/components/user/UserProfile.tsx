@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User, Mail, Phone, Shield, Edit, Save, X } from 'lucide-react';
-import { getCurrentUser, updateUserProfile, User as UserType, UserProfileDto } from '@/lib/userApi';
+import { getCurrentUser, updateUserProfile, UserResponse, UserProfileDto } from '@/lib/userApi';
 import { getCurrentUserFromStorage } from '@/lib/auth';
 import { toast } from 'sonner';
 
 const UserProfile = () => {
-  const [user, setUser] = useState<UserType | null>(null);
+  const [user, setUser] = useState<UserResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);

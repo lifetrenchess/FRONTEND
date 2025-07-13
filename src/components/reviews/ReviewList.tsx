@@ -31,15 +31,17 @@ const ReviewList: React.FC = () => {
       const response = await fetch(getApiUrl('REVIEW_SERVICE', '/reviews'));
       
       if (!response.ok) {
-        throw new Error('Failed to fetch reviews');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to fetch reviews');
       }
       
       const data = await response.json();
       setReviews(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching reviews:", error);
-      setError(error.message);
-      toast.error("Failed to load reviews");
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load reviews';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

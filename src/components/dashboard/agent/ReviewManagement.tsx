@@ -46,15 +46,17 @@ const ReviewManagement = () => {
       const response = await fetch(getApiUrl('REVIEW_SERVICE', '/reviews'));
       
       if (!response.ok) {
-        throw new Error('Failed to load reviews');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to load reviews');
       }
       
       const data: Review[] = await response.json();
       setReviews(data);
       setFilteredReviews(data);
-    } catch (err: any) {
-      setError(err.message);
-      toast.error('Failed to load reviews');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load reviews';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -122,7 +124,8 @@ const ReviewManagement = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to submit response');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to submit response');
       }
 
       const updatedReview: Review = await response.json();
@@ -137,8 +140,9 @@ const ReviewManagement = () => {
       setSelectedReview(null);
       setAgentResponse('');
       toast.success('Response submitted successfully!');
-    } catch (err: any) {
-      toast.error(`Failed to submit response: ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to submit response';
+      toast.error(errorMessage);
     } finally {
       setResponding(false);
     }
