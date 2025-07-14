@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, PenTool, Send, Sparkles } from 'lucide-react';
+import { Star, PenTool, Send, Sparkles, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiConfig';
 import { getCurrentUserFromStorage } from '@/lib/auth';
@@ -30,7 +30,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     // Get current user from authentication
     const currentUser = getCurrentUserFromStorage();
     if (!currentUser || !currentUser.userId) {
-      toast.error("Please log in to submit a review.");
+      toast.error("Please log in to submit a review. You can still read reviews without logging in.");
       return;
     }
 
@@ -95,6 +95,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     }
   };
 
+  // Check if user is authenticated
+  const currentUser = getCurrentUserFromStorage();
+  const isAuthenticated = currentUser && currentUser.userId;
+
   return (
     <Card className="max-w-2xl mx-auto border-0 shadow-xl bg-white/90 backdrop-blur-sm">
       <CardHeader className="bg-gradient-to-r from-palette-teal/5 to-palette-teal/10 border-b border-palette-teal/10">
@@ -109,6 +113,19 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         </div>
       </CardHeader>
       <CardContent className="p-8 space-y-8">
+        {/* Login Notice for Non-Authenticated Users */}
+        {!isAuthenticated && (
+          <div className="bg-gradient-to-r from-palette-orange/5 to-palette-orange/10 p-4 rounded-lg border border-palette-orange/20">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-palette-orange" />
+              <div>
+                <p className="text-sm font-medium text-palette-orange">Login Required</p>
+                <p className="text-sm text-gray-600">You need to be logged in to submit a review. You can still read reviews without logging in.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Rating Stars */}
         <div className="text-center">
           <Label className="text-lg font-medium text-gray-700 mb-6 block">Your Rating</Label>
@@ -123,6 +140,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                     : "text-gray-300 hover:text-gray-400"
                 }`}
                 type="button"
+                disabled={!isAuthenticated}
               >
                 ★
               </button>
@@ -142,25 +160,31 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           </Label>
           <Textarea
             id="comment"
-            placeholder="Share your experience with this travel package... Tell us about the highlights, any challenges, and what made your trip special."
+            placeholder={isAuthenticated ? "Share your experience with this travel package... Tell us about the highlights, any challenges, and what made your trip special." : "Please log in to write a review..."}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={5}
             className="border-2 border-gray-200 focus:border-palette-teal focus:ring-palette-teal/20 transition-all duration-200 resize-none text-base"
+            disabled={!isAuthenticated}
           />
         </div>
 
         {/* Submit Button */}
         <Button
           onClick={submitFeedback}
-          disabled={isSubmitting || rating === 0 || comment.trim() === ""}
-          className="w-full bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white font-semibold py-4 px-8 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg"
+          disabled={isSubmitting || rating === 0 || comment.trim() === "" || !isAuthenticated}
+          className="w-full bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white font-semibold py-4 px-8 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           size="lg"
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-3">
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               <span>Submitting...</span>
+            </div>
+          ) : !isAuthenticated ? (
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5" />
+              <span>Login Required</span>
             </div>
           ) : (
             <div className="flex items-center space-x-3">

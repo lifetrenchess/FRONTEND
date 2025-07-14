@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
+import { fetchAllPackages, TravelPackageDto, mockPackages } from '@/lib/packagesApi';
 import PackageCard from './PackageCard';
 
 interface PackageGridProps {
@@ -31,59 +31,8 @@ const PackageGrid = ({
       })
       .catch((err) => {
         console.error('PackageGrid: Error fetching packages:', err);
-        console.log('PackageGrid: Using fallback mock data');
-        // Use fallback mock data instead of showing error
-        const fallbackData = [
-          {
-            packageId: 1,
-            title: 'Goa Beach Paradise',
-            description: 'Experience the perfect beach vacation in Goa with pristine beaches and vibrant nightlife.',
-            duration: 5,
-            price: 15000,
-            destination: 'Goa',
-            includeService: 'Hotel, Meals, Transport, Guide',
-            highlights: 'Beach Activities, Water Sports, Nightlife',
-            active: true,
-            mainImage: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500',
-            flights: [],
-            hotels: [],
-            sightseeingList: []
-          },
-          {
-            packageId: 2,
-            title: 'Shimla Mountain Adventure',
-            description: 'Explore the beautiful mountains of Shimla with trekking and adventure activities.',
-            duration: 4,
-            price: 12000,
-            destination: 'Shimla',
-            includeService: 'Hotel, Meals, Transport, Guide',
-            highlights: 'Mountain Trekking, Adventure Sports, Scenic Views',
-            active: true,
-            mainImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500',
-            flights: [],
-            hotels: [],
-            sightseeingList: []
-          },
-          {
-            packageId: 3,
-            title: 'Kerala Backwaters Experience',
-            description: 'Discover the serene backwaters of Kerala with traditional houseboat stays.',
-            duration: 6,
-            price: 18000,
-            destination: 'Kerala',
-            includeService: 'Houseboat, Meals, Transport, Guide',
-            highlights: 'Houseboat Cruise, Ayurvedic Massage, Kathakali Performance',
-            active: true,
-            mainImage: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500',
-            flights: [],
-            hotels: [],
-            sightseeingList: []
-          }
-        ];
-        const limitedFallbackData = maxPackages ? fallbackData.slice(0, maxPackages) : fallbackData;
-        setPackages(limitedFallbackData);
+        setPackages(mockPackages);
         setLoading(false);
-        // Don't set error, just use fallback data
       });
   }, [maxPackages]);
 

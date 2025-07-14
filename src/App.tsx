@@ -20,6 +20,8 @@ import ReviewPage from '@/pages/ReviewPage';
 import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import BookingSummaryPage from '@/pages/BookingSummaryPage';
+import AboutPage from '@/pages/AboutPage';
+import ContactPage from '@/pages/ContactPage';
 
 const queryClient = new QueryClient();
 
@@ -46,8 +48,10 @@ const App = () => (
           
           {/* Public routes */}
           <Route path="/packages/:id" element={<PackageDetails />} />
-          <Route path="/about" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">About Us</h1><p>Coming soon...</p></div>} />
-          <Route path="/contact" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">Contact Us</h1><p>Coming soon...</p></div>} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/assistance" element={<AssistancePage />} />
+          <Route path="/reviews" element={<ReviewPage />} />
           <Route path="/booking-summary" element={<BookingSummaryPage />} />
           
           {/* Protected routes for all authenticated users */}
@@ -56,8 +60,6 @@ const App = () => (
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/insurance" element={<InsurancePage />} />
             <Route path="/confirmation" element={<ConfirmationPage />} />
-            <Route path="/assistance" element={<AssistancePage />} />
-            <Route path="/reviews" element={<ReviewPage />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

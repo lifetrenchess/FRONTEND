@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { getBookingsByUser, BookingResponse } from '@/lib/bookingApi';
 import { getCurrentUserFromStorage } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
+import { fetchPackageById } from '@/lib/packagesApi';
 
 interface UserData {
   fullName: string;
@@ -37,6 +38,10 @@ interface DisplayBooking extends BookingResponse {
   type?: string;
   totalTravelers?: number;
   totalAmount?: number;
+  includeService?: string;
+  flights?: string[];
+  hotels?: string[];
+  sightseeingList?: string[];
 }
 
 const BookingHistory = ({ user }: BookingHistoryProps) => {
@@ -66,14 +71,26 @@ const BookingHistory = ({ user }: BookingHistoryProps) => {
       const userBookings = await getBookingsByUser(currentUser.userId);
       
       // Transform bookings for display
-      const displayBookings: DisplayBooking[] = userBookings.map(booking => ({
-        ...booking,
-        destination: getDestinationFromPackageId(booking.packageId), // Placeholder - would need package service integration
-        packageTitle: getPackageTitleFromPackageId(booking.packageId), // Placeholder
-        image: getImageFromPackageId(booking.packageId), // Placeholder
-        type: 'Package Tour', // Default type
-        totalTravelers: booking.adults + booking.children + booking.infants,
-        totalAmount: calculateTotalAmount(booking) // Calculate total amount
+      const displayBookings: DisplayBooking[] = await Promise.all(userBookings.map(async (booking) => {
+        let packageData = null;
+        try {
+          packageData = await fetchPackageById(booking.packageId);
+        } catch (e) {
+          packageData = null;
+        }
+        return {
+          ...booking,
+          destination: packageData?.destination || 'Unknown Destination',
+          packageTitle: packageData?.title || 'Travel Package',
+          image: packageData?.mainImage || '',
+          includeService: packageData?.includeService || '',
+          flights: packageData?.flights || [],
+          hotels: packageData?.hotels || [],
+          sightseeingList: packageData?.sightseeingList || [],
+          type: 'Package Tour',
+          totalTravelers: booking.adults + booking.children + booking.infants,
+          totalAmount: calculateTotalAmount(booking)
+        };
       }));
 
       setBookings(displayBookings);

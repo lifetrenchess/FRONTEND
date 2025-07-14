@@ -123,27 +123,22 @@ const Header = () => {
   return (
     <header className="bg-palette-cream shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20"> {/* Increased height for larger logo */}
           <div className="flex items-center">
             <Link to="/">
-            <AventraLogo size={120} />
+            <span className="flex items-center space-x-3 drop-shadow-xl">
+              <AventraLogo size={170} />
+              <span className="text-4xl font-extrabold text-palette-teal drop-shadow-lg tracking-wide" style={{letterSpacing: '0.08em'}}>AVENTRA</span>
+            </span>
             </Link>
           </div>
           
-          <nav className="hidden md:flex space-x-8">
-            <Link to="/about" className="text-gray-700 hover:text-palette-teal transition-colors">
-              About
-            </Link>
-            <Link to="/contact" className="text-gray-700 hover:text-palette-teal transition-colors">
-              Contact
-            </Link>
-            <Link to="/assistance" className="text-gray-700 hover:text-palette-teal transition-colors">
-              Support
-            </Link>
-            <Link to="/reviews" className="text-gray-700 hover:text-palette-teal transition-colors">
-              Reviews
-            </Link>
-          </nav>
+         <nav className="hidden md:flex flex-1 justify-center space-x-12">
+           <Link to="/about" className="text-lg font-semibold text-gray-700 hover:text-palette-teal transition-colors px-2 py-1 rounded-md hover:bg-palette-teal/10">About</Link>
+           <Link to="/contact" className="text-lg font-semibold text-gray-700 hover:text-palette-teal transition-colors px-2 py-1 rounded-md hover:bg-palette-teal/10">Contact</Link>
+           <Link to="/assistance" className="text-lg font-semibold text-gray-700 hover:text-palette-teal transition-colors px-2 py-1 rounded-md hover:bg-palette-teal/10">Support</Link>
+           <Link to="/reviews" className="text-lg font-semibold text-gray-700 hover:text-palette-teal transition-colors px-2 py-1 rounded-md hover:bg-palette-teal/10">Reviews</Link>
+         </nav>
 
           <div className="flex items-center space-x-4">
             {currentUser ? (
@@ -171,25 +166,17 @@ const Header = () => {
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </Button>
+                <Button 
+                  className="bg-palette-orange hover:bg-palette-orange/90 text-white"
+                  onClick={() => navigate('/packages')}
+                >
+                  Book Now
+                </Button>
               </>
             ) : (
               // Non-authenticated user view
               <AuthButtons onAuthSuccess={handleAuthSuccess} />
             )}
-            
-            <Button 
-              className="bg-palette-orange hover:bg-palette-orange/90 text-white"
-              onClick={() => {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                  setShowLoginDialog(true);
-                } else {
-                  navigate('/packages');
-                }
-              }}
-            >
-              Book Now
-            </Button>
             <Button variant="ghost" size="sm" className="md:hidden">
               <Menu className="w-5 h-5" />
             </Button>

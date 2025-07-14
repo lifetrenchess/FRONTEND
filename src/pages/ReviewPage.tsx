@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +15,7 @@ const ReviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
+      <Header />
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-palette-orange via-palette-orange/90 to-palette-orange/80 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,10 @@ import {
   Calendar,
   Users,
   Thermometer,
-  Sun
+  Sun,
+  Plane,
+  Hotel,
+  Camera
 } from 'lucide-react';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
@@ -41,6 +44,7 @@ const seededTitles = [
 
 const AllPackages = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [packages, setPackages] = useState<TravelPackageDto[]>([]);
   const [filteredPackages, setFilteredPackages] = useState<TravelPackageDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +57,12 @@ const AllPackages = () => {
   const { handleBookNow, showLoginDialog, setShowLoginDialog, onAuthSuccess } = useBookingAuth();
 
   useEffect(() => {
+    // Read query params for destination and guests
+    const params = new URLSearchParams(location.search);
+    const dest = params.get('destination');
+    const guests = params.get('guests');
+    if (dest) setDestinationFilter(dest);
+    if (guests) localStorage.setItem('selectedGuests', guests);
     loadPackages();
   }, []);
 
@@ -367,6 +377,36 @@ const AllPackages = () => {
 
                       <p className="text-gray-700 mb-4 line-clamp-2">{pkg.description}</p>
 
+                      {/* Included Services Summary */}
+                      {pkg.includeService && (
+                        <div className="mb-2 p-2 bg-green-50 border border-green-100 rounded-lg flex items-center space-x-2">
+                          <Package className="w-4 h-4 text-green-600" />
+                          <span className="text-xs text-green-700 font-medium">Includes: {pkg.includeService}</span>
+                        </div>
+                      )}
+
+                      {/* Quick Preview of Flights, Hotels, Sightseeing */}
+                      <div className="flex items-center space-x-4 mb-4">
+                        {pkg.flights && pkg.flights.length > 0 && (
+                          <span className="flex items-center text-xs text-blue-700">
+                            <Plane className="w-4 h-4 mr-1" />
+                            {pkg.flights.length} flights
+                          </span>
+                        )}
+                        {pkg.hotels && pkg.hotels.length > 0 && (
+                          <span className="flex items-center text-xs text-orange-700">
+                            <Hotel className="w-4 h-4 mr-1" />
+                            {pkg.hotels.length} hotels
+                          </span>
+                        )}
+                        {pkg.sightseeingList && pkg.sightseeingList.length > 0 && (
+                          <span className="flex items-center text-xs text-purple-700">
+                            <Camera className="w-4 h-4 mr-1" />
+                            {pkg.sightseeingList.length} sightseeing
+                          </span>
+                        )}
+                      </div>
+
                       <div className="flex flex-wrap gap-2 mb-4">
                         {pkg.difficultyLevel && (
                           <Badge className={getDifficultyColor(pkg.difficultyLevel)}>
@@ -421,7 +461,10 @@ const AllPackages = () => {
                 <CardContent>
                   <Button
                     className="mt-4 w-full bg-palette-orange hover:bg-palette-orange/90"
-                    onClick={() => navigate(`/booking/${pkg.packageId}`)}
+                    onClick={() => {
+                      const guests = localStorage.getItem('selectedGuests') || '2';
+                      navigate(`/booking/${pkg.packageId}?guests=${guests}`);
+                    }}
                   >
                     Book Now
                   </Button>

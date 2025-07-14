@@ -259,24 +259,15 @@ const PackageDetails: React.FC = () => {
                     
                     {/* Enhanced Thumbnail Images */}
                     {images.length > 1 && (
-                      <div className="grid grid-cols-4 gap-3">
-                        {images.map((image, index) => (
-                          <div
-                            key={index}
-                            className={`relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                              selectedImage === image ? 'ring-2 ring-palette-teal ring-offset-2' : 'hover:ring-2 hover:ring-gray-300'
-                            }`}
-                            onClick={() => setSelectedImage(image)}
-                          >
-                            <img
-                              src={image}
-                              alt={`${pkg.title} ${index + 1}`}
-                              className="w-full h-20 object-cover transition-opacity duration-300"
-                            />
-                            <div className={`absolute inset-0 transition-opacity duration-300 ${
-                              selectedImage === image ? 'bg-palette-teal/20' : 'bg-black/0 hover:bg-black/10'
-                            }`}></div>
-                          </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                        {images.map((img, idx) => (
+                          <img
+                            key={idx}
+                            src={img}
+                            alt={`Gallery image ${idx + 1}`}
+                            className={`rounded-lg object-cover w-full h-32 cursor-pointer border-2 ${selectedImage === img ? 'border-palette-teal' : 'border-transparent'}`}
+                            onClick={() => setSelectedImage(img)}
+                          />
                         ))}
                       </div>
                     )}
@@ -297,10 +288,6 @@ const PackageDetails: React.FC = () => {
                     <TabsTrigger value="inclusions" className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-300">
                       <Package className="w-4 h-4 mr-2" />
                       Inclusions
-                    </TabsTrigger>
-                    <TabsTrigger value="details" className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-300">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Details
                     </TabsTrigger>
                     <TabsTrigger value="policies" className="data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-300">
                       <Shield className="w-4 h-4 mr-2" />
@@ -448,116 +435,44 @@ const PackageDetails: React.FC = () => {
                     )}
                   </TabsContent>
 
-                  <TabsContent value="details" className="space-y-6 mt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {pkg.maxGroupSize && (
-                        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                          <CardContent className="p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="p-2 bg-palette-teal/20 rounded-lg">
-                                <Users className="w-6 h-6 text-palette-teal" />
-                              </div>
-                              <div>
-                                <div className="font-semibold text-gray-800">Max Group Size</div>
-                                <div className="text-gray-600">{pkg.maxGroupSize} people</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {pkg.minAge && (
-                        <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                          <CardContent className="p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="p-2 bg-palette-orange/20 rounded-lg">
-                                <Calendar className="w-6 h-6 text-palette-orange" />
-                              </div>
-                              <div>
-                                <div className="font-semibold text-gray-800">Minimum Age</div>
-                                <div className="text-gray-600">{pkg.minAge} years</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {pkg.bestTimeToVisit && (
-                        <Card className="bg-gradient-to-r from-orange-50 to-red-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                          <CardContent className="p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="p-2 bg-orange-500/20 rounded-lg">
-                                <Sun className="w-6 h-6 text-orange-500" />
-                              </div>
-                              <div>
-                                <div className="font-semibold text-gray-800">Best Time to Visit</div>
-                                <div className="text-gray-600">{pkg.bestTimeToVisit}</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {pkg.weatherInfo && (
-                        <Card className="bg-gradient-to-r from-cyan-50 to-blue-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                          <CardContent className="p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="p-2 bg-cyan-500/20 rounded-lg">
-                                <Thermometer className="w-6 h-6 text-cyan-500" />
-                              </div>
-                              <div>
-                                <div className="font-semibold text-gray-800">Weather Information</div>
-                                <div className="text-gray-600">{pkg.weatherInfo}</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-
-                    {pkg.whatToBring && (
-                      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <CardHeader>
-                          <CardTitle className="flex items-center text-gray-800">
-                            <Luggage className="w-5 h-5 mr-2" />
-                            What to Bring
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-gray-700 whitespace-pre-line leading-relaxed">{pkg.whatToBring}</div>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </TabsContent>
-
                   <TabsContent value="policies" className="space-y-6 mt-6">
-                    {pkg.cancellationPolicy && (
-                      <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <CardHeader>
-                          <CardTitle className="flex items-center text-red-800">
-                            <Shield className="w-5 h-5 mr-2" />
-                            Cancellation Policy
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-gray-700 whitespace-pre-line leading-relaxed">{pkg.cancellationPolicy}</div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {pkg.termsAndConditions && (
-                      <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border-gray-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <CardHeader>
-                          <CardTitle className="flex items-center text-gray-800">
-                            <FileText className="w-5 h-5 mr-2" />
-                            Terms & Conditions
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-gray-700 whitespace-pre-line leading-relaxed">{pkg.termsAndConditions}</div>
-                        </CardContent>
-                      </Card>
-                    )}
+                    <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-red-800">
+                          <Shield className="w-5 h-5 mr-2" />
+                          Cancellation Policy
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-gray-700 whitespace-pre-line leading-relaxed">
+                          <strong>Flexible Cancellation:</strong>\n
+                          - Free cancellation up to 14 days before departure.\n
+                          - 50% refund for cancellations made 7-13 days before departure.\n
+                          - 25% refund for cancellations made 3-6 days before departure.\n
+                          - No refund for cancellations within 2 days of departure or for no-shows.\n
+                          - All cancellation requests must be made in writing (email or portal).\n
+                          - Refunds will be processed within 7 business days.\n                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border-gray-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <CardHeader>
+                        <CardTitle className="flex items-center text-gray-800">
+                          <FileText className="w-5 h-5 mr-2" />
+                          Terms & Conditions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-gray-700 whitespace-pre-line leading-relaxed">
+                          <strong>General Terms:</strong>\n
+                          - All bookings are subject to availability and confirmation.\n
+                          - Full payment must be made before the start of the trip.\n
+                          - Travel insurance is strongly recommended for all travelers.\n
+                          - The company is not responsible for delays, cancellations, or changes due to weather, natural disasters, or unforeseen circumstances.\n
+                          - Travelers are responsible for obtaining valid travel documents (passport, visa, etc.).\n
+                          - Any changes to the itinerary may incur additional charges.\n
+                          - By booking, you agree to our privacy policy and code of conduct.\n                        </div>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                 </Tabs>
               </CardContent>
@@ -612,32 +527,7 @@ const PackageDetails: React.FC = () => {
             </Card>
 
             {/* Enhanced Package Info */}
-            <Card className="bg-gradient-to-r from-gray-50 to-blue-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-              <CardHeader>
-                <CardTitle className="flex items-center text-gray-800">
-                  <Package className="w-5 h-5 mr-2" />
-                  Package Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Package ID:</span>
-                  <span className="font-medium text-palette-orange">#{pkg.packageId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <Badge className={`px-3 py-1 ${pkg.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                    {pkg.active ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-                {pkg.createdAt && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Created:</span>
-                    <span className="font-medium text-gray-800">{new Date(pkg.createdAt).toLocaleDateString()}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Remove the Card with CardHeader 'Package Information' and its CardContent (Package ID, Status, Created) */}
           </div>
         </div>
       </div>
