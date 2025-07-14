@@ -21,13 +21,16 @@ const Dashboard = () => {
       const userData = JSON.parse(user);
       if (userData.isAuthenticated) {
         setCurrentUser(userData);
+        console.log('User authenticated:', userData);
       } else {
         // User exists but not authenticated
         navigate('/');
+        return;
       }
     } else {
       // No user found, redirect to home
       navigate('/');
+      return;
     }
     setIsLoading(false);
   }, [navigate]);
