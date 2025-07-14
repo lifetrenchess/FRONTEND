@@ -48,6 +48,32 @@ const BookingSummaryPage = () => {
                   <div>
                     <div className="font-bold">{packageData.title}</div>
                     <div className="text-sm text-gray-600">{packageData.duration} days</div>
+                    {packageData.destination && (
+                      <div className="text-xs text-gray-500">Destination: {packageData.destination}</div>
+                    )}
+                    {packageData.includeService && (
+                      <div className="text-xs text-green-700 mt-1">Includes: {packageData.includeService}</div>
+                    )}
+                    <div className="flex items-center space-x-2 mt-1">
+                      {packageData.flights && packageData.flights.length > 0 && (
+                        <span className="flex items-center text-xs text-blue-700">
+                          <span role="img" aria-label="flight">✈️</span> {packageData.flights.length} flights
+                        </span>
+                      )}
+                      {packageData.hotels && packageData.hotels.length > 0 && (
+                        <span className="flex items-center text-xs text-orange-700">
+                          <span role="img" aria-label="hotel">🏨</span> {packageData.hotels.length} hotels
+                        </span>
+                      )}
+                      {packageData.sightseeingList && packageData.sightseeingList.length > 0 && (
+                        <span className="flex items-center text-xs text-purple-700">
+                          <span role="img" aria-label="sightseeing">📸</span> {packageData.sightseeingList.length} sightseeing
+                        </span>
+                      )}
+                    </div>
+                    {packageData.highlights && (
+                      <div className="text-xs text-gray-500 mt-1">Highlights: {packageData.highlights}</div>
+                    )}
                   </div>
                 </div>
               </div>

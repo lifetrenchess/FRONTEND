@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -147,6 +148,9 @@ const AssistancePage: React.FC = () => {
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const [adminResolutionMessage, setAdminResolutionMessage] = useState<string>("");
   const [isResolving, setIsResolving] = useState<boolean>(false);
+  const [adminPassword, setAdminPassword] = useState<string>("");
+  const [showPasswordInput, setShowPasswordInput] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<string>("");
 
   // Predefined FAQ data with categories and icons
   const faqs: FAQItem[] = [
@@ -212,44 +216,52 @@ const AssistancePage: React.FC = () => {
 
   const handleNewRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmittingNewRequest(true);
+    
+    if (!newRequestIssueDescription.trim()) {
+      toast.error("Please describe your issue");
+      return;
+    }
 
-    // Get current user from authentication
+    // Check if user is authenticated
     const currentUser = getCurrentUserFromStorage();
     if (!currentUser || !currentUser.userId) {
-      toast.error("Please log in to submit an assistance request.");
-      setIsSubmittingNewRequest(false);
+      toast.error("Please log in to submit a support request. You can still browse our FAQ section.");
       return;
     }
 
-    if (!newRequestIssueDescription) {
-      toast.error("Issue Description is required.");
-      setIsSubmittingNewRequest(false);
-      return;
-    }
+    setIsSubmittingNewRequest(true);
+
+    const assistanceRequest: AssistanceDTO = {
+      userId: currentUser.userId,
+      issueDescription: newRequestIssueDescription,
+    };
 
     try {
       const response = await fetch(getApiUrl('ASSISTANCE_SERVICE', ''), {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: currentUser.userId,
-          issueDescription: newRequestIssueDescription,
-        }),
+        body: JSON.stringify(assistanceRequest),
       });
 
       if (!response.ok) {
-        const errorData: { message?: string } = await response.json().catch(() => ({ message: "Unknown error occurred" }));
-        throw new Error(errorData.message || "Failed to submit request.");
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to submit request');
       }
 
-      const data: AssistanceDTO = await response.json();
-      toast.success(`Request submitted successfully! Request ID: ${data.requestId}`);
+      const result = await response.json();
+      toast.success("Support request submitted successfully! We'll get back to you soon.");
       setNewRequestIssueDescription("");
-    } catch (error: any) {
-      toast.error(`Failed to submit request: ${error.message}`);
+      
+      // Show the request ID to the user
+      if (result.requestId) {
+        toast.info(`Your request ID is: ${result.requestId}. Please save this for reference.`);
+      }
+    } catch (error: unknown) {
+      console.error('Error submitting assistance request:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit request. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmittingNewRequest(false);
     }
@@ -257,45 +269,90 @@ const AssistancePage: React.FC = () => {
 
   const handleViewRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsViewingRequest(true);
-
-    if (!viewRequestId) {
-      toast.error("Request ID is required.");
-      setIsViewingRequest(false);
+    
+    if (!viewRequestId.trim()) {
+      toast.error("Please enter a request ID");
       return;
     }
 
-    // Get current user from authentication
+    // Check if user is authenticated
     const currentUser = getCurrentUserFromStorage();
     if (!currentUser || !currentUser.userId) {
-      toast.error("Please log in to view assistance requests.");
-      setIsViewingRequest(false);
+      toast.error("Please log in to view your support requests.");
       return;
     }
+
+    setIsViewingRequest(true);
 
     try {
       const response = await fetch(getApiUrl('ASSISTANCE_SERVICE', `/${viewRequestId}`));
       
       if (!response.ok) {
-        throw new Error("Request not found or access denied.");
+        if (response.status === 404) {
+          throw new Error('Request not found. Please check your request ID.');
+        }
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to fetch request');
       }
 
-      const data: AssistanceDTO = await response.json();
-      
-      // Verify that the request belongs to the current user (unless in admin mode)
-      if (!isAdminMode && data.userId !== currentUser.userId) {
-        toast.error("You can only view your own assistance requests.");
-        setViewedRequest(null);
-        setIsViewingRequest(false);
-        return;
-      }
-      
-      setViewedRequest(data);
-    } catch (error: any) {
-      toast.error(`Failed to fetch request: ${error.message}`);
+      const request = await response.json();
+      setViewedRequest(request);
+      toast.success("Request details loaded successfully!");
+    } catch (error: unknown) {
+      console.error('Error fetching assistance request:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch request. Please try again.';
+      toast.error(errorMessage);
       setViewedRequest(null);
     } finally {
       setIsViewingRequest(false);
+    }
+  };
+
+  const handleAdminPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!adminPassword.trim()) {
+      setPasswordError("Please enter admin password");
+      return;
+    }
+
+    try {
+      // Use the existing admin credentials from database
+      const adminCredentials = {
+        userEmail: "lifetrenchess@gmail.com",
+        userPassword: adminPassword
+      };
+
+      const response = await fetch(getApiUrl('USER_SERVICE', '/login'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(adminCredentials),
+      });
+
+      if (response.ok) {
+        const adminData = await response.json();
+        
+        // Check if the logged-in user is actually an admin
+        if (adminData.userRole === 'ADMIN') {
+          setIsAdminMode(true);
+          setShowPasswordInput(false);
+          setPasswordError("");
+          setAdminPassword("");
+          toast.success("Admin access granted!");
+        } else {
+          setPasswordError("Access denied. Admin privileges required.");
+          setAdminPassword("");
+        }
+      } else {
+        setPasswordError("Invalid admin credentials");
+        setAdminPassword("");
+      }
+    } catch (error) {
+      console.error('Admin authentication error:', error);
+      setPasswordError("Authentication failed. Please try again.");
+      setAdminPassword("");
     }
   };
 
@@ -332,18 +389,19 @@ const AssistancePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
+      <Header />
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-palette-teal via-palette-teal/90 to-palette-teal/80 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-r from-palette-teal to-palette-orange text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6">
-              <MessageCircle className="w-8 h-8 text-white" />
+              <HelpCircle className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Customer <span className="text-palette-orange">Assistance</span>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Customer <span className="text-palette-cream">Support</span>
             </h1>
-            <p className="text-xl text-white/90 max-w-3xl mx-auto">
-              Get help with your bookings and travel queries. Our support team is here to assist you 24/7.
+            <p className="text-xl text-palette-cream/90 max-w-3xl mx-auto">
+              We're here to help! Find answers to common questions or submit a support request.
             </p>
           </div>
         </div>
@@ -495,17 +553,81 @@ const AssistancePage: React.FC = () => {
                   <div className="p-2 rounded-full bg-gradient-to-br from-gray-200 to-gray-300">
                     <Shield className="w-5 h-5 text-gray-600" />
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      id="adminMode"
-                      checked={isAdminMode}
-                      onChange={(e) => setIsAdminMode(e.target.checked)}
-                      className="w-5 h-5 text-palette-teal bg-gray-100 border-gray-300 rounded focus:ring-palette-teal focus:ring-2"
-                    />
-                    <Label htmlFor="adminMode" className="text-base font-medium text-gray-700">Admin Mode</Label>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id="adminMode"
+                        checked={isAdminMode}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setShowPasswordInput(true);
+                          } else {
+                            setIsAdminMode(false);
+                            setShowPasswordInput(false);
+                            setPasswordError("");
+                          }
+                        }}
+                        className="w-5 h-5 text-palette-teal bg-gray-100 border-gray-300 rounded focus:ring-palette-teal focus:ring-2"
+                      />
+                      <Label htmlFor="adminMode" className="text-base font-medium text-gray-700">Admin Mode</Label>
+                    </div>
+                    {isAdminMode && (
+                      <div className="mt-2 flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-600 font-medium">Admin access granted</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+                
+                {/* Admin Password Input */}
+                {showPasswordInput && !isAdminMode && (
+                  <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg">
+                    <form onSubmit={handleAdminPasswordSubmit} className="space-y-3">
+                      <div>
+                        <Label htmlFor="adminPassword" className="text-sm font-medium text-gray-700 mb-1 block">
+                          Admin Credentials Required
+                        </Label>
+                        <p className="text-xs text-gray-500 mb-2">Email: lifetrenchess@gmail.com</p>
+                        <Input
+                          id="adminPassword"
+                          type="password"
+                          value={adminPassword}
+                          onChange={(e) => setAdminPassword(e.target.value)}
+                          placeholder="Enter admin password (Ayush@1806)"
+                          className="border-2 border-gray-200 focus:border-red-500 focus:ring-red-500/20 transition-all duration-200"
+                          required
+                        />
+                        {passwordError && (
+                          <p className="text-sm text-red-600 mt-1">{passwordError}</p>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          type="submit"
+                          size="sm"
+                          className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
+                        >
+                          Verify Password
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setShowPasswordInput(false);
+                            setPasswordError("");
+                            setAdminPassword("");
+                          }}
+                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

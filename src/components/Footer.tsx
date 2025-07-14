@@ -2,6 +2,7 @@
 import React from 'react';
 import AventraLogo from './AventraLogo';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -26,13 +27,11 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-6 text-palette-orange">Quick Links</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Destinations</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Packages</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
-              <li><a href="/assistance" className="text-gray-400 hover:text-white transition-colors">Support</a></li>
-              <li><a href="/reviews" className="text-gray-400 hover:text-white transition-colors">Reviews</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+              <li><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/packages" className="text-gray-400 hover:text-white transition-colors">Packages</Link></li>
+              <li><Link to="/assistance" className="text-gray-400 hover:text-white transition-colors">Support</Link></li>
+              <li><Link to="/reviews" className="text-gray-400 hover:text-white transition-colors">Reviews</Link></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
             </ul>
           </div>
 
@@ -42,15 +41,15 @@ const Footer = () => {
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-palette-teal" />
-                <span className="text-gray-400">+1 (555) 123-4567</span>
+                <span className="text-gray-400">+91 8296755162</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-palette-teal" />
-                <span className="text-gray-400">hello@aventra.com</span>
+                <span className="text-gray-400">lifetrenchess@gmail.com</span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-5 h-5 text-palette-teal" />
-                <span className="text-gray-400">123 Travel Street, Adventure City</span>
+                <span className="text-gray-400">Aventra Travels, Siruseri, Chennai(560068) </span>
               </div>
             </div>
           </div>

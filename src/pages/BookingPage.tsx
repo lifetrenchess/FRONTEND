@@ -62,6 +62,7 @@ const mockPackage = {
 const BookingPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
   
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -148,6 +149,21 @@ const BookingPage = () => {
       });
     }
   }, [id]);
+
+  useEffect(() => {
+    // Read guests from query param or localStorage
+    const params = new URLSearchParams(location.search);
+    const guestsParam = params.get('guests');
+    let guests = 1;
+    if (guestsParam) {
+      guests = parseInt(guestsParam);
+      localStorage.setItem('selectedGuests', guestsParam);
+    } else {
+      const stored = localStorage.getItem('selectedGuests');
+      if (stored) guests = parseInt(stored);
+    }
+    setAdults(guests);
+  }, []);
 
   useEffect(() => {
     if (packageData) {

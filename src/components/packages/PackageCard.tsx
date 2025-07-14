@@ -137,6 +137,14 @@ const PackageCard = ({ pkg }: PackageCardProps) => {
           </div>
         )}
 
+        {/* Included Services Summary */}
+        {pkg.includeService && (
+          <div className="mb-4 p-2 bg-green-50 border border-green-100 rounded-lg flex items-center space-x-2">
+            <Package className="w-4 h-4 text-green-600" />
+            <span className="text-xs text-green-700 font-medium">Includes: {pkg.includeService}</span>
+          </div>
+        )}
+
           {/* Rating Stars */}
           <div className="flex items-center space-x-1 mb-4">
             {[...Array(5)].map((_, i) => (

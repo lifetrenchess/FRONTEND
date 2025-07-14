@@ -249,14 +249,10 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
             ) : packages.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {packages.map((pkg) => (
-                  <div 
-                    key={pkg.packageId} 
-                    className="group cursor-pointer hover:shadow-lg transition-all duration-300 rounded-lg p-2"
-                    onClick={() => navigate(`/packages/${pkg.packageId}`)}
-                  >
+                  <Card key={pkg.packageId} className="group cursor-pointer hover:shadow-lg transition-all duration-300 rounded-lg p-2" onClick={() => navigate(`/packages/${pkg.packageId}`)}>
                     <div className="relative overflow-hidden rounded-lg">
                       <img 
-                        src={pkg.image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'} 
+                        src={pkg.mainImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'} 
                         alt={pkg.title}
                         className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -266,33 +262,38 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
                         <p className="text-xs opacity-90">₹{pkg.price?.toLocaleString()}</p>
                       </div>
                     </div>
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-600 line-clamp-2">{pkg.description}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-palette-teal font-medium">{pkg.duration} days</span>
-                        <Button 
-                          size="sm" 
-                          className="text-xs bg-palette-teal hover:bg-palette-teal/90 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/packages/${pkg.packageId}`);
-                          }}
-                        >
-                          View Details
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          className="text-xs bg-palette-orange hover:bg-palette-orange/90 text-white ml-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBookNow(pkg.packageId);
-                          }}
-                        >
-                          Book Now
-                        </Button>
+                    <CardContent>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <MapPin className="w-4 h-4 text-palette-teal" />
+                        <span className="text-xs text-gray-700">{pkg.destination}</span>
+                        <Clock className="w-4 h-4 text-palette-orange ml-2" />
+                        <span className="text-xs text-gray-700">{pkg.duration} days</span>
                       </div>
-                    </div>
-                  </div>
+                      {pkg.includeService && (
+                        <div className="mt-2 p-1 bg-green-50 border border-green-100 rounded flex items-center space-x-1">
+                          <Package className="w-3 h-3 text-green-600" />
+                          <span className="text-xs text-green-700 font-medium">Includes: {pkg.includeService}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center space-x-2 mt-2">
+                        {pkg.flights && pkg.flights.length > 0 && (
+                          <span className="flex items-center text-xs text-blue-700">
+                            <Plane className="w-3 h-3 mr-1" />{pkg.flights.length} flights
+                          </span>
+                        )}
+                        {pkg.hotels && pkg.hotels.length > 0 && (
+                          <span className="flex items-center text-xs text-orange-700">
+                            <Award className="w-3 h-3 mr-1" />{pkg.hotels.length} hotels
+                          </span>
+                        )}
+                        {pkg.sightseeingList && pkg.sightseeingList.length > 0 && (
+                          <span className="flex items-center text-xs text-purple-700">
+                            <Star className="w-3 h-3 mr-1" />{pkg.sightseeingList.length} sightseeing
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             ) : (
