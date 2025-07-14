@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserDashboard from './UserDashboard';
+import { isAuthenticated, getStoredCurrentUser } from '@/lib/auth';
 
 interface UserData {
   fullName: string;
@@ -15,20 +16,14 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication on component mount
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      const userData = JSON.parse(user);
-      if (userData.isAuthenticated) {
-        setCurrentUser(userData);
-        console.log('User authenticated:', userData);
-      } else {
-        // User exists but not authenticated
-        navigate('/');
-        return;
-      }
+    if (!isAuthenticated()) {
+      navigate('/');
+      return;
+    }
+    const user = getStoredCurrentUser();
+    if (user && user.isAuthenticated && user.role === 'USER') {
+      setCurrentUser(user);
     } else {
-      // No user found, redirect to home
       navigate('/');
       return;
     }
