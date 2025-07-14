@@ -49,14 +49,14 @@ const ConfirmationPage = () => {
 
     const fetchBookingDetails = async () => {
       try {
-        const response = await fetch(getApiUrl('BOOKING_SERVICE', `/bookings/${bookingId}`));
+        const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}`));
         
         if (!response.ok) {
           throw new Error('Failed to fetch booking details');
         }
         
-        const data = await response.json();
-        setBookingDetails(data);
+        const bookingData = await response.json();
+        setBookingDetails(bookingData);
       } catch (error: any) {
         console.error('Error fetching booking details:', error);
         toast.error('Failed to load booking details');

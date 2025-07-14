@@ -43,7 +43,7 @@ const ReviewManagement = () => {
     setError('');
     
     try {
-      const response = await fetch(getApiUrl('REVIEW_SERVICE', '/reviews'));
+      const response = await fetch(getApiUrl('REVIEW_SERVICE', ''));
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -111,7 +111,7 @@ const ReviewManagement = () => {
     
     try {
       const response = await fetch(
-        getApiUrl('REVIEW_SERVICE', `/reviews/${selectedReview.reviewID}/response`),
+        getApiUrl('REVIEW_SERVICE', `/${selectedReview.reviewID}/response`),
         {
           method: 'POST',
           headers: {

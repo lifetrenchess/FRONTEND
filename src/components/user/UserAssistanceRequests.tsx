@@ -36,7 +36,7 @@ const UserAssistanceRequests: React.FC<UserAssistanceRequestsProps> = ({
     setError('');
     
     try {
-      const response = await fetch(getApiUrl('ASSISTANCE_SERVICE', `/assistance/user/${userId}`));
+      const response = await fetch(getApiUrl('ASSISTANCE_SERVICE', `/user/${userId}`));
       
       if (!response.ok) {
         throw new Error('Failed to load your assistance requests');

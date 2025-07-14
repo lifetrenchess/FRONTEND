@@ -47,10 +47,16 @@ import { getApiUrl } from '@/lib/apiConfig';
 const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId, totalAmount, userId } = (location.state || {}) as { 
+  const { bookingId, totalAmount, userId, insurance } = (location.state || {}) as { 
     bookingId: number; 
     totalAmount: number; 
     userId: number; 
+    insurance?: {
+      planId: number;
+      planName: string;
+      price: number;
+      insuranceId: number;
+    };
   };
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('CREDIT_DEBIT_CARD');
@@ -146,7 +152,8 @@ const PaymentPage = () => {
     }
 
     try {
-      const orderRequestPayload = {
+      // Create payment order
+      const paymentData = {
         amount: totalAmount,
         currency: 'INR',
         bookingId: bookingId,
@@ -154,92 +161,80 @@ const PaymentPage = () => {
         paymentMethod: selectedPaymentMethod,
       };
 
-      console.log("Requesting Razorpay order from backend:", orderRequestPayload);
-      const orderResponse = await fetch(getApiUrl('BOOKING_SERVICE', '/payments'), {
+      const orderResponse = await fetch(getApiUrl('PAYMENT_SERVICE', ''), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(orderRequestPayload),
+        body: JSON.stringify(paymentData),
       });
 
       if (!orderResponse.ok) {
-        throw new Error(`HTTP error! Status: ${orderResponse.status}`);
+        const errorData = await orderResponse.json();
+        throw new Error(errorData.message || 'Failed to create payment order');
       }
 
-      const orderData: RazorpayOrderResponse = await orderResponse.json();
-      const { orderId, currency, amount: razorpayAmount, keyId } = orderData;
-      
-      console.log("Received Razorpay order:", orderData);
+      const orderData = await orderResponse.json();
+      console.log('Payment order created:', orderData);
 
-      if (!keyId) {
-        throw new Error("Razorpay Key ID not received from backend.");
-      }
-
+      // Initialize Razorpay
       const options = {
-        key: keyId,
-        amount: (razorpayAmount * 100),
-        currency: currency,
+        key: 'rzp_test_51OqXqXqXqXqXq', // Replace with your actual Razorpay test key
+        amount: orderData.amount,
+        currency: orderData.currency,
         name: 'Aventra Travel',
-        description: `Payment for Booking ID: ${bookingId}`,
-        order_id: orderId,
+        description: `Payment for Booking #${bookingId}`,
+        order_id: orderData.id,
         handler: async function (response: any) {
-          console.log("Razorpay payment response:", response);
           try {
-            const verificationPayload = {
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              bookingId: bookingId,
-              userId: userId,
-            };
-            console.log("Sending payment verification to backend:", verificationPayload);
-            const verificationResult = await fetch(getApiUrl('BOOKING_SERVICE', '/payments/verifyPayment'), {
+            // Verify payment
+            const verificationResult = await fetch(getApiUrl('PAYMENT_SERVICE', '/verifyPayment'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(verificationPayload),
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
             });
 
             if (!verificationResult.ok) {
               throw new Error('Payment verification failed');
             }
 
-            console.log("Payment verification successful");
-            toast.success('Payment successful! Redirecting to confirmation page.');
-            navigate('/confirmation', { state: { bookingId: bookingId } });
+            const verificationData = await verificationResult.json();
+            console.log('Payment verified:', verificationData);
 
-          } catch (verifyError: any) {
-            console.error('Payment verification failed:', verifyError);
-            toast.error(`Payment verification failed: ${verifyError.message}. Please contact support.`);
-            setError('Payment verification failed.');
-          } finally {
-            setIsLoading(false);
+            // Navigate to confirmation page
+            navigate('/confirmation', {
+              state: {
+                bookingId: bookingId,
+                paymentId: response.razorpay_payment_id,
+                amount: totalAmount,
+              },
+            });
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast.error('Payment verification failed. Please contact support.');
           }
         },
         prefill: {
-          name: 'Traveler Name',
+          name: 'Traveler Name', // Use default values since userData is not available
           email: 'traveler@example.com',
           contact: '9999999999',
         },
-        notes: {
-          booking_id: bookingId,
-          user_id: userId,
-          travel_package_details: 'Package name/summary'
-        },
         theme: {
-          color: '#f97316'
-        }
+          color: '#1B9AAA',
+        },
       };
 
-      const razorpay = new window.Razorpay(options);
+      const razorpay = new (window as any).Razorpay(options);
       razorpay.open();
-
     } catch (error: any) {
       console.error('Payment error:', error);
       toast.error(`Payment failed: ${error.message}`);
-      setError(error.message);
     } finally {
       setIsLoading(false);
     }

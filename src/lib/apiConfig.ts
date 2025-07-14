@@ -14,6 +14,8 @@ export const API_CONFIG = {
         LOGIN: '/login',
         ME: '/me',
         PROFILE: '/profile',
+        ADMIN_CREATE: '/admin/create',
+        SEARCH: '/search',
       }
     },
     
@@ -34,8 +36,14 @@ export const API_CONFIG = {
       BASE_URL: 'http://localhost:9999/api/bookings',
       ENDPOINTS: {
         BOOKINGS: '',
-        PAYMENTS: '/payments',
-        PAYMENT_VERIFICATION: '/payments/verifyPayment',
+      }
+    },
+    
+    PAYMENT_SERVICE: {
+      BASE_URL: 'http://localhost:9999/api/payments',
+      ENDPOINTS: {
+        PAYMENTS: '',
+        VERIFY_PAYMENT: '/verifyPayment',
       }
     },
     

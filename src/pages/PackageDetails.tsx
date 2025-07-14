@@ -112,11 +112,11 @@ const PackageDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
         <div className="text-center">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#01E8B2] border-t-transparent mx-auto"></div>
-            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#964734] border-b-transparent animate-ping opacity-20"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-palette-teal border-t-transparent mx-auto"></div>
+            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-palette-orange border-b-transparent animate-ping opacity-20"></div>
           </div>
           <p className="mt-6 text-gray-600 text-lg font-medium animate-pulse">Loading your dream destination...</p>
         </div>
@@ -126,12 +126,12 @@ const PackageDetails: React.FC = () => {
 
   if (error || !pkg) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-pink-100">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
         <div className="text-center animate-bounce">
-          <Globe className="w-24 h-24 text-red-400 mx-auto mb-6" />
+          <Globe className="w-24 h-24 text-palette-orange mx-auto mb-6" />
           <h2 className="text-4xl font-bold mb-4 text-gray-800">Package Not Found</h2>
           <p className="text-gray-600 mb-8">The package you're looking for doesn't exist or has been removed.</p>
-          <Button onClick={() => navigate(-1)} className="bg-[#01E8B2] hover:bg-[#00d4a1] text-white px-8 py-3 text-lg">
+          <Button onClick={() => navigate(-1)} className="bg-palette-teal hover:bg-palette-teal/90 text-white px-8 py-3 text-lg">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Go Back
           </Button>
@@ -143,12 +143,12 @@ const PackageDetails: React.FC = () => {
   const images = getImages();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
       {/* Enhanced Header with Animation */}
       <div className={`bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-200 transition-all duration-1000 ${animateHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center text-[#01E8B2] hover:text-[#00d4a1] transition-colors duration-300 group">
+            <Link to="/" className="flex items-center text-palette-teal hover:text-palette-teal/80 transition-colors duration-300 group">
               <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
               <span className="font-medium">Back to Packages</span>
             </Link>
@@ -165,7 +165,7 @@ const PackageDetails: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleShare}
-                className="text-gray-400 hover:text-[#01E8B2] transition-colors duration-300"
+                className="text-gray-400 hover:text-palette-teal transition-colors duration-300"
               >
                 <Share2 className="w-5 h-5" />
               </Button>
@@ -180,9 +180,9 @@ const PackageDetails: React.FC = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Enhanced Package Header */}
             <Card className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1">
-              <div className="relative bg-gradient-to-r from-[#01E8B2]/10 to-[#964734]/10 p-8">
+              <div className="relative bg-gradient-to-r from-palette-teal/10 to-palette-orange/10 p-8">
                 <div className="absolute top-4 right-4">
-                  <Badge className="bg-gradient-to-r from-[#01E8B2] to-[#964734] text-white px-4 py-2 animate-pulse">
+                  <Badge className="bg-gradient-to-r from-palette-teal to-palette-orange text-white px-4 py-2 animate-pulse">
                     <Zap className="w-4 h-4 mr-2" />
                     Featured Package
                   </Badge>
@@ -195,17 +195,17 @@ const PackageDetails: React.FC = () => {
                       </h1>
                       <div className="flex items-center space-x-6 text-gray-600 mb-4">
                         <div className="flex items-center space-x-2 bg-white/70 px-3 py-2 rounded-full">
-                          <MapPin className="w-4 h-4 text-[#01E8B2]" />
+                          <MapPin className="w-4 h-4 text-palette-teal" />
                           <span className="font-medium">{pkg.destination}</span>
                         </div>
                         <div className="flex items-center space-x-2 bg-white/70 px-3 py-2 rounded-full">
-                          <Clock className="w-4 h-4 text-[#964734]" />
+                          <Clock className="w-4 h-4 text-palette-orange" />
                           <span className="font-medium">{pkg.duration} days</span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-4xl font-bold bg-gradient-to-r from-[#964734] to-[#01E8B2] bg-clip-text text-transparent">
+                      <div className="text-4xl font-bold bg-gradient-to-r from-palette-orange to-palette-teal bg-clip-text text-transparent">
                         ₹{pkg.price.toLocaleString()}
                       </div>
                       <div className="text-gray-500 text-sm">per person</div>
@@ -238,7 +238,7 @@ const PackageDetails: React.FC = () => {
               <Card className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500">
                 <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50">
                   <CardTitle className="flex items-center text-gray-800">
-                    <Camera className="w-6 h-6 mr-3 text-[#01E8B2]" />
+                    <Camera className="w-6 h-6 mr-3 text-palette-teal" />
                     Photo Gallery
                   </CardTitle>
                 </CardHeader>
@@ -264,7 +264,7 @@ const PackageDetails: React.FC = () => {
                           <div
                             key={index}
                             className={`relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 transform hover:scale-105 ${
-                              selectedImage === image ? 'ring-2 ring-[#01E8B2] ring-offset-2' : 'hover:ring-2 hover:ring-gray-300'
+                              selectedImage === image ? 'ring-2 ring-palette-teal ring-offset-2' : 'hover:ring-2 hover:ring-gray-300'
                             }`}
                             onClick={() => setSelectedImage(image)}
                           >
@@ -274,7 +274,7 @@ const PackageDetails: React.FC = () => {
                               className="w-full h-20 object-cover transition-opacity duration-300"
                             />
                             <div className={`absolute inset-0 transition-opacity duration-300 ${
-                              selectedImage === image ? 'bg-[#01E8B2]/20' : 'bg-black/0 hover:bg-black/10'
+                              selectedImage === image ? 'bg-palette-teal/20' : 'bg-black/0 hover:bg-black/10'
                             }`}></div>
                           </div>
                         ))}
@@ -313,12 +313,12 @@ const PackageDetails: React.FC = () => {
                     {pkg.flights && pkg.flights.length > 0 && (
                       <div className="animate-fade-in">
                         <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-800">
-                          <Plane className="w-5 h-5 mr-2 text-[#01E8B2] animate-pulse" />
+                          <Plane className="w-5 h-5 mr-2 text-palette-teal animate-pulse" />
                           Flight Details
                         </h3>
                         <div className="space-y-3">
                           {pkg.flights.map((flight, index) => (
-                            <Card key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-[#01E8B2] hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                            <Card key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-palette-teal hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                               <CardContent className="p-4">
                                 <div className="flex justify-between items-center">
                                   <div>
@@ -328,7 +328,7 @@ const PackageDetails: React.FC = () => {
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-medium text-[#964734]">
+                                    <div className="text-sm font-medium text-palette-orange">
                                       {flight.departureTime} - {flight.arrivalTime}
                                     </div>
                                   </div>
@@ -344,12 +344,12 @@ const PackageDetails: React.FC = () => {
                     {pkg.hotels && pkg.hotels.length > 0 && (
                       <div className="animate-fade-in">
                         <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-800">
-                          <Hotel className="w-5 h-5 mr-2 text-[#964734] animate-pulse" />
+                          <Hotel className="w-5 h-5 mr-2 text-palette-orange animate-pulse" />
                           Accommodation
                         </h3>
                         <div className="space-y-3">
                           {pkg.hotels.map((hotel, index) => (
-                            <Card key={index} className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-[#964734] hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                            <Card key={index} className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-palette-orange hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                               <CardContent className="p-4">
                                 <div className="flex justify-between items-start">
                                   <div>
@@ -361,7 +361,7 @@ const PackageDetails: React.FC = () => {
                                       ))}
                                     </div>
                                   </div>
-                                  <div className="text-right text-sm text-[#964734]">
+                                  <div className="text-right text-sm text-palette-orange">
                                     <div>Check-in: {hotel.checkInTime}</div>
                                     <div>Check-out: {hotel.checkOutTime}</div>
                                   </div>
@@ -432,10 +432,10 @@ const PackageDetails: React.FC = () => {
                     </div>
 
                     {pkg.highlights && (
-                      <Card className="bg-gradient-to-r from-[#01E8B2]/10 to-[#964734]/10 border-[#01E8B2]/20 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <Card className="bg-gradient-to-r from-palette-teal/10 to-palette-orange/10 border-palette-teal/20 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                         <CardHeader>
                           <CardTitle className="flex items-center text-gray-800">
-                            <Star className="w-5 h-5 mr-2 text-[#01E8B2]" />
+                            <Star className="w-5 h-5 mr-2 text-palette-teal" />
                             Highlights
                           </CardTitle>
                         </CardHeader>
@@ -454,8 +454,8 @@ const PackageDetails: React.FC = () => {
                         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                           <CardContent className="p-4">
                             <div className="flex items-center space-x-3">
-                              <div className="p-2 bg-[#01E8B2]/20 rounded-lg">
-                                <Users className="w-6 h-6 text-[#01E8B2]" />
+                              <div className="p-2 bg-palette-teal/20 rounded-lg">
+                                <Users className="w-6 h-6 text-palette-teal" />
                               </div>
                               <div>
                                 <div className="font-semibold text-gray-800">Max Group Size</div>
@@ -470,8 +470,8 @@ const PackageDetails: React.FC = () => {
                         <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                           <CardContent className="p-4">
                             <div className="flex items-center space-x-3">
-                              <div className="p-2 bg-[#964734]/20 rounded-lg">
-                                <Calendar className="w-6 h-6 text-[#964734]" />
+                              <div className="p-2 bg-palette-orange/20 rounded-lg">
+                                <Calendar className="w-6 h-6 text-palette-orange" />
                               </div>
                               <div>
                                 <div className="font-semibold text-gray-800">Minimum Age</div>
@@ -568,10 +568,10 @@ const PackageDetails: React.FC = () => {
           <div className="space-y-6">
             {/* Enhanced Booking Card */}
             <Card className="sticky top-6 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1">
-              <div className="bg-gradient-to-br from-[#01E8B2] to-[#964734] p-1">
+              <div className="bg-gradient-to-br from-palette-teal to-palette-orange p-1">
                 <CardContent className="p-6 bg-white">
                   <div className="text-center mb-6">
-                    <div className="text-4xl font-bold bg-gradient-to-r from-[#964734] to-[#01E8B2] bg-clip-text text-transparent mb-2">
+                    <div className="text-4xl font-bold bg-gradient-to-r from-palette-orange to-palette-teal bg-clip-text text-transparent mb-2">
                       ₹{pkg.price.toLocaleString()}
                     </div>
                     <div className="text-gray-500">per person</div>
@@ -595,7 +595,7 @@ const PackageDetails: React.FC = () => {
                   </div>
 
                   <Button 
-                    className="w-full bg-gradient-to-r from-[#01E8B2] to-[#00d4a1] hover:from-[#00d4a1] hover:to-[#01E8B2] text-white py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="w-full bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     onClick={() => handleBookNow(pkg.packageId)}
                   >
                     <Zap className="w-5 h-5 mr-2" />
@@ -622,7 +622,7 @@ const PackageDetails: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Package ID:</span>
-                  <span className="font-medium text-[#964734]">#{pkg.packageId}</span>
+                  <span className="font-medium text-palette-orange">#{pkg.packageId}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status:</span>
@@ -649,16 +649,6 @@ const PackageDetails: React.FC = () => {
         </LoginDialog>
       )}
 
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

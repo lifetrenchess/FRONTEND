@@ -25,6 +25,19 @@ import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
 import LoginDialog from '@/components/auth/LoginDialog';
 
+// Add seeded titles for frontend-only badge logic
+const seededTitles = [
+  "Paris Adventure",
+  "Tokyo Discovery",
+  "New York City Explorer",
+  "Bali Paradise",
+  "London Royal Tour",
+  "Santorini Dream",
+  "Dubai Luxury",
+  "Machu Picchu Trek",
+  "Sydney Coastal"
+];
+
 const AllPackages = () => {
   const navigate = useNavigate();
   const [packages, setPackages] = useState<TravelPackageDto[]>([]);
@@ -141,13 +154,20 @@ const AllPackages = () => {
     handleBookNow(packageId);
   };
 
+  // Helper to check if user is admin/agent (replace with your actual auth logic)
+  const getCurrentUserRole = () => {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    return user?.role || 'USER';
+  };
+  const userRole = getCurrentUserRole();
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#01E8B2] border-t-transparent mx-auto"></div>
-            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#964734] border-b-transparent animate-ping opacity-20"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-palette-teal border-t-transparent mx-auto"></div>
+            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-palette-orange border-b-transparent animate-ping opacity-20"></div>
           </div>
           <p className="mt-6 text-gray-600 text-lg font-medium animate-pulse">Loading amazing packages...</p>
         </div>
@@ -162,7 +182,7 @@ const AllPackages = () => {
           <Package className="w-24 h-24 text-red-400 mx-auto mb-6" />
           <h2 className="text-2xl font-bold mb-4 text-gray-800">Failed to Load Packages</h2>
           <p className="text-gray-600 mb-8">{error}</p>
-          <Button onClick={loadPackages} className="bg-[#01E8B2] hover:bg-[#00d4a1] text-white">
+          <Button onClick={loadPackages} className="bg-palette-teal hover:bg-palette-teal/90 text-white">
             Try Again
           </Button>
         </div>
@@ -171,7 +191,7 @@ const AllPackages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -180,7 +200,7 @@ const AllPackages = () => {
               <Button 
                 variant="ghost" 
                 onClick={() => navigate('/')}
-                className="flex items-center text-[#01E8B2] hover:text-[#00d4a1] transition-colors duration-300"
+                className="flex items-center text-palette-teal hover:text-palette-teal/80 transition-colors duration-300"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Back to Home
@@ -192,7 +212,7 @@ const AllPackages = () => {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Found</p>
-              <p className="text-2xl font-bold text-[#964734]">{filteredPackages.length} packages</p>
+              <p className="text-2xl font-bold text-palette-orange">{filteredPackages.length} packages</p>
             </div>
           </div>
         </div>
@@ -289,7 +309,7 @@ const AllPackages = () => {
                 setPriceFilter('');
                 setTypeFilter('');
               }}
-              className="bg-[#01E8B2] hover:bg-[#00d4a1] text-white"
+                              className="bg-palette-teal hover:bg-palette-teal/90 text-white"
             >
               Clear All Filters
             </Button>
@@ -298,122 +318,106 @@ const AllPackages = () => {
           <div className="space-y-6">
             {filteredPackages.map((pkg) => (
               <Card key={pkg.packageId} className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div className="flex flex-col lg:flex-row">
-                  {/* Package Image */}
-                  <div className="lg:w-1/3 relative">
-                    <img 
-                      src={pkg.mainImage || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500'} 
-                      alt={pkg.title}
-                      className="w-full h-64 lg:h-full object-cover"
-                    />
-                    <div className="absolute top-4 right-4 flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleLike(pkg.packageId)}
-                        className={`w-8 h-8 p-0 rounded-full backdrop-blur-sm ${
-                          likedPackages.has(pkg.packageId) 
-                            ? 'bg-red-500 text-white' 
-                            : 'bg-white/80 text-gray-700 hover:bg-red-500 hover:text-white'
-                        } transition-all duration-300`}
-                      >
-                        <Heart className={`w-4 h-4 ${likedPackages.has(pkg.packageId) ? 'fill-current' : ''}`} />
-                      </Button>
-                    </div>
-                    {pkg.packageType && (
-                      <div className="absolute bottom-4 left-4">
-                        <Badge className={`${getPackageTypeColor(pkg.packageType)}`}>
-                          <Package className="w-3 h-3 mr-1" />
-                          {pkg.packageType}
-                        </Badge>
-                      </div>
+                <CardHeader>
+                  <div className="flex items-center">
+                    <CardTitle>{pkg.title}</CardTitle>
+                    {/* Show badges only for admin/agent */}
+                    {(userRole === 'ADMIN' || userRole === 'AGENT') && (
+                      seededTitles.includes(pkg.title) ? (
+                        <Badge className="ml-2 bg-blue-100 text-blue-700">Seeded</Badge>
+                      ) : (
+                        <Badge className="ml-2 bg-green-100 text-green-700">Agent-added</Badge>
+                      )
                     )}
                   </div>
-
-                  {/* Package Details */}
-                  <div className="lg:w-2/3 p-6">
-                    <div className="flex flex-col h-full">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2">{pkg.title}</h3>
-                            <div className="flex items-center space-x-4 text-gray-600 mb-3">
-                              <div className="flex items-center space-x-1">
-                                <MapPin className="w-4 h-4 text-[#01E8B2]" />
-                                <span>{pkg.destination}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Clock className="w-4 h-4 text-[#964734]" />
-                                <span>{pkg.duration} days</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Users className="w-4 h-4 text-blue-500" />
-                                <span>{pkg.maxGroupSize || 'Unlimited'} people</span>
-                              </div>
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-4 text-gray-600 mb-3">
+                            <div className="flex items-center space-x-1">
+                              <MapPin className="w-4 h-4 text-palette-teal" />
+                              <span>{pkg.destination}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="w-4 h-4 text-palette-orange" />
+                              <span>{pkg.duration} days</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Users className="w-4 h-4 text-blue-500" />
+                              <span>{pkg.maxGroupSize || 'Unlimited'} people</span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-3xl font-bold bg-gradient-to-r from-[#964734] to-[#01E8B2] bg-clip-text text-transparent">
-                              ₹{pkg.price.toLocaleString()}
-                            </div>
-                            <div className="text-gray-500 text-sm">per person</div>
-                          </div>
                         </div>
-
-                        <p className="text-gray-700 mb-4 line-clamp-2">{pkg.description}</p>
-
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {pkg.difficultyLevel && (
-                            <Badge className={getDifficultyColor(pkg.difficultyLevel)}>
-                              {pkg.difficultyLevel}
-                            </Badge>
-                          )}
-                          {pkg.bestTimeToVisit && (
-                            <Badge className="bg-orange-100 text-orange-800">
-                              <Sun className="w-3 h-3 mr-1" />
-                              Best: {pkg.bestTimeToVisit}
-                            </Badge>
-                          )}
-                          {pkg.weatherInfo && (
-                            <Badge className="bg-cyan-100 text-cyan-800">
-                              <Thermometer className="w-3 h-3 mr-1" />
-                              {pkg.weatherInfo.split(' ').slice(0, 3).join(' ')}...
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="flex items-center space-x-1 mb-4">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-4 h-4 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                            />
-                          ))}
-                          <span className="text-sm text-gray-600 ml-2">(4.8)</span>
+                        <div className="text-right">
+                                          <div className="text-3xl font-bold bg-gradient-to-r from-palette-orange to-palette-teal bg-clip-text text-transparent">
+                  ₹{pkg.price.toLocaleString()}
+                </div>
+                          <div className="text-gray-500 text-sm">per person</div>
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center space-x-3 pt-4 border-t">
-                        <Button 
-                          variant="outline"
-                          onClick={() => handleViewDetails(pkg.packageId)}
-                          className="flex-1"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </Button>
-                        <Button 
-                          onClick={() => handleBookNowClick(pkg.packageId)}
-                          className="flex-1 bg-gradient-to-r from-[#01E8B2] to-[#00d4a1] hover:from-[#00d4a1] hover:to-[#01E8B2] text-white"
-                        >
-                          <Zap className="w-4 h-4 mr-2" />
-                          Book Now
-                        </Button>
+                      <p className="text-gray-700 mb-4 line-clamp-2">{pkg.description}</p>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {pkg.difficultyLevel && (
+                          <Badge className={getDifficultyColor(pkg.difficultyLevel)}>
+                            {pkg.difficultyLevel}
+                          </Badge>
+                        )}
+                        {pkg.bestTimeToVisit && (
+                          <Badge className="bg-orange-100 text-orange-800">
+                            <Sun className="w-3 h-3 mr-1" />
+                            Best: {pkg.bestTimeToVisit}
+                          </Badge>
+                        )}
+                        {pkg.weatherInfo && (
+                          <Badge className="bg-cyan-100 text-cyan-800">
+                            <Thermometer className="w-3 h-3 mr-1" />
+                            {pkg.weatherInfo.split(' ').slice(0, 3).join(' ')}...
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="flex items-center space-x-1 mb-4">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`w-4 h-4 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                          />
+                        ))}
+                        <span className="text-sm text-gray-600 ml-2">(4.8)</span>
                       </div>
                     </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-3 pt-4 border-t">
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleViewDetails(pkg.packageId)}
+                        className="flex-1"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button 
+                        onClick={() => handleBookNowClick(pkg.packageId)}
+                        className="flex-1 bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white"
+                      >
+                        <Zap className="w-4 h-4 mr-2" />
+                        Book Now
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    className="mt-4 w-full bg-palette-orange hover:bg-palette-orange/90"
+                    onClick={() => navigate(`/booking/${pkg.packageId}`)}
+                  >
+                    Book Now
+                  </Button>
+                </CardContent>
               </Card>
             ))}
           </div>

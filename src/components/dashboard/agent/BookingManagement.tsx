@@ -60,13 +60,13 @@ const BookingManagement = () => {
     setError('');
     
     try {
-      const response = await fetch(getApiUrl('BOOKING_SERVICE', '/bookings'));
+      const response = await fetch(getApiUrl('BOOKING_SERVICE', ''));
       
       if (!response.ok) {
         throw new Error('Failed to load bookings');
       }
       
-      const data: Booking[] = await response.json();
+      const data = await response.json();
       setBookings(data);
       setFilteredBookings(data);
     } catch (err: any) {
@@ -113,7 +113,7 @@ const BookingManagement = () => {
   // Update booking status
   const updateBookingStatus = async (bookingId: number, newStatus: string) => {
     try {
-      const response = await fetch(getApiUrl('BOOKING_SERVICE', `/bookings/${bookingId}/status`), {
+      const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}/status`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

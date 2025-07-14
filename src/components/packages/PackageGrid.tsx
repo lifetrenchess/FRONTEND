@@ -90,7 +90,7 @@ const PackageGrid = ({
   if (loading) {
     return (
       <div className="text-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#01E8B2] mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palette-teal mx-auto"></div>
         <p className="mt-4 text-gray-600">Loading packages...</p>
       </div>
     );
@@ -103,7 +103,7 @@ const PackageGrid = ({
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             {title.split(' ').map((word, index) => 
               index === 1 ? (
-                <span key={index} className="text-[#01E8B2]">{word}</span>
+                <span key={index} className="text-palette-teal">{word}</span>
               ) : (
                 <span key={index}>{word}</span>
               )
@@ -130,7 +130,7 @@ const PackageGrid = ({
             {/* View All Packages Button */}
             <div className="text-center mt-12">
               <Link to="/packages">
-                <Button className="bg-gradient-to-r from-[#01E8B2] to-[#00d4a1] hover:from-[#00d4a1] hover:to-[#01E8B2] text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <Button className="bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                   View All Packages
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>

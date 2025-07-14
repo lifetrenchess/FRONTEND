@@ -1,27 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Shield, CheckCircle, ArrowLeft, Star, Users, Plane, Heart } from 'lucide-react';
+import { Shield, CheckCircle, ArrowLeft, Star, Users, Plane, Heart, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
-
-interface InsurancePlan {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  features: string[];
-  coverage: {
-    medical: string;
-    trip: string;
-    baggage: string;
-    cancellation: string;
-  };
-  recommended?: boolean;
-}
+import { fetchInsurancePackages, selectInsuranceForBooking, InsurancePlan } from '@/lib/insuranceApi';
 
 const InsurancePage = () => {
   const navigate = useNavigate();
@@ -32,72 +18,31 @@ const InsurancePage = () => {
     userId: number; 
   };
 
-  const [selectedPlan, setSelectedPlan] = useState<string>('');
+  const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const insurancePlans: InsurancePlan[] = [
-    {
-      id: 'basic',
-      name: 'Basic Coverage',
-      description: 'Essential protection for your trip',
-      price: 25,
-      features: [
-        'Medical expenses up to ₹5,00,000',
-        'Trip cancellation coverage',
-        'Lost baggage protection',
-        '24/7 emergency assistance'
-      ],
-      coverage: {
-        medical: '₹5,00,000',
-        trip: '₹2,00,000',
-        baggage: '₹50,000',
-        cancellation: '₹1,00,000'
+  // Fetch insurance packages from backend on component mount
+  useEffect(() => {
+    const loadInsurancePackages = async () => {
+      try {
+        setLoading(true);
+        const packages = await fetchInsurancePackages();
+        setInsurancePlans(packages);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load insurance packages:', err);
+        setError('Failed to load insurance packages. Please try again.');
+        toast.error('Failed to load insurance packages');
+      } finally {
+        setLoading(false);
       }
-    },
-    {
-      id: 'comprehensive',
-      name: 'Comprehensive Coverage',
-      description: 'Complete protection for peace of mind',
-      price: 45,
-      features: [
-        'Medical expenses up to ₹10,00,000',
-        'Trip cancellation & interruption',
-        'Lost baggage & personal effects',
-        'Flight delay compensation',
-        'Emergency medical evacuation',
-        '24/7 worldwide assistance'
-      ],
-      coverage: {
-        medical: '₹10,00,000',
-        trip: '₹5,00,000',
-        baggage: '₹1,00,000',
-        cancellation: '₹2,50,000'
-      },
-      recommended: true
-    },
-    {
-      id: 'premium',
-      name: 'Premium Coverage',
-      description: 'Ultimate protection with luxury benefits',
-      price: 75,
-      features: [
-        'Medical expenses up to ₹25,00,000',
-        'Trip cancellation & interruption',
-        'Lost baggage & personal effects',
-        'Flight delay & missed connection',
-        'Emergency medical evacuation',
-        'Pre-existing condition coverage',
-        'Adventure sports coverage',
-        '24/7 concierge service'
-      ],
-      coverage: {
-        medical: '₹25,00,000',
-        trip: '₹10,00,000',
-        baggage: '₹2,50,000',
-        cancellation: '₹5,00,000'
-      }
-    }
-  ];
+    };
+
+    loadInsurancePackages();
+  }, []);
 
   const formatIndianRupees = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -108,7 +53,7 @@ const InsurancePage = () => {
     }).format(amount);
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = async () => {
     if (!selectedPlan) {
       toast.error('Please select an insurance plan');
       return;
@@ -119,25 +64,40 @@ const InsurancePage = () => {
       return;
     }
 
-    const selectedPlanData = insurancePlans.find(plan => plan.id === selectedPlan);
+    const selectedPlanData = insurancePlans.find(plan => plan.insuranceId === selectedPlan);
     if (!selectedPlanData) {
       toast.error('Invalid plan selected');
       return;
     }
 
-    // Navigate to payment with insurance details
-    navigate('/payment', {
-      state: {
-        bookingId: bookingId,
-        totalAmount: totalAmount + selectedPlanData.price,
-        userId: userId,
-        insurance: {
-          planId: selectedPlan,
-          planName: selectedPlanData.name,
-          price: selectedPlanData.price
+    try {
+      // Create insurance selection in backend
+      const insuranceSelection = await selectInsuranceForBooking(
+        selectedPlan,
+        userId,
+        bookingId
+      );
+
+      toast.success('Insurance plan selected successfully!');
+
+      // Navigate to payment with insurance details
+      navigate('/payment', {
+        state: {
+          bookingId: bookingId,
+          totalAmount: totalAmount + selectedPlanData.price,
+          userId: userId,
+          insurance: {
+            planId: selectedPlan,
+            planName: selectedPlanData.packageType,
+            price: selectedPlanData.price,
+            insuranceId: insuranceSelection.insuranceId
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Failed to select insurance:', error);
+      toast.error('Failed to select insurance plan. Please try again.');
+    }
   };
 
   const handleSkipInsurance = () => {
@@ -150,15 +110,41 @@ const InsurancePage = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-palette-teal mx-auto mb-4" />
+          <p className="text-gray-600">Loading insurance packages...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-12 h-12 text-palette-orange mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Failed to Load Insurance</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} className="bg-palette-teal hover:bg-palette-teal/90">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <Button 
             variant="ghost" 
             onClick={() => navigate(-1)}
-            className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
+            className="mb-4 flex items-center text-palette-teal hover:text-palette-teal/80"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Booking
@@ -174,27 +160,28 @@ const InsurancePage = () => {
             <div className="space-y-6">
               {insurancePlans.map((plan) => (
                 <Card 
-                  key={plan.id} 
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                    selectedPlan === plan.id 
+                  key={plan.insuranceId} 
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg backdrop-blur-md bg-white/30 border border-white/40 shadow-xl ${
+                    selectedPlan === plan.insuranceId 
                       ? 'ring-2 ring-palette-teal border-palette-teal' 
                       : 'hover:border-gray-300'
-                  } ${plan.recommended ? 'border-2 border-palette-orange' : ''}`}
-                  onClick={() => setSelectedPlan(plan.id)}
+                  } ${plan.packageType === 'Medium' ? 'border-2 border-palette-orange' : ''}`}
+                  style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)', borderRadius: '1.25rem' }}
+                  onClick={() => setSelectedPlan(plan.insuranceId)}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="flex items-center space-x-2">
                           <Shield className="w-5 h-5 text-palette-teal" />
-                          <span>{plan.name}</span>
-                          {plan.recommended && (
+                          <span>{plan.packageType} Coverage</span>
+                          {plan.packageType === 'Medium' && (
                             <span className="bg-palette-orange text-white text-xs px-2 py-1 rounded-full">
                               Recommended
                             </span>
                           )}
                         </CardTitle>
-                        <p className="text-gray-600 mt-1">{plan.description}</p>
+                        <p className="text-gray-600 mt-1">{plan.coverageDetails}</p>
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-palette-teal">
@@ -205,40 +192,18 @@ const InsurancePage = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Features */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-3">What's Included</h4>
-                        <ul className="space-y-2">
-                          {plan.features.map((feature, index) => (
-                            <li key={index} className="flex items-start space-x-2">
-                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm text-gray-700">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
+                    <div className="space-y-4">
+                      {/* Provider Info */}
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Shield className="w-4 h-4" />
+                        <span>Provider: {plan.provider}</span>
                       </div>
-
-                      {/* Coverage Details */}
+                      
+                      {/* Coverage Summary */}
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Coverage Limits</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Medical Expenses</span>
-                            <span className="text-sm font-medium">{plan.coverage.medical}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Trip Cancellation</span>
-                            <span className="text-sm font-medium">{plan.coverage.cancellation}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Baggage Loss</span>
-                            <span className="text-sm font-medium">{plan.coverage.baggage}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Trip Interruption</span>
-                            <span className="text-sm font-medium">{plan.coverage.trip}</span>
-                          </div>
+                        <h4 className="font-medium text-gray-900 mb-3">Coverage Summary</h4>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-700 leading-relaxed">{plan.coverageDetails}</p>
                         </div>
                       </div>
                     </div>
@@ -304,7 +269,7 @@ const InsurancePage = () => {
             </Card>
 
             {/* Summary */}
-            <Card>
+            <Card className="backdrop-blur-md bg-white/30 border border-white/40 shadow-xl" style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)', borderRadius: '1.25rem' }}>
               <CardHeader>
                 <CardTitle>Insurance Summary</CardTitle>
               </CardHeader>
@@ -317,12 +282,12 @@ const InsurancePage = () => {
                   <>
                     <div className="flex justify-between">
                       <span>Insurance:</span>
-                      <span>{formatIndianRupees(insurancePlans.find(p => p.id === selectedPlan)?.price || 0)}</span>
+                      <span>{formatIndianRupees(insurancePlans.find(p => p.insuranceId === selectedPlan)?.price || 0)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total:</span>
-                      <span>{formatIndianRupees(totalAmount + (insurancePlans.find(p => p.id === selectedPlan)?.price || 0))}</span>
+                      <span>{formatIndianRupees(totalAmount + (insurancePlans.find(p => p.insuranceId === selectedPlan)?.price || 0))}</span>
                     </div>
                   </>
                 )}
@@ -332,7 +297,8 @@ const InsurancePage = () => {
             {/* Action Buttons */}
             <div className="space-y-3">
               <Button
-                className="w-full bg-palette-orange hover:bg-palette-orange/90"
+                className="w-full bg-palette-orange hover:bg-palette-orange/90 backdrop-blur-md bg-white/30 border border-white/40 shadow-lg"
+                style={{ boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.12)', borderRadius: '0.75rem' }}
                 onClick={handleProceedToPayment}
                 disabled={!selectedPlan || !agreedToTerms}
               >
@@ -340,7 +306,8 @@ const InsurancePage = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full backdrop-blur-md bg-white/30 border border-white/40 shadow"
+                style={{ borderRadius: '0.75rem' }}
                 onClick={handleSkipInsurance}
               >
                 Skip Insurance
