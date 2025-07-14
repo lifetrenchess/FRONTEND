@@ -25,6 +25,7 @@ const Dashboard = () => {
       setCurrentUser(user);
     } else {
       navigate('/');
+      return;
     }
     setIsLoading(false);
   }, [navigate]);
