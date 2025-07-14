@@ -126,9 +126,8 @@ const Header = () => {
         <div className="flex justify-between items-center h-20"> {/* Increased height for larger logo */}
           <div className="flex items-center">
             <Link to="/">
-            <span className="flex items-center space-x-3 drop-shadow-xl">
-              <AventraLogo size={170} />
-              <span className="text-4xl font-extrabold text-palette-teal drop-shadow-lg tracking-wide" style={{letterSpacing: '0.08em'}}>AVENTRA</span>
+            <span className="flex items-center drop-shadow-xl">
+              <AventraLogo size={150} />
             </span>
             </Link>
           </div>

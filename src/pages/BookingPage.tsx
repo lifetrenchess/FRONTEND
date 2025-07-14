@@ -150,6 +150,26 @@ const BookingPage = () => {
     }
   }, [id]);
 
+  // 1. Restore form data on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('bookingFormData');
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.startDate) setStartDate(new Date(data.startDate));
+      if (data.endDate) setEndDate(new Date(data.endDate));
+      if (data.adults !== undefined) setAdults(data.adults);
+      if (data.children !== undefined) setChildren(data.children);
+      if (data.infants !== undefined) setInfants(data.infants);
+      if (data.fullName !== undefined) setFullName(data.fullName);
+      if (data.email !== undefined) setEmail(data.email);
+      if (data.phoneNumber !== undefined) setPhoneNumber(data.phoneNumber);
+      if (data.travelerNames !== undefined) setTravelerNames(data.travelerNames);
+      if (data.hasInsurance !== undefined) setHasInsurance(data.hasInsurance);
+      if (data.selectedInsurancePlan !== undefined) setSelectedInsurancePlan(data.selectedInsurancePlan);
+      if (data.agreedToTerms !== undefined) setAgreedToTerms(data.agreedToTerms);
+    }
+  }, []);
+
   useEffect(() => {
     // Read guests from query param or localStorage
     const params = new URLSearchParams(location.search);
@@ -209,6 +229,15 @@ const BookingPage = () => {
     });
   }, [adults, children]);
 
+  // 1. When startDate or packageData.duration changes, auto-set endDate
+  useEffect(() => {
+    if (startDate && packageData?.duration) {
+      const calculatedEnd = new Date(startDate);
+      calculatedEnd.setDate(calculatedEnd.getDate() + packageData.duration - 1);
+      setEndDate(calculatedEnd);
+    }
+  }, [startDate, packageData?.duration]);
+
   const handleTravelerNameChange = (index: number, name: string) => {
     setTravelerNames(prevNames => {
       const newNames = [...prevNames];
@@ -217,8 +246,34 @@ const BookingPage = () => {
     });
   };
 
+  // 2. Save form data before navigating to insurance
+  const handleGoToInsurance = () => {
+    localStorage.setItem('bookingFormData', JSON.stringify({
+      startDate,
+      endDate,
+      adults,
+      children,
+      infants,
+      fullName,
+      email,
+      phoneNumber,
+      travelerNames,
+      hasInsurance: true,
+      selectedInsurancePlan,
+      agreedToTerms
+    }));
+    navigate('/insurance', {
+      state: {
+        bookingId: packageData?.packageId || id,
+        totalAmount: priceBreakdown.totalAmount,
+        userId: getCurrentUserFromStorage()?.userId,
+      }
+    });
+  };
+
+  // 3. Clear form data after successful booking
   const handleSubmitBooking = async () => {
-    if (!startDate || !endDate || !agreedToTerms || fullName === '' || email === '' || phoneNumber === '' || adults === 0 || travelerNames.slice(0, adults + children).some(name => name.trim() === '')) {
+    if (!startDate || !agreedToTerms || fullName === '' || email === '' || phoneNumber === '' || adults === 0 || travelerNames.slice(0, adults + children).some(name => name.trim() === '')) {
       alert('Please fill all required fields, select dates, and agree to terms.');
       return;
     }
@@ -278,6 +333,10 @@ const BookingPage = () => {
       const createdBooking = await response.json();
       console.log('Booking created:', createdBooking);
 
+      // Clear saved form data
+      localStorage.removeItem('bookingFormData');
+      // Save bookingId for insurance fallback
+      localStorage.setItem('lastBookingId', createdBooking.bookingId);
       // Navigate to payment page
       navigate('/payment', {
         state: {
@@ -392,29 +451,13 @@ const BookingPage = () => {
                   </div>
                   <div>
                     <Label>End Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !endDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, "PPP") : <span>Pick an end date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={endDate}
-                          onSelect={setEndDate}
-                          initialFocus
-                          disabled={(date) => date <= (startDate || new Date())}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Input
+                      type="text"
+                      value={endDate ? format(endDate, 'PPP') : ''}
+                      readOnly
+                      className="w-full bg-gray-100 cursor-not-allowed"
+                      placeholder="End date will be auto-calculated"
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -525,15 +568,7 @@ const BookingPage = () => {
                       onCheckedChange={(checked) => {
                         setHasInsurance(checked as boolean);
                         if (checked) {
-                          // Redirect to insurance page with booking info
-                          navigate('/insurance', {
-                            state: {
-                              bookingId: packageData?.packageId || id,
-                              totalAmount: priceBreakdown.totalAmount,
-                              userId: getCurrentUserFromStorage()?.userId,
-                              // Pass any other info needed for insurance
-                            }
-                          });
+                          handleGoToInsurance();
                         } else {
                           setSelectedInsurancePlan(null);
                         }
@@ -632,7 +667,7 @@ const BookingPage = () => {
               className="w-full bg-palette-orange hover:bg-palette-orange/90"
               onClick={handleSubmitBooking}
               disabled={
-                !startDate || !endDate || !agreedToTerms ||
+                !startDate || !agreedToTerms ||
                 fullName === '' || email === '' || phoneNumber === '' ||
                 adults === 0 ||
                 travelerNames.slice(0, adults + children).some(name => name.trim() === '') ||

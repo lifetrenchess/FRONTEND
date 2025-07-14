@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CreditCard, Shield, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCurrentUserFromStorage } from '@/lib/auth';
 
 interface PaymentMethod {
   id: string;
@@ -47,10 +48,10 @@ import { getApiUrl } from '@/lib/apiConfig';
 const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId, totalAmount, userId, insurance } = (location.state || {}) as { 
-    bookingId: number; 
-    totalAmount: number; 
-    userId: number; 
+  let { bookingId, totalAmount, userId, insurance } = (location.state || {}) as {
+    bookingId: number;
+    totalAmount: number;
+    userId: number;
     insurance?: {
       planId: number;
       planName: string;
@@ -58,6 +59,10 @@ const PaymentPage = () => {
       insuranceId: number;
     };
   };
+  if (!userId) {
+    const user = getCurrentUserFromStorage();
+    userId = user?.userId;
+  }
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('CREDIT_DEBIT_CARD');
   const [isLoading, setIsLoading] = useState(false);

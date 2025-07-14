@@ -3,11 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { getCurrentUserFromStorage } from '@/lib/auth';
 
 const BookingSummaryPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId, totalAmount, userId, insurance, packageData } = (location.state || {}) as {
+  let { bookingId, totalAmount, userId, insurance, packageData } = (location.state || {}) as {
     bookingId: number;
     totalAmount: number;
     userId: number;
@@ -19,6 +20,10 @@ const BookingSummaryPage = () => {
     };
     packageData?: any;
   };
+  if (!userId) {
+    const user = getCurrentUserFromStorage();
+    userId = user?.userId;
+  }
 
   const formatIndianRupees = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -39,48 +44,57 @@ const BookingSummaryPage = () => {
           <CardContent className="space-y-6">
             {/* Package Details */}
             {packageData && (
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Package</h3>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg mb-2">Package Details</h3>
                 <div className="flex items-center space-x-4">
                   {packageData.mainImage && (
-                    <img src={packageData.mainImage} alt={packageData.title} className="w-24 h-16 object-cover rounded-lg" />
+                    <img src={packageData.mainImage} alt={packageData.title} className="w-28 h-20 object-cover rounded-lg border" />
                   )}
                   <div>
-                    <div className="font-bold">{packageData.title}</div>
-                    <div className="text-sm text-gray-600">{packageData.duration} days</div>
-                    {packageData.destination && (
-                      <div className="text-xs text-gray-500">Destination: {packageData.destination}</div>
+                    <div className="font-bold text-xl text-palette-teal">{packageData.title}</div>
+                    <div className="text-sm text-gray-600">{packageData.destination} &bull; {packageData.duration} days</div>
+                    {packageData.packageType && (
+                      <div className="text-xs text-blue-700 mt-1">Type: {packageData.packageType}</div>
                     )}
-                    {packageData.includeService && (
-                      <div className="text-xs text-green-700 mt-1">Includes: {packageData.includeService}</div>
+                    {packageData.difficultyLevel && (
+                      <div className="text-xs text-orange-700">Difficulty: {packageData.difficultyLevel}</div>
                     )}
-                    <div className="flex items-center space-x-2 mt-1">
-                      {packageData.flights && packageData.flights.length > 0 && (
-                        <span className="flex items-center text-xs text-blue-700">
-                          <span role="img" aria-label="flight">✈️</span> {packageData.flights.length} flights
-                        </span>
-                      )}
-                      {packageData.hotels && packageData.hotels.length > 0 && (
-                        <span className="flex items-center text-xs text-orange-700">
-                          <span role="img" aria-label="hotel">🏨</span> {packageData.hotels.length} hotels
-                        </span>
-                      )}
-                      {packageData.sightseeingList && packageData.sightseeingList.length > 0 && (
-                        <span className="flex items-center text-xs text-purple-700">
-                          <span role="img" aria-label="sightseeing">📸</span> {packageData.sightseeingList.length} sightseeing
-                        </span>
-                      )}
-                    </div>
-                    {packageData.highlights && (
-                      <div className="text-xs text-gray-500 mt-1">Highlights: {packageData.highlights}</div>
+                    {packageData.maxGroupSize && (
+                      <div className="text-xs text-green-700">Max Group Size: {packageData.maxGroupSize}</div>
                     )}
                   </div>
+                </div>
+                {packageData.highlights && (
+                  <div className="text-xs text-gray-700 mt-2"><span className="font-semibold">Highlights:</span> {packageData.highlights}</div>
+                )}
+                {packageData.description && (
+                  <div className="text-xs text-gray-600 mt-1">{packageData.description}</div>
+                )}
+              </div>
+            )}
+            {/* Inclusions */}
+            {packageData && (
+              <div className="space-y-1">
+                <h4 className="font-semibold text-md mb-1">What's Included</h4>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  {packageData.flights && packageData.flights.length > 0 && (
+                    <span className="flex items-center bg-blue-50 px-2 py-1 rounded"><span role="img" aria-label="flight">✈️</span> {packageData.flights.length} Flight{packageData.flights.length > 1 ? 's' : ''}</span>
+                  )}
+                  {packageData.hotels && packageData.hotels.length > 0 && (
+                    <span className="flex items-center bg-orange-50 px-2 py-1 rounded"><span role="img" aria-label="hotel">🏨</span> {packageData.hotels.length} Hotel{packageData.hotels.length > 1 ? 's' : ''}</span>
+                  )}
+                  {packageData.sightseeingList && packageData.sightseeingList.length > 0 && (
+                    <span className="flex items-center bg-purple-50 px-2 py-1 rounded"><span role="img" aria-label="sightseeing">📸</span> {packageData.sightseeingList.length} Sightseeing</span>
+                  )}
+                  {packageData.includeService && (
+                    <span className="flex items-center bg-green-50 px-2 py-1 rounded">{packageData.includeService}</span>
+                  )}
                 </div>
               </div>
             )}
             {/* Insurance Details */}
             <div>
-              <h3 className="font-semibold text-lg mb-2">Insurance</h3>
+              <h4 className="font-semibold text-md mb-1">Insurance</h4>
               {insurance ? (
                 <div className="flex items-center space-x-2">
                   <span className="font-medium text-palette-orange">{insurance.planName}</span>

@@ -8,15 +8,21 @@ import { Shield, CheckCircle, ArrowLeft, Star, Users, Plane, Heart, Loader2 } fr
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { fetchInsurancePackages, selectInsuranceForBooking, InsurancePlan } from '@/lib/insuranceApi';
+import { getCurrentUserFromStorage } from '@/lib/auth';
 
 const InsurancePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId, totalAmount, userId } = (location.state || {}) as { 
+  const { bookingId: navBookingId, totalAmount, userId } = (location.state || {}) as { 
     bookingId: number; 
     totalAmount: number; 
     userId: number; 
   };
+  let bookingId = navBookingId;
+  if (!bookingId) {
+    const stored = localStorage.getItem('lastBookingId');
+    if (stored) bookingId = Number(stored);
+  }
 
   const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
@@ -54,38 +60,41 @@ const InsurancePage = () => {
   };
 
   const handleProceedToSummary = async () => {
+    let actualUserId = userId;
+    if (!actualUserId) {
+      const user = getCurrentUserFromStorage();
+      actualUserId = user?.userId;
+    }
     if (!selectedPlan) {
       toast.error('Please select an insurance plan');
       return;
     }
-
     if (!agreedToTerms) {
       toast.error('Please agree to the terms and conditions');
       return;
     }
-
+    if (!actualUserId || !bookingId) {
+      toast.error('User or booking information missing. Please login and try again.');
+      navigate('/login');
+      return;
+    }
     const selectedPlanData = insurancePlans.find(plan => plan.insuranceId === selectedPlan);
     if (!selectedPlanData) {
       toast.error('Invalid plan selected');
       return;
     }
-
     try {
-      // Create insurance selection in backend
       const insuranceSelection = await selectInsuranceForBooking(
         selectedPlan,
-        userId,
+        actualUserId,
         bookingId
       );
-
       toast.success('Insurance plan selected successfully!');
-
-      // Navigate to booking summary with insurance details
       navigate('/booking-summary', {
         state: {
           bookingId: bookingId,
           totalAmount: totalAmount + selectedPlanData.price,
-          userId: userId,
+          userId: actualUserId,
           insurance: {
             planId: selectedPlan,
             planName: selectedPlanData.packageType,
@@ -324,7 +333,7 @@ const InsurancePage = () => {
                     ))}
                   </div>
                   <p className="text-sm text-green-700">
-                    Trusted by 50,000+ travelers
+                    Trusted by travelers
                   </p>
                 </div>
               </CardContent>

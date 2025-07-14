@@ -55,37 +55,33 @@ const Hero = () => {
           <CardContent className="p-6">
             <form onSubmit={handleSearch}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                  <MapPin className="w-5 h-5 text-palette-teal" />
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Destination</label>
-                    <select
-                      className="w-full bg-transparent text-gray-900 focus:outline-none"
-                      value={selectedDestination}
-                      onChange={e => setSelectedDestination(e.target.value)}
-                    >
-                      <option value="">Where to?</option>
-                      {destinations.map(dest => (
-                        <option key={dest} value={dest}>{dest}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg">
+                  <MapPin className="w-5 h-5 text-palette-teal mb-1" />
+                  <label className="text-sm font-medium text-gray-700">Destination</label>
+                  <select
+                    className="w-full bg-transparent text-gray-900 focus:outline-none text-center"
+                    value={selectedDestination}
+                    onChange={e => setSelectedDestination(e.target.value)}
+                  >
+                    <option value="">Where to?</option>
+                    {destinations.map(dest => (
+                      <option key={dest} value={dest}>{dest}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                  <Users className="w-5 h-5 text-palette-teal" />
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Guests</label>
-                    <select
-                      className="w-full bg-transparent text-gray-900 focus:outline-none"
-                      value={guests}
-                      onChange={e => setGuests(e.target.value)}
-                    >
-                      <option>2 Adults</option>
-                      <option>1 Adult</option>
-                      <option>3 Adults</option>
-                      <option>4+ Adults</option>
-                    </select>
-                  </div>
+                <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg">
+                  <Users className="w-5 h-5 text-palette-teal mb-1" />
+                  <label className="text-sm font-medium text-gray-700">Guests</label>
+                  <select
+                    className="w-full bg-transparent text-gray-900 focus:outline-none text-center"
+                    value={guests}
+                    onChange={e => setGuests(e.target.value)}
+                  >
+                    <option>2 Adults</option>
+                    <option>1 Adult</option>
+                    <option>3 Adults</option>
+                    <option>4+ Adults</option>
+                  </select>
                 </div>
               </div>
               <Button type="submit" className="w-full mt-6 bg-palette-orange hover:bg-palette-orange/90 text-white py-3 text-lg">

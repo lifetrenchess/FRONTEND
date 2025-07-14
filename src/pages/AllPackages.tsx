@@ -232,7 +232,7 @@ const AllPackages = () => {
       {/* Filters */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -268,20 +268,6 @@ const AllPackages = () => {
                 <SelectItem value="10000-20000">₹10,000 - ₹20,000</SelectItem>
                 <SelectItem value="20000-30000">₹20,000 - ₹30,000</SelectItem>
                 <SelectItem value="30000-">Above ₹30,000</SelectItem>
-              </SelectContent>
-            </Select>
-            {/* Type Filter */}
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Adventure">Adventure</SelectItem>
-                <SelectItem value="Relaxation">Relaxation</SelectItem>
-                <SelectItem value="Cultural">Cultural</SelectItem>
-                <SelectItem value="Beach">Beach</SelectItem>
-                <SelectItem value="Mountain">Mountain</SelectItem>
               </SelectContent>
             </Select>
             {/* View All Packages Button */}
@@ -441,9 +427,8 @@ const AllPackages = () => {
                     {/* Action Buttons */}
                     <div className="flex items-center space-x-3 pt-4 border-t">
                       <Button 
-                        variant="outline"
+                        className="flex-1 bg-palette-orange hover:bg-palette-orange/90 text-white"
                         onClick={() => handleViewDetails(pkg.packageId)}
-                        className="flex-1"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         View Details
@@ -458,17 +443,6 @@ const AllPackages = () => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <Button
-                    className="mt-4 w-full bg-palette-orange hover:bg-palette-orange/90"
-                    onClick={() => {
-                      const guests = localStorage.getItem('selectedGuests') || '2';
-                      navigate(`/booking/${pkg.packageId}?guests=${guests}`);
-                    }}
-                  >
-                    Book Now
-                  </Button>
-                </CardContent>
               </Card>
             ))}
           </div>

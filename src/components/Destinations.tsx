@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const destinations = [
   {
@@ -26,6 +27,7 @@ const destinations = [
 ];
 
 const Destinations = () => {
+  const navigate = useNavigate();
   return (
     <section id="destinations" className="py-20 bg-palette-cream">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,14 +56,6 @@ const Destinations = () => {
                 
                 <CardContent className="absolute bottom-0 left-0 right-0 p-6 text-white">
                   <h3 className="text-2xl font-bold mb-2">{destination.name}</h3>
-                  <p className="text-lg opacity-90 mb-4">{destination.count}</p>
-                  <Button 
-                    variant="secondary" 
-                    className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-palette-cream hover:text-palette-teal transition-all duration-300"
-                  >
-                    Explore
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
                 </CardContent>
               </div>
             </Card>
@@ -72,6 +66,7 @@ const Destinations = () => {
           <Button 
             size="lg" 
             className="bg-palette-orange hover:bg-palette-orange/90 text-white px-8 py-3"
+            onClick={() => navigate('/packages')}
           >
             View All Destinations
             <ArrowRight className="w-5 h-5 ml-2" />

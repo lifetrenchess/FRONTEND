@@ -444,14 +444,15 @@ const PackageDetails: React.FC = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-gray-700 whitespace-pre-line leading-relaxed">
-                          <strong>Flexible Cancellation:</strong>\n
-                          - Free cancellation up to 14 days before departure.\n
-                          - 50% refund for cancellations made 7-13 days before departure.\n
-                          - 25% refund for cancellations made 3-6 days before departure.\n
-                          - No refund for cancellations within 2 days of departure or for no-shows.\n
-                          - All cancellation requests must be made in writing (email or portal).\n
-                          - Refunds will be processed within 7 business days.\n                        </div>
+                        <div className="text-gray-700 leading-relaxed">
+                          {`Flexible Cancellation:\n- Free cancellation up to 14 days before departure.\n- 50% refund for cancellations made 7-13 days before departure.\n- 25% refund for cancellations made 3-6 days before departure.\n- No refund for cancellations within 2 days of departure or for no-shows.\n- All cancellation requests must be made in writing (email or portal).\n- Refunds will be processed within 7 business days.`
+                            .split('\n').map((line, idx) => (
+                              <span key={idx}>
+                                {line}
+                                <br />
+                              </span>
+                            ))}
+                        </div>
                       </CardContent>
                     </Card>
                     <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border-gray-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
@@ -462,15 +463,15 @@ const PackageDetails: React.FC = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-gray-700 whitespace-pre-line leading-relaxed">
-                          <strong>General Terms:</strong>\n
-                          - All bookings are subject to availability and confirmation.\n
-                          - Full payment must be made before the start of the trip.\n
-                          - Travel insurance is strongly recommended for all travelers.\n
-                          - The company is not responsible for delays, cancellations, or changes due to weather, natural disasters, or unforeseen circumstances.\n
-                          - Travelers are responsible for obtaining valid travel documents (passport, visa, etc.).\n
-                          - Any changes to the itinerary may incur additional charges.\n
-                          - By booking, you agree to our privacy policy and code of conduct.\n                        </div>
+                        <div className="text-gray-700 leading-relaxed">
+                          {`General Terms:\n- All bookings are subject to availability and confirmation.\n- Full payment must be made before the start of the trip.\n- Travel insurance is strongly recommended for all travelers.\n- The company is not responsible for delays, cancellations, or changes due to weather, natural disasters, or unforeseen circumstances.\n- Travelers are responsible for obtaining valid travel documents (passport, visa, etc.).\n- Any changes to the itinerary may incur additional charges.\n- By booking, you agree to our privacy policy and code of conduct.`
+                            .split('\n').map((line, idx) => (
+                              <span key={idx}>
+                                {line}
+                                <br />
+                              </span>
+                            ))}
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>
