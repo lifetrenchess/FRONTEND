@@ -59,10 +59,7 @@ const PaymentPage = () => {
       insuranceId: number;
     };
   };
-  if (!userId) {
-    const user = getCurrentUserFromStorage();
-    userId = user?.userId;
-  }
+  if (!userId) userId = getCurrentUserFromStorage()?.userId;
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('CREDIT_DEBIT_CARD');
   const [isLoading, setIsLoading] = useState(false);

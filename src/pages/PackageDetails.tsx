@@ -316,7 +316,7 @@ const PackageDetails: React.FC = () => {
                                   </div>
                                   <div className="text-right">
                                     <div className="text-sm font-medium text-palette-orange">
-                                      {flight.departureTime} - {flight.arrivalTime}
+                                      {new Date(flight.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(flight.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                   </div>
                                 </div>
@@ -376,9 +376,6 @@ const PackageDetails: React.FC = () => {
                                     <div className="font-semibold text-gray-800">{sightseeing.name}</div>
                                     <div className="text-sm text-gray-600">{sightseeing.location}</div>
                                     <div className="text-sm text-gray-700 mt-1">{sightseeing.description}</div>
-                                  </div>
-                                  <div className="text-sm text-purple-600 font-medium">
-                                    Duration: {sightseeing.duration}
                                   </div>
                                 </div>
                               </CardContent>

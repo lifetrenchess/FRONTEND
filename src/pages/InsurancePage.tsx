@@ -13,10 +13,11 @@ import { getCurrentUserFromStorage } from '@/lib/auth';
 const InsurancePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId: navBookingId, totalAmount, userId } = (location.state || {}) as { 
+  const { bookingId: navBookingId, totalAmount, userId, packageData } = (location.state || {}) as { 
     bookingId: number; 
     totalAmount: number; 
     userId: number; 
+    packageData?: any;
   };
   let bookingId = navBookingId;
   if (!bookingId) {
@@ -100,7 +101,8 @@ const InsurancePage = () => {
             planName: selectedPlanData.packageType,
             price: selectedPlanData.price,
             insuranceId: insuranceSelection.insuranceId
-          }
+          },
+          packageData // <-- forward packageData
         }
       });
     } catch (error) {
@@ -114,7 +116,8 @@ const InsurancePage = () => {
       state: {
         bookingId: bookingId,
         totalAmount: totalAmount,
-        userId: userId
+        userId: userId,
+        packageData // <-- forward packageData
       }
     });
   };

@@ -267,6 +267,7 @@ const BookingPage = () => {
         bookingId: packageData?.packageId || id,
         totalAmount: priceBreakdown.totalAmount,
         userId: getCurrentUserFromStorage()?.userId,
+        packageData // <-- pass packageData
       }
     });
   };

@@ -115,7 +115,7 @@ const BookingSummaryPage = () => {
                 className="bg-palette-orange hover:bg-palette-orange/90 flex-1"
                 onClick={() => {
                   navigate('/payment', {
-                    state: { bookingId, totalAmount, userId, insurance }
+                    state: { bookingId, totalAmount, userId, insurance, packageData }
                   });
                 }}
               >
