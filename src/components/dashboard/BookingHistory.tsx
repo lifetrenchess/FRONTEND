@@ -314,7 +314,7 @@ const BookingHistory = ({ user }: BookingHistoryProps) => {
                   {booking.hasInsurance && (
                     <div className="flex items-center space-x-2 text-sm text-blue-600">
                       <Package className="w-4 h-4" />
-                      <span>Travel Insurance Included</span>
+                      <span>Travel Insurance: {booking.insurancePlan ? `Plan #${booking.insurancePlan}` : 'Included'}</span>
                     </div>
                   )}
                 </div>
@@ -343,7 +343,7 @@ const BookingHistory = ({ user }: BookingHistoryProps) => {
                       variant="outline" 
                       size="sm" 
                       className="text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
-                      onClick={() => navigate('/reviews')}
+                      onClick={() => navigate('/reviews', { state: { packageId: booking.packageId } })}
                     >
                       <Star className="w-4 h-4 mr-2" />
                       Review

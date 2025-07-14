@@ -37,6 +37,7 @@ interface Booking {
   };
   paymentStatus?: string;
   createdAt?: string;
+  insurancePlan?: number; // Added for insurance plan info
 }
 
 const BookingManagement = () => {
@@ -364,7 +365,7 @@ const BookingManagement = () => {
                           {booking.hasInsurance && (
                             <span className="text-green-600">
                               <CreditCard className="w-4 h-4 inline mr-1" />
-                              Insurance Included
+                              Insurance: {booking.insurancePlan ? `Plan #${booking.insurancePlan}` : 'Included'}
                             </span>
                           )}
                           {booking.totalAmount && (
@@ -520,6 +521,12 @@ const BookingManagement = () => {
                       <Label className="text-sm text-gray-600">Insurance</Label>
                       <p className="font-medium">{selectedBooking.hasInsurance ? 'Included' : 'Not Included'}</p>
                     </div>
+                    {selectedBooking.hasInsurance && (
+                      <div>
+                        <Label className="text-sm text-gray-600">Insurance Plan</Label>
+                        <p className="font-medium text-green-700">{selectedBooking.insurancePlan ? `Plan #${selectedBooking.insurancePlan}` : 'Included'}</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

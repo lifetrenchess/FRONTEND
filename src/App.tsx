@@ -19,6 +19,7 @@ import AssistancePage from '@/pages/AssistancePage';
 import ReviewPage from '@/pages/ReviewPage';
 import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import BookingSummaryPage from '@/pages/BookingSummaryPage';
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/packages/:id" element={<PackageDetails />} />
           <Route path="/about" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">About Us</h1><p>Coming soon...</p></div>} />
           <Route path="/contact" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">Contact Us</h1><p>Coming soon...</p></div>} />
+          <Route path="/booking-summary" element={<BookingSummaryPage />} />
           
           {/* Protected routes for all authenticated users */}
           <Route element={<ProtectedRoute allowedRoles={['USER', 'ADMIN', 'TRAVEL_AGENT']} />}>

@@ -53,7 +53,7 @@ const InsurancePage = () => {
     }).format(amount);
   };
 
-  const handleProceedToPayment = async () => {
+  const handleProceedToSummary = async () => {
     if (!selectedPlan) {
       toast.error('Please select an insurance plan');
       return;
@@ -80,8 +80,8 @@ const InsurancePage = () => {
 
       toast.success('Insurance plan selected successfully!');
 
-      // Navigate to payment with insurance details
-      navigate('/payment', {
+      // Navigate to booking summary with insurance details
+      navigate('/booking-summary', {
         state: {
           bookingId: bookingId,
           totalAmount: totalAmount + selectedPlanData.price,
@@ -101,7 +101,7 @@ const InsurancePage = () => {
   };
 
   const handleSkipInsurance = () => {
-    navigate('/payment', {
+    navigate('/booking-summary', {
       state: {
         bookingId: bookingId,
         totalAmount: totalAmount,
@@ -299,7 +299,7 @@ const InsurancePage = () => {
               <Button
                 className="w-full bg-palette-orange hover:bg-palette-orange/90 backdrop-blur-md bg-white/30 border border-white/40 shadow-lg"
                 style={{ boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.12)', borderRadius: '0.75rem' }}
-                onClick={handleProceedToPayment}
+                onClick={handleProceedToSummary}
                 disabled={!selectedPlan || !agreedToTerms}
               >
                 Continue with Insurance

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +9,8 @@ import { Star, MessageCircle, PenTool, Eye } from 'lucide-react';
 
 const ReviewPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('form');
+  const location = useLocation();
+  const packageId = location.state?.packageId;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
@@ -54,7 +57,7 @@ const ReviewPage: React.FC = () => {
               </TabsList>
               
               <TabsContent value="form" className="mt-0">
-                <ReviewForm onReviewSubmitted={() => setActiveTab('list')} />
+                <ReviewForm onReviewSubmitted={() => setActiveTab('list')} packageId={packageId} />
               </TabsContent>
               
               <TabsContent value="list" className="mt-0">

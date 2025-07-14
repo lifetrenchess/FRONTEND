@@ -214,9 +214,6 @@ const Header = () => {
           </div>
           
           <nav className="hidden md:flex space-x-8">
-            <Link to="/packages" className="text-gray-700 hover:text-palette-teal transition-colors">
-              Packages
-            </Link>
             <Link to="/about" className="text-gray-700 hover:text-palette-teal transition-colors">
               About
             </Link>
@@ -293,7 +290,11 @@ const Header = () => {
       
       {/* Login Dialog for Booking Authentication */}
       {showLoginDialog && (
-        <LoginDialog onAuthSuccess={onAuthSuccess}>
+        <LoginDialog onAuthSuccess={(userData) => {
+          onAuthSuccess(userData);
+          setShowLoginDialog(false);
+          navigate('/packages');
+        }}>
           <div style={{ display: 'none' }} />
         </LoginDialog>
       )}

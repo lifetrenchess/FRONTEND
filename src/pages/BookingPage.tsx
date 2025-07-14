@@ -508,10 +508,18 @@ const BookingPage = () => {
                       checked={hasInsurance}
                       onCheckedChange={(checked) => {
                         setHasInsurance(checked as boolean);
-                        if (!checked) {
+                        if (checked) {
+                          // Redirect to insurance page with booking info
+                          navigate('/insurance', {
+                            state: {
+                              bookingId: packageData?.packageId || id,
+                              totalAmount: priceBreakdown.totalAmount,
+                              userId: getCurrentUserFromStorage()?.userId,
+                              // Pass any other info needed for insurance
+                            }
+                          });
+                        } else {
                           setSelectedInsurancePlan(null);
-                        } else if (!selectedInsurancePlan) {
-                          setSelectedInsurancePlan(2); // Default to Medium package (ID: 2)
                         }
                       }}
                     />
@@ -520,13 +528,7 @@ const BookingPage = () => {
                     </Label>
                   </div>
                   
-                  {hasInsurance && (
-                    <InsuranceOptions
-                      selectedPlan={selectedInsurancePlan}
-                      onPlanSelect={setSelectedInsurancePlan}
-                      travelers={adults + children}
-                    />
-                  )}
+                  {/* Removed inline InsuranceOptions selector */}
                 </div>
               </CardContent>
             </Card>

@@ -179,7 +179,7 @@ const PaymentPage = () => {
 
       // Initialize Razorpay
       const options = {
-        key: 'rzp_test_51OqXqXqXqXqXq', // Replace with your actual Razorpay test key
+        key: orderData.keyId, // Use the keyId returned from backend
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Aventra Travel',

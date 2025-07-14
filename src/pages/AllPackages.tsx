@@ -24,6 +24,7 @@ import {
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
 import LoginDialog from '@/components/auth/LoginDialog';
+import { ReviewList } from '@/components/reviews';
 
 // Add seeded titles for frontend-only badge logic
 const seededTitles = [
@@ -45,9 +46,9 @@ const AllPackages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [destinationFilter, setDestinationFilter] = useState('');
-  const [priceFilter, setPriceFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [destinationFilter, setDestinationFilter] = useState('all');
+  const [priceFilter, setPriceFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [likedPackages, setLikedPackages] = useState<Set<number>>(new Set());
   const { handleBookNow, showLoginDialog, setShowLoginDialog, onAuthSuccess } = useBookingAuth();
 
@@ -85,14 +86,14 @@ const AllPackages = () => {
     }
 
     // Filter by destination
-    if (destinationFilter) {
+    if (destinationFilter && destinationFilter !== 'all') {
       filtered = filtered.filter(pkg => 
         pkg.destination.toLowerCase().includes(destinationFilter.toLowerCase())
       );
     }
 
     // Filter by price
-    if (priceFilter) {
+    if (priceFilter && priceFilter !== 'all') {
       const [min, max] = priceFilter.split('-').map(Number);
       filtered = filtered.filter(pkg => {
         if (max) {
@@ -103,7 +104,7 @@ const AllPackages = () => {
     }
 
     // Filter by package type
-    if (typeFilter) {
+    if (typeFilter && typeFilter !== 'all') {
       filtered = filtered.filter(pkg => pkg.packageType === typeFilter);
     }
 
@@ -238,7 +239,7 @@ const AllPackages = () => {
                 <SelectValue placeholder="All Destinations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Destinations</SelectItem>
+                <SelectItem value="all">All Destinations</SelectItem>
                 <SelectItem value="Goa">Goa</SelectItem>
                 <SelectItem value="Shimla">Shimla</SelectItem>
                 <SelectItem value="Kerala">Kerala</SelectItem>
@@ -252,7 +253,7 @@ const AllPackages = () => {
                 <SelectValue placeholder="All Prices" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Prices</SelectItem>
+                <SelectItem value="all">All Prices</SelectItem>
                 <SelectItem value="0-10000">Under ₹10,000</SelectItem>
                 <SelectItem value="10000-20000">₹10,000 - ₹20,000</SelectItem>
                 <SelectItem value="20000-30000">₹20,000 - ₹30,000</SelectItem>
@@ -265,7 +266,7 @@ const AllPackages = () => {
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="Adventure">Adventure</SelectItem>
                 <SelectItem value="Relaxation">Relaxation</SelectItem>
                 <SelectItem value="Cultural">Cultural</SelectItem>
@@ -278,9 +279,9 @@ const AllPackages = () => {
               variant="outline"
               onClick={() => {
                 setSearchTerm('');
-                setDestinationFilter('');
-                setPriceFilter('');
-                setTypeFilter('');
+                setDestinationFilter('all');
+                setPriceFilter('all');
+                setTypeFilter('all');
                 loadPackages();
               }}
               className="flex items-center"
@@ -302,9 +303,9 @@ const AllPackages = () => {
             <Button 
               onClick={() => {
                 setSearchTerm('');
-                setDestinationFilter('');
-                setPriceFilter('');
-                setTypeFilter('');
+                setDestinationFilter('all');
+                setPriceFilter('all');
+                setTypeFilter('all');
                 loadPackages();
               }}
               className="bg-palette-teal hover:bg-palette-teal/90 text-white"
@@ -429,6 +430,12 @@ const AllPackages = () => {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Reviews Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-12">What Our Travelers Say</h2>
+        <ReviewList />
       </div>
 
       {/* Login Dialog for Booking Authentication */}
