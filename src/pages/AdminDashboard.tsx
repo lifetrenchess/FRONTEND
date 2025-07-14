@@ -10,6 +10,7 @@ import Payments from '@/components/dashboard/admin/SystemSettings';
 import AssistanceManagement from '@/components/dashboard/admin/AssistanceManagement';
 import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
 import BookingManagement from '@/components/dashboard/agent/BookingManagement';
+import { Card, CardHeader, CardTitle, Badge } from '@/components/ui/card';
 
 interface UserData {
   fullName: string;
@@ -17,6 +18,19 @@ interface UserData {
   isAuthenticated: boolean;
   role?: string;
 }
+
+// Add seeded titles for frontend-only badge logic
+const seededTitles = [
+  "Paris Adventure",
+  "Tokyo Discovery",
+  "New York City Explorer",
+  "Bali Paradise",
+  "London Royal Tour",
+  "Santorini Dream",
+  "Dubai Luxury",
+  "Machu Picchu Trek",
+  "Sydney Coastal"
+];
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -103,6 +117,13 @@ const AdminDashboard = () => {
         </Button>
     </>
   );
+
+  // Helper to check if user is admin/agent (replace with your actual auth logic)
+  const getCurrentUserRole = () => {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    return user?.role || 'USER';
+  };
+  const userRole = getCurrentUserRole();
 
   const renderActiveSection = () => {
     switch (activeSection) {

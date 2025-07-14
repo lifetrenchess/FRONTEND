@@ -35,11 +35,11 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 flex items-center justify-center px-4">
           <div className="max-w-md w-full text-center">
             <div className="mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-palette-orange/20 rounded-full mb-4">
+                <AlertTriangle className="w-8 h-8 text-palette-orange" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
               <p className="text-gray-600 mb-6">

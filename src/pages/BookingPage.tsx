@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { getApiUrl } from '@/lib/apiConfig';
 import InsuranceOptions from '@/components/InsuranceOptions';
+import { getCurrentUserFromStorage } from '@/lib/auth';
 
 interface TravelPackageSummary {
   image: string;
@@ -47,7 +48,7 @@ interface BookingDTO {
     names: string[];
   };
   hasInsurance: boolean;
-  insurancePlan?: string;
+  insurancePlan?: number;
 }
 
 const BookingPage = () => {
@@ -64,7 +65,7 @@ const BookingPage = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [travelerNames, setTravelerNames] = useState<string[]>(['']);
   const [hasInsurance, setHasInsurance] = useState<boolean>(false);
-  const [selectedInsurancePlan, setSelectedInsurancePlan] = useState<string>('');
+  const [selectedInsurancePlan, setSelectedInsurancePlan] = useState<number | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
 
   const [packageSummary, setPackageSummary] = useState<TravelPackageSummary>({
@@ -98,14 +99,17 @@ const BookingPage = () => {
     let currentPackagePrice = (adults * basePricePerAdult) + (children * basePricePerChild) + (infants * basePricePerInfant);
     
     // Calculate insurance cost based on selected plan
+    // For now, we'll use a simple calculation. In a real implementation,
+    // you would fetch the actual insurance plan price from the backend
     let currentInsuranceCost = 0;
     if (hasInsurance && selectedInsurancePlan) {
-      const insurancePlans = {
-        'basic': 15,
-        'standard': 25,
-        'premium': 40
+      // Default insurance prices based on plan type
+      const insurancePrices = {
+        1: 599,  // Small package
+        2: 899,  // Medium package  
+        3: 1000  // Large package
       };
-      const planPrice = insurancePlans[selectedInsurancePlan as keyof typeof insurancePlans] || 0;
+      const planPrice = insurancePrices[selectedInsurancePlan as keyof typeof insurancePrices] || 0;
       currentInsuranceCost = planPrice * (adults + children);
     }
     
@@ -164,7 +168,14 @@ const BookingPage = () => {
       return;
     }
 
-    const userId = 123; // This userId is hardcoded for now, would typically come from authentication
+    // Get current user from authentication
+    const currentUser = getCurrentUserFromStorage();
+    if (!currentUser || !currentUser.userId) {
+      alert('Please log in to make a booking.');
+      return;
+    }
+
+    const userId = currentUser.userId;
     const packageId = parseInt(id || '456');
 
     const bookingPayload: BookingDTO = {
@@ -191,7 +202,7 @@ const BookingPage = () => {
     console.log('Booking Payload:', bookingPayload);
 
     try {
-      const response = await fetch(getApiUrl('BOOKING_SERVICE', '/bookings'), {
+      const response = await fetch(getApiUrl('BOOKING_SERVICE', ''), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -201,35 +212,25 @@ const BookingPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Backend error response:', errorData);
-        throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.message || response.statusText}`);
+        throw new Error(errorData.message || 'Failed to create booking');
       }
 
-      const bookingConfirmation = await response.json();
-      console.log('Booking created:', bookingConfirmation);
-      alert('Booking initiated successfully!');
+      const createdBooking = await response.json();
+      console.log('Booking created:', createdBooking);
 
-      if (hasInsurance) {
-        navigate('/insurance', {
-          state: {
-            bookingId: bookingConfirmation.bookingId,
-            totalAmount: priceBreakdown.totalAmount,
-            userId: userId
-          }
-        });
-      } else {
-        navigate('/payment', {
-          state: {
-            bookingId: bookingConfirmation.bookingId,
-            totalAmount: priceBreakdown.totalAmount,
-            userId: userId
-          }
-        });
-      }
-
+      // Navigate to payment page
+      navigate('/payment', {
+        state: {
+          bookingId: createdBooking.bookingId,
+          totalAmount: priceBreakdown.totalAmount,
+          userId: currentUser.userId,
+        },
+      });
     } catch (error: any) {
-      console.error('Error creating booking:', error);
-      alert(`Failed to initiate booking. Please try again. Error: ${error.message || 'Unknown error'}`);
+      console.error('Booking error:', error);
+      alert(`Booking failed: ${error.message}`);
+    } finally {
+      // setIsSubmitting(false); // This line was not in the new_code, so it's removed.
     }
   };
 
@@ -464,9 +465,9 @@ const BookingPage = () => {
                       onCheckedChange={(checked) => {
                         setHasInsurance(checked as boolean);
                         if (!checked) {
-                          setSelectedInsurancePlan('');
+                          setSelectedInsurancePlan(null);
                         } else if (!selectedInsurancePlan) {
-                          setSelectedInsurancePlan('standard');
+                          setSelectedInsurancePlan(2); // Default to Medium package (ID: 2)
                         }
                       }}
                     />

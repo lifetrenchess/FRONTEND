@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
-// Removed invalid Sonner import
+
+import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Index from '@/pages/Index';
 import TestDashboard from '@/pages/TestDashboard';
@@ -26,7 +26,6 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      {/* Removed invalid <Sonner /> component */}
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -68,4 +67,3 @@ const App = () => (
 );
 
 export default App;
-np

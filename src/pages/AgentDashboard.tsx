@@ -8,6 +8,8 @@ import BookingManagement from '@/components/dashboard/agent/BookingManagement';
 import CustomerInquiries from '@/components/dashboard/agent/CustomerInquiries';
 import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
 import AgentProfile from '@/components/dashboard/agent/AgentProfile';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface UserData {
   fullName: string;
@@ -15,6 +17,19 @@ interface UserData {
   isAuthenticated: boolean;
   role?: string;
 }
+
+// Add seeded titles for frontend-only badge logic
+const seededTitles = [
+  "Paris Adventure",
+  "Tokyo Discovery",
+  "New York City Explorer",
+  "Bali Paradise",
+  "London Royal Tour",
+  "Santorini Dream",
+  "Dubai Luxury",
+  "Machu Picchu Trek",
+  "Sydney Coastal"
+];
 
 const AgentDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
@@ -103,6 +118,13 @@ const AgentDashboard = () => {
       </Button>
     </>
   );
+
+  // Helper to check if user is admin/agent (replace with your actual auth logic)
+  const getCurrentUserRole = () => {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    return user?.role || 'USER';
+  };
+  const userRole = getCurrentUserRole();
 
   const renderActiveSection = () => {
     switch (activeSection) {

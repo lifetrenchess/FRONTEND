@@ -41,7 +41,7 @@ const AssistanceManagement = () => {
     setError('');
     
     try {
-      const response = await fetch(getApiUrl('ASSISTANCE_SERVICE', '/assistance'));
+      const response = await fetch(getApiUrl('ASSISTANCE_SERVICE', ''));
       
       if (!response.ok) {
         throw new Error('Failed to load assistance requests');
@@ -86,23 +86,23 @@ const AssistanceManagement = () => {
   }, []);
 
   // Handle request resolution
-  const handleResolve = async () => {
+  const handleResolveRequest = async () => {
     if (!selectedRequest || !resolutionMessage.trim()) {
-      toast.error('Please provide a resolution message');
+      toast.error('Please enter a resolution message');
       return;
     }
 
     setResolving(true);
-    
+
     try {
       const response = await fetch(
-        getApiUrl('ASSISTANCE_SERVICE', `/assistance/${selectedRequest.requestId}/resolve`),
+        getApiUrl('ASSISTANCE_SERVICE', `/${selectedRequest.requestId}/resolve`),
         {
           method: 'PUT',
           headers: {
-            'Content-Type': 'text/plain',
+            'Content-Type': 'application/json',
           },
-          body: resolutionMessage,
+          body: JSON.stringify(resolutionMessage),
         }
       );
 
@@ -110,18 +110,10 @@ const AssistanceManagement = () => {
         throw new Error('Failed to resolve request');
       }
 
-      const updatedRequest: AssistanceDTO = await response.json();
-      
-      // Update the requests list
-      setRequests(prev => 
-        prev.map(req => 
-          req.requestId === updatedRequest.requestId ? updatedRequest : req
-        )
-      );
-      
-      setSelectedRequest(null);
-      setResolutionMessage('');
       toast.success('Request resolved successfully!');
+      setResolutionMessage('');
+      setSelectedRequest(null);
+      loadRequests(); // Refresh the list
     } catch (err: any) {
       toast.error(`Failed to resolve request: ${err.message}`);
     } finally {
@@ -353,7 +345,7 @@ const AssistanceManagement = () => {
                               <AlertDialogAction 
                                 onClick={() => {
                                   setSelectedRequest(request);
-                                  handleResolve();
+                                  handleResolveRequest();
                                 }}
                                 disabled={resolving || !resolutionMessage.trim()}
                                 className="bg-palette-teal hover:bg-palette-teal/90"
