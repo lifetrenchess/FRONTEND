@@ -24,7 +24,6 @@ import {
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
 import LoginDialog from '@/components/auth/LoginDialog';
-import ReviewList from '@/components/reviews/ReviewList';
 
 // Add seeded titles for frontend-only badge logic
 const seededTitles = [
@@ -428,11 +427,6 @@ const AllPackages = () => {
                 </CardContent>
               </Card>
             ))}
-            {/* Render all reviews below the package list */}
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold mb-4">What Travelers Say</h2>
-              <ReviewList />
-            </div>
           </div>
         )}
       </div>

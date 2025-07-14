@@ -83,7 +83,7 @@ api.interceptors.request.use((config) => {
 export async function fetchAllPackages(): Promise<TravelPackageDto[]> {
   try {
     console.log('Attempting to fetch packages through API Gateway...');
-    const response = await api.get('/');
+    const response = await api.get(''); // Removed trailing slash to match backend
     console.log('Packages fetched successfully through API Gateway:', response.data);
     return response.data;
   } catch (error: unknown) {

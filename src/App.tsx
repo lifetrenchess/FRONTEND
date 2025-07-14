@@ -47,7 +47,6 @@ const App = () => (
           <Route path="/packages/:id" element={<PackageDetails />} />
           <Route path="/about" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">About Us</h1><p>Coming soon...</p></div>} />
           <Route path="/contact" element={<div className="min-h-screen bg-palette-cream p-8"><h1 className="text-3xl font-bold">Contact Us</h1><p>Coming soon...</p></div>} />
-          <Route path="/reviews" element={<ReviewPage />} />
           
           {/* Protected routes for all authenticated users */}
           <Route element={<ProtectedRoute allowedRoles={['USER', 'ADMIN', 'TRAVEL_AGENT']} />}>
@@ -56,6 +55,7 @@ const App = () => (
             <Route path="/insurance" element={<InsurancePage />} />
             <Route path="/confirmation" element={<ConfirmationPage />} />
             <Route path="/assistance" element={<AssistancePage />} />
+            <Route path="/reviews" element={<ReviewPage />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

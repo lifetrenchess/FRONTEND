@@ -214,7 +214,7 @@ const Header = () => {
           </div>
           
           <nav className="hidden md:flex space-x-8">
-            <Link to="/#packages" className="text-gray-700 hover:text-palette-teal transition-colors">
+            <Link to="/packages" className="text-gray-700 hover:text-palette-teal transition-colors">
               Packages
             </Link>
             <Link to="/about" className="text-gray-700 hover:text-palette-teal transition-colors">
