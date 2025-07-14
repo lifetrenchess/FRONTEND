@@ -24,10 +24,7 @@ const Header = () => {
     // Check for authenticated user on component mount
     const token = localStorage.getItem('token');
     if (token) {
-      // Try to get user data from both sources
       const currentUserFromStorage = localStorage.getItem('currentUser');
-      const userFromStorage = localStorage.getItem('user');
-      
       if (currentUserFromStorage) {
         try {
           const currentUserData = JSON.parse(currentUserFromStorage);
@@ -35,30 +32,14 @@ const Header = () => {
         } catch (error) {
           console.error('Error parsing currentUser:', error);
         }
-      } else if (userFromStorage) {
-        // If currentUser doesn't exist but user does, create currentUser from user data
-        try {
-          const userData = JSON.parse(userFromStorage);
-          const currentUserData = {
-            fullName: userData.userName,
-            email: userData.userEmail,
-            isAuthenticated: true,
-            role: userData.userRole || 'USER'
-          };
-          localStorage.setItem('currentUser', JSON.stringify(currentUserData));
-          setCurrentUser(currentUserData);
-        } catch (error) {
-          console.error('Error parsing user data:', error);
-        }
       }
     } else {
-      // No token, clear any existing user data
       setCurrentUser(null);
     }
 
     // Listen for storage changes (when user logs in/out in another tab)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'token' || e.key === 'currentUser' || e.key === 'user') {
+      if (e.key === 'token' || e.key === 'currentUser') {
         const newToken = localStorage.getItem('token');
         if (newToken) {
           const currentUserFromStorage = localStorage.getItem('currentUser');
@@ -81,111 +62,47 @@ const Header = () => {
   }, []);
 
   const handleAuthSuccess = (userData: UserData) => {
-    console.log('Header - handleAuthSuccess called with:', userData);
-    
-    // Ensure role is set - try to get it from user storage if not provided
-    let role = userData.role;
-    if (!role) {
-      const userFromStorage = localStorage.getItem('user');
-      if (userFromStorage) {
-        try {
-          const userDataFromStorage = JSON.parse(userFromStorage);
-          role = userDataFromStorage.userRole || 'USER';
-        } catch (error) {
-          console.error('Error parsing user from storage:', error);
-          role = 'USER';
-        }
-      } else {
-        role = 'USER';
-      }
-    }
-    
+    // Ensure role is set
     const userDataWithRole = {
       ...userData,
-      role: role
+      role: userData.role || 'USER'
     };
-    
-    console.log('Header - Setting currentUser with role:', userDataWithRole);
     setCurrentUser(userDataWithRole);
-    
-    // Ensure role is set for the booking auth hook
     onAuthSuccess(userDataWithRole);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setCurrentUser(null);
     navigate('/');
-  };
-
-  const debugAuthState = () => {
-    console.log('=== AUTH DEBUG INFO ===');
-    console.log('Token:', localStorage.getItem('token'));
-    console.log('User:', localStorage.getItem('user'));
-    console.log('CurrentUser:', localStorage.getItem('currentUser'));
-    console.log('Current user state:', currentUser);
-    
-    const userFromStorage = localStorage.getItem('user');
-    const currentUserFromStorage = localStorage.getItem('currentUser');
-    
-    if (userFromStorage) {
-      try {
-        const userData = JSON.parse(userFromStorage);
-        console.log('Parsed user data:', userData);
-        console.log('User role from storage:', userData.userRole);
-      } catch (error) {
-        console.error('Error parsing user:', error);
-      }
-    }
-    
-    if (currentUserFromStorage) {
-      try {
-        const currentUserData = JSON.parse(currentUserFromStorage);
-        console.log('Parsed currentUser data:', currentUserData);
-        console.log('CurrentUser role from storage:', currentUserData.role);
-      } catch (error) {
-        console.error('Error parsing currentUser:', error);
-      }
-    }
-    
-    console.log('=== END AUTH DEBUG ===');
   };
 
   const handleDashboardClick = () => {
     // Always get the latest user info from localStorage
     let role = null;
     const currentUserFromStorage = localStorage.getItem('currentUser');
-    console.log('Dashboard button clicked!');
     if (currentUserFromStorage) {
       try {
         const currentUserData = JSON.parse(currentUserFromStorage);
         role = currentUserData.role;
-        console.log('Role from currentUser in localStorage:', role);
       } catch (error) {
         console.error('Error parsing currentUser from storage:', error);
       }
-    } else {
-      console.warn('No currentUser found in localStorage.');
     }
 
     switch (role?.toUpperCase()) {
       case 'ADMIN':
-        console.log('Navigating to /admin');
         navigate('/admin');
         break;
       case 'TRAVEL_AGENT':
       case 'AGENT':
-        console.log('Navigating to /agent');
         navigate('/agent');
         break;
       case 'USER':
-        console.log('Navigating to /dashboard');
         navigate('/dashboard');
         break;
       default:
-        console.warn('Unknown or missing role, navigating to /dashboard as fallback');
         navigate('/dashboard');
         break;
     }
@@ -232,14 +149,6 @@ const Header = () => {
             {currentUser ? (
               // Authenticated user view
               <>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={debugAuthState}
-                  className="hidden md:flex text-gray-500 hover:bg-gray-100"
-                >
-                  Debug
-                </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 

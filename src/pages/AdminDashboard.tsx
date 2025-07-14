@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Home, Users, Package, FileText, BarChart3, CreditCard, BookOpen, Settings, MessageCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
@@ -11,6 +12,7 @@ import AssistanceManagement from '@/components/dashboard/admin/AssistanceManagem
 import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
 import BookingManagement from '@/components/dashboard/agent/BookingManagement';
 import { Card, CardHeader, CardTitle, Badge } from '@/components/ui/card';
+import { isAuthenticated, getStoredCurrentUser } from '@/lib/auth';
 
 interface UserData {
   fullName: string;
@@ -35,14 +37,22 @@ const seededTitles = [
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      const userData = JSON.parse(user);
-      setCurrentUser(userData);
+    if (!isAuthenticated()) {
+      navigate('/');
+      return;
     }
-  }, []);
+    const user = getStoredCurrentUser();
+    if (user && user.isAuthenticated && user.role === 'ADMIN') {
+      setCurrentUser(user);
+    } else {
+      navigate('/');
+    }
+    setIsLoading(false);
+  }, [navigate]);
 
   const menuItems = [
     {

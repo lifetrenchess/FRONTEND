@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Home, Package, Calendar, MessageSquare, Users, Plus, TrendingUp, Settings, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
@@ -10,6 +11,7 @@ import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
 import AgentProfile from '@/components/dashboard/agent/AgentProfile';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { isAuthenticated, getStoredCurrentUser } from '@/lib/auth';
 
 interface UserData {
   fullName: string;
@@ -34,14 +36,22 @@ const seededTitles = [
 const AgentDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      const userData = JSON.parse(user);
-      setCurrentUser(userData);
-      }
-  }, []);
+    if (!isAuthenticated()) {
+      navigate('/');
+      return;
+    }
+    const user = getStoredCurrentUser();
+    if (user && user.isAuthenticated && user.role === 'AGENT') {
+      setCurrentUser(user);
+    } else {
+      navigate('/');
+    }
+    setIsLoading(false);
+  }, [navigate]);
 
   const menuItems = [
     {

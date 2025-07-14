@@ -73,56 +73,24 @@ const LoginDialog = ({ children, onAuthSuccess }: LoginDialogProps) => {
       // Store token with the correct key from API_CONFIG
       localStorage.setItem('token', token);
       
-      // Add a small delay to ensure token is stored before making authenticated request
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      try {
-        // Fetch user profile after login to get role
-        const user = await getCurrentUser();
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        // Create currentUser object with role
-        const currentUser = {
-          fullName: user.userName,
-          email: user.userEmail,
-          isAuthenticated: true,
-          role: user.userRole || 'USER'
-        };
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        console.log('LoginDialog - User role from backend:', user.userRole);
-        console.log('LoginDialog - Created currentUser:', currentUser);
-        
-        if (onAuthSuccess) onAuthSuccess(currentUser);
-        
-        setMessage({ type: 'success', text: `Login successful! Welcome back, ${currentUser.fullName}!` });
-        
-        setTimeout(() => {
-          setIsOpen(false);
-          // Stay on homepage - don't redirect to dashboard
-          // User will see their profile button in navbar and can click it to go to dashboard
-        }, 1500);
-        
-      } catch (profileError) {
-        console.error('Failed to fetch user profile:', profileError);
-        // Even if profile fetch fails, we can still proceed with basic login
-        const currentUser = {
-          fullName: formData.userEmail.split('@')[0], // Use email prefix as name
-          email: formData.userEmail,
-          isAuthenticated: true,
-          role: 'USER' // Default role
-        };
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        if (onAuthSuccess) onAuthSuccess(currentUser);
-        
-        setMessage({ type: 'success', text: 'Login successful! Welcome back!' });
-        
-        setTimeout(() => {
-          setIsOpen(false);
-          // Stay on homepage - don't redirect to dashboard
-        }, 1500);
-      }
+      // Fetch user profile after login to get role
+      const user = await getCurrentUser();
+      const currentUser = {
+        fullName: user.userName,
+        email: user.userEmail,
+        isAuthenticated: true,
+        role: user.userRole || 'USER'
+      };
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+      if (onAuthSuccess) onAuthSuccess(currentUser);
+
+      setMessage({ type: 'success', text: `Login successful! Welcome back, ${currentUser.fullName}!` });
+
+      setTimeout(() => {
+        setIsOpen(false);
+        // Stay on homepage
+      }, 1000);
       
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';

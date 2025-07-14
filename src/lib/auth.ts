@@ -56,3 +56,8 @@ export function getUserRole(): 'USER' | 'ADMIN' | 'TRAVEL_AGENT' | null {
 export function isAuthenticated(): boolean {
   return !!localStorage.getItem('token');
 } 
+
+export const getStoredCurrentUser = (): { fullName: string; email: string; isAuthenticated: boolean; role: string } | null => {
+  const currentUserStr = localStorage.getItem('currentUser');
+  return currentUserStr ? JSON.parse(currentUserStr) : null;
+}; 
