@@ -24,6 +24,7 @@ import {
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
 import LoginDialog from '@/components/auth/LoginDialog';
+import ReviewList from '@/components/reviews/ReviewList';
 
 // Add seeded titles for frontend-only badge logic
 const seededTitles = [
@@ -232,7 +233,6 @@ const AllPackages = () => {
                 className="pl-10"
               />
             </div>
-
             {/* Destination Filter */}
             <Select value={destinationFilter} onValueChange={setDestinationFilter}>
               <SelectTrigger>
@@ -247,7 +247,6 @@ const AllPackages = () => {
                 <SelectItem value="Himalayas">Himalayas</SelectItem>
               </SelectContent>
             </Select>
-
             {/* Price Filter */}
             <Select value={priceFilter} onValueChange={setPriceFilter}>
               <SelectTrigger>
@@ -261,7 +260,6 @@ const AllPackages = () => {
                 <SelectItem value="30000-">Above ₹30,000</SelectItem>
               </SelectContent>
             </Select>
-
             {/* Type Filter */}
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger>
@@ -276,20 +274,20 @@ const AllPackages = () => {
                 <SelectItem value="Mountain">Mountain</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* Clear Filters */}
-            <Button 
-              variant="outline" 
+            {/* View All Packages Button */}
+            <Button
+              variant="outline"
               onClick={() => {
                 setSearchTerm('');
                 setDestinationFilter('');
                 setPriceFilter('');
                 setTypeFilter('');
+                loadPackages();
               }}
               className="flex items-center"
             >
               <Filter className="w-4 h-4 mr-2" />
-              Clear Filters
+              View All Packages
             </Button>
           </div>
         </div>
@@ -308,16 +306,26 @@ const AllPackages = () => {
                 setDestinationFilter('');
                 setPriceFilter('');
                 setTypeFilter('');
+                loadPackages();
               }}
-                              className="bg-palette-teal hover:bg-palette-teal/90 text-white"
+              className="bg-palette-teal hover:bg-palette-teal/90 text-white"
             >
-              Clear All Filters
+              View All Packages
             </Button>
           </div>
         ) : (
           <div className="space-y-6">
             {filteredPackages.map((pkg) => (
               <Card key={pkg.packageId} className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                {/* Render main image if available */}
+                {pkg.mainImage && (
+                  <img
+                    src={pkg.mainImage}
+                    alt={pkg.title}
+                    className="w-full h-56 object-cover"
+                    style={{ objectFit: 'cover', width: '100%', height: '14rem' }}
+                  />
+                )}
                 <CardHeader>
                   <div className="flex items-center">
                     <CardTitle>{pkg.title}</CardTitle>
@@ -420,6 +428,11 @@ const AllPackages = () => {
                 </CardContent>
               </Card>
             ))}
+            {/* Render all reviews below the package list */}
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold mb-4">What Travelers Say</h2>
+              <ReviewList />
+            </div>
           </div>
         )}
       </div>

@@ -154,45 +154,38 @@ const Header = () => {
   };
 
   const handleDashboardClick = () => {
-    console.log('Dashboard click - Current user role:', currentUser?.role);
-    console.log('Current user data:', currentUser);
-    
-    // Get role from both sources to ensure we have the correct role
-    const userFromStorage = localStorage.getItem('user');
+    // Always get the latest user info from localStorage
+    let role = null;
     const currentUserFromStorage = localStorage.getItem('currentUser');
-    
-    console.log('User from storage:', userFromStorage);
-    console.log('CurrentUser from storage:', currentUserFromStorage);
-    
-    let role = currentUser?.role;
-    
-    // If role is not available from currentUser, try to get it from user storage
-    if (!role && userFromStorage) {
+    console.log('Dashboard button clicked!');
+    if (currentUserFromStorage) {
       try {
-        const userData = JSON.parse(userFromStorage);
-        role = userData.userRole;
-        console.log('Using role from user storage:', role);
+        const currentUserData = JSON.parse(currentUserFromStorage);
+        role = currentUserData.role;
+        console.log('Role from currentUser in localStorage:', role);
       } catch (error) {
-        console.error('Error parsing user from storage:', error);
+        console.error('Error parsing currentUser from storage:', error);
       }
+    } else {
+      console.warn('No currentUser found in localStorage.');
     }
-    
-    console.log('Final role for navigation:', role);
-    
-    // Navigate to role-specific dashboard
+
     switch (role?.toUpperCase()) {
       case 'ADMIN':
-        console.log('Navigating to admin dashboard');
+        console.log('Navigating to /admin');
         navigate('/admin');
         break;
       case 'TRAVEL_AGENT':
       case 'AGENT':
-        console.log('Navigating to agent dashboard');
+        console.log('Navigating to /agent');
         navigate('/agent');
         break;
       case 'USER':
+        console.log('Navigating to /dashboard');
+        navigate('/dashboard');
+        break;
       default:
-        console.log('Navigating to user dashboard');
+        console.warn('Unknown or missing role, navigating to /dashboard as fallback');
         navigate('/dashboard');
         break;
     }
@@ -280,7 +273,14 @@ const Header = () => {
             
             <Button 
               className="bg-palette-orange hover:bg-palette-orange/90 text-white"
-              onClick={() => handleBookNow()}
+              onClick={() => {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  setShowLoginDialog(true);
+                } else {
+                  navigate('/packages');
+                }
+              }}
             >
               Book Now
             </Button>

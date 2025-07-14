@@ -15,6 +15,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { getApiUrl } from '@/lib/apiConfig';
 import InsuranceOptions from '@/components/InsuranceOptions';
 import { getCurrentUserFromStorage } from '@/lib/auth';
+import { fetchPackageById, TravelPackageDto } from '@/lib/packagesApi';
 
 interface TravelPackageSummary {
   image: string;
@@ -51,6 +52,13 @@ interface BookingDTO {
   insurancePlan?: number;
 }
 
+const mockPackage = {
+  mainImage: 'https://via.placeholder.com/200x150',
+  title: 'Mystical Bali Retreat',
+  duration: 7,
+  price: 1500.00,
+};
+
 const BookingPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -67,11 +75,12 @@ const BookingPage = () => {
   const [hasInsurance, setHasInsurance] = useState<boolean>(false);
   const [selectedInsurancePlan, setSelectedInsurancePlan] = useState<number | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
+  const [packageData, setPackageData] = useState<TravelPackageDto | null>(null);
 
   const [packageSummary, setPackageSummary] = useState<TravelPackageSummary>({
-    image: 'https://via.placeholder.com/200x150',
-    title: 'Mystical Bali Retreat',
-    duration: '7 Days / 6 Nights',
+    image: '',
+    title: '',
+    duration: '',
     selectedDates: 'Please select dates',
   });
 
@@ -92,38 +101,73 @@ const BookingPage = () => {
   };
 
   useEffect(() => {
-    const basePricePerAdult = 1500;
-    const basePricePerChild = 750;
-    const basePricePerInfant = 0;
-
-    let currentPackagePrice = (adults * basePricePerAdult) + (children * basePricePerChild) + (infants * basePricePerInfant);
-    
-    // Calculate insurance cost based on selected plan
-    // For now, we'll use a simple calculation. In a real implementation,
-    // you would fetch the actual insurance plan price from the backend
-    let currentInsuranceCost = 0;
-    if (hasInsurance && selectedInsurancePlan) {
-      // Default insurance prices based on plan type
-      const insurancePrices = {
-        1: 599,  // Small package
-        2: 899,  // Medium package  
-        3: 1000  // Large package
-      };
-      const planPrice = insurancePrices[selectedInsurancePlan as keyof typeof insurancePrices] || 0;
-      currentInsuranceCost = planPrice * (adults + children);
+    if (id) {
+      fetchPackageById(Number(id)).then((data) => {
+        if (data && data.packageId) {
+          setPackageData(data);
+          setPackageSummary((prev) => ({
+            ...prev,
+            image: data.mainImage || mockPackage.mainImage,
+            title: data.title,
+            duration: `${data.duration} Days`,
+          }));
+          setPriceBreakdown((prev) => ({
+            ...prev,
+            packagePrice: data.price,
+            totalAmount: data.price + prev.travelInsurance + prev.taxesFees,
+          }));
+        } else {
+          // Use mock data if no package found
+          setPackageData(null);
+          setPackageSummary((prev) => ({
+            ...prev,
+            image: mockPackage.mainImage,
+            title: mockPackage.title,
+            duration: `${mockPackage.duration} Days`,
+          }));
+          setPriceBreakdown((prev) => ({
+            ...prev,
+            packagePrice: mockPackage.price,
+            totalAmount: mockPackage.price + prev.travelInsurance + prev.taxesFees,
+          }));
+        }
+      }).catch(() => {
+        // Use mock data if fetch fails
+        setPackageData(null);
+        setPackageSummary((prev) => ({
+          ...prev,
+          image: mockPackage.mainImage,
+          title: mockPackage.title,
+          duration: `${mockPackage.duration} Days`,
+        }));
+        setPriceBreakdown((prev) => ({
+          ...prev,
+          packagePrice: mockPackage.price,
+          totalAmount: mockPackage.price + prev.travelInsurance + prev.taxesFees,
+        }));
+      });
     }
-    
-    let currentTaxesFees = 50;
+  }, [id]);
 
-    const newTotalAmount = currentPackagePrice + currentInsuranceCost + currentTaxesFees;
-
-    setPriceBreakdown({
-      packagePrice: currentPackagePrice,
-      travelInsurance: currentInsuranceCost,
-      taxesFees: currentTaxesFees,
-      totalAmount: newTotalAmount,
-    });
-  }, [adults, children, infants, hasInsurance, selectedInsurancePlan]);
+  useEffect(() => {
+    if (packageData) {
+      let currentPackagePrice = packageData.price * adults + packageData.price * children * 0.5 + 0 * infants;
+      let currentInsuranceCost = 0;
+      if (hasInsurance && selectedInsurancePlan) {
+        const insurancePrices = { 1: 599, 2: 899, 3: 1000 };
+        const planPrice = insurancePrices[selectedInsurancePlan as keyof typeof insurancePrices] || 0;
+        currentInsuranceCost = planPrice * (adults + children);
+      }
+      let currentTaxesFees = 50;
+      const newTotalAmount = currentPackagePrice + currentInsuranceCost + currentTaxesFees;
+      setPriceBreakdown({
+        packagePrice: currentPackagePrice,
+        travelInsurance: currentInsuranceCost,
+        taxesFees: currentTaxesFees,
+        totalAmount: newTotalAmount,
+      });
+    }
+  }, [adults, children, infants, hasInsurance, selectedInsurancePlan, packageData]);
 
   useEffect(() => {
     if (startDate && endDate) {

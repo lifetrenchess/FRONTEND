@@ -246,9 +246,11 @@ const PackageManagement = () => {
           )
         );
         toast.success('Package updated successfully!');
+        await fetchPackages();
       } else {
         setPackages(prev => [...prev, savedPackage]);
         toast.success('Package created successfully!');
+        await fetchPackages();
       }
       
       resetForm();
