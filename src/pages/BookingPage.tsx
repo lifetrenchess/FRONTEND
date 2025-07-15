@@ -16,6 +16,7 @@ import { getApiUrl } from '@/lib/apiConfig';
 import InsuranceOptions from '@/components/InsuranceOptions';
 import { getCurrentUserFromStorage } from '@/lib/auth';
 import { fetchPackageById, TravelPackageDto } from '@/lib/packagesApi';
+import styles from '@/styles/BookingPage.module.css';
 
 interface TravelPackageSummary {
   image: string;
@@ -49,7 +50,6 @@ interface BookingDTO {
     names: string[];
   };
   hasInsurance: boolean;
-  insurancePlan?: number;
 }
 
 const mockPackage = {
@@ -74,7 +74,6 @@ const BookingPage = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [travelerNames, setTravelerNames] = useState<string[]>(['']);
   const [hasInsurance, setHasInsurance] = useState<boolean>(false);
-  const [selectedInsurancePlan, setSelectedInsurancePlan] = useState<number | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
   const [packageData, setPackageData] = useState<TravelPackageDto | null>(null);
 
@@ -165,7 +164,6 @@ const BookingPage = () => {
       if (data.phoneNumber !== undefined) setPhoneNumber(data.phoneNumber);
       if (data.travelerNames !== undefined) setTravelerNames(data.travelerNames);
       if (data.hasInsurance !== undefined) setHasInsurance(data.hasInsurance);
-      if (data.selectedInsurancePlan !== undefined) setSelectedInsurancePlan(data.selectedInsurancePlan);
       if (data.agreedToTerms !== undefined) setAgreedToTerms(data.agreedToTerms);
     }
   }, []);
@@ -189,10 +187,8 @@ const BookingPage = () => {
     if (packageData) {
       let currentPackagePrice = packageData.price * adults + packageData.price * children * 0.5 + 0 * infants;
       let currentInsuranceCost = 0;
-      if (hasInsurance && selectedInsurancePlan) {
-        const insurancePrices = { 1: 599, 2: 899, 3: 1000 };
-        const planPrice = insurancePrices[selectedInsurancePlan as keyof typeof insurancePrices] || 0;
-        currentInsuranceCost = planPrice * (adults + children);
+      if (hasInsurance) {
+        currentInsuranceCost = 1000; // Fixed insurance cost for now
       }
       let currentTaxesFees = 50;
       const newTotalAmount = currentPackagePrice + currentInsuranceCost + currentTaxesFees;
@@ -203,7 +199,7 @@ const BookingPage = () => {
         totalAmount: newTotalAmount,
       });
     }
-  }, [adults, children, infants, hasInsurance, selectedInsurancePlan, packageData]);
+  }, [adults, children, infants, hasInsurance, packageData]);
 
   useEffect(() => {
     if (startDate && endDate) {
@@ -247,53 +243,19 @@ const BookingPage = () => {
   };
 
   // 2. Save form data before navigating to insurance
-  const handleGoToInsurance = () => {
-    localStorage.setItem('bookingFormData', JSON.stringify({
-      startDate,
-      endDate,
-      adults,
-      children,
-      infants,
-      fullName,
-      email,
-      phoneNumber,
-      travelerNames,
-      hasInsurance: true,
-      selectedInsurancePlan,
-      agreedToTerms
-    }));
-    navigate('/insurance', {
-      state: {
-        bookingId: packageData?.packageId || id,
-        totalAmount: priceBreakdown.totalAmount,
-        userId: getCurrentUserFromStorage()?.userId,
-        packageData // <-- pass packageData
-      }
-    });
-  };
-
-  // 3. Clear form data after successful booking
   const handleSubmitBooking = async () => {
     if (!startDate || !agreedToTerms || fullName === '' || email === '' || phoneNumber === '' || adults === 0 || travelerNames.slice(0, adults + children).some(name => name.trim() === '')) {
       alert('Please fill all required fields, select dates, and agree to terms.');
       return;
     }
-
-    if (hasInsurance && !selectedInsurancePlan) {
-      alert('Please select an insurance plan or uncheck the insurance option.');
-      return;
-    }
-
     // Get current user from authentication
     const currentUser = getCurrentUserFromStorage();
     if (!currentUser || !currentUser.userId) {
       alert('Please log in to make a booking.');
       return;
     }
-
     const userId = currentUser.userId;
     const packageId = parseInt(id || '456');
-
     const bookingPayload: BookingDTO = {
       userId: userId,
       packageId: packageId,
@@ -312,11 +274,7 @@ const BookingPage = () => {
         names: travelerNames.filter(name => name.trim() !== ''),
       },
       hasInsurance: hasInsurance,
-      insurancePlan: selectedInsurancePlan,
     };
-
-    console.log('Booking Payload:', bookingPayload);
-
     try {
       const response = await fetch(getApiUrl('BOOKING_SERVICE', ''), {
         method: 'POST',
@@ -325,32 +283,32 @@ const BookingPage = () => {
         },
         body: JSON.stringify(bookingPayload),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to create booking');
       }
-
       const createdBooking = await response.json();
-      console.log('Booking created:', createdBooking);
-
-      // Clear saved form data
       localStorage.removeItem('bookingFormData');
-      // Save bookingId for insurance fallback
-      localStorage.setItem('lastBookingId', createdBooking.bookingId);
-      // Navigate to payment page
-      navigate('/payment', {
-        state: {
-          bookingId: createdBooking.bookingId,
-          totalAmount: priceBreakdown.totalAmount,
-          userId: currentUser.userId,
-        },
-      });
+      if (hasInsurance) {
+        navigate('/insurance', {
+          state: {
+            bookingId: createdBooking.bookingId,
+            totalAmount: priceBreakdown.totalAmount,
+            userId: currentUser.userId,
+          },
+        });
+      } else {
+        navigate('/payment', {
+          state: {
+            bookingId: createdBooking.bookingId,
+            totalAmount: priceBreakdown.totalAmount,
+            userId: currentUser.userId,
+          },
+        });
+      }
     } catch (error: any) {
       console.error('Booking error:', error);
       alert(`Booking failed: ${error.message}`);
-    } finally {
-      // setIsSubmitting(false); // This line was not in the new_code, so it's removed.
     }
   };
 
@@ -361,25 +319,25 @@ const BookingPage = () => {
     min?: number;
     max?: number;
   }) => (
-    <div className="flex items-center justify-between p-4 border rounded-lg">
-      <Label className="text-sm font-medium">{label}</Label>
-      <div className="flex items-center space-x-3">
+    <div className={styles.quantitySelector}>
+      <Label className={styles.quantitySelectorLabel}>{label}</Label>
+      <div className={styles.quantitySelectorButtons}>
         <Button
           variant="outline"
           size="sm"
           onClick={() => onChange(value - 1)}
           disabled={value <= min}
-          className="w-8 h-8 p-0"
+          className={styles.quantityButton}
         >
           -
         </Button>
-        <span className="w-8 text-center font-medium">{value}</span>
+        <span className={styles.quantityValue}>{value}</span>
         <Button
           variant="outline"
           size="sm"
           onClick={() => onChange(value + 1)}
           disabled={value >= max}
-          className="w-8 h-8 p-0"
+          className={styles.quantityButton}
         >
           +
         </Button>
@@ -388,42 +346,42 @@ const BookingPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={styles.bookingPageContainer}>
+      <div className={styles.bookingPageContent}>
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Confirm Your Booking</h1>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
+        <div className={styles.header}>
+          <h1 className={styles.headerTitle}>Confirm Your Booking</h1>
+          <div className={styles.headerSubtitle}>
+            <div className={styles.headerSubtitleItem}>
+              <CheckCircle className={styles.headerSubtitleIcon} />
               <span>Package Details</span>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center space-x-2">
-              <CreditCard className="w-4 h-4 text-gray-400" />
+            <div className={styles.headerSubtitleDivider}></div>
+            <div className={styles.headerSubtitleItem}>
+              <CreditCard className={styles.headerSubtitleIcon} />
               <span>Confirm & Pay</span>
             </div>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-gray-400" />
+            <div className={styles.headerSubtitleDivider}></div>
+            <div className={styles.headerSubtitleItem}>
+              <CheckCircle className={styles.headerSubtitleIcon} />
               <span>Confirmation</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={styles.grid}>
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className={styles.mainContent}>
             {/* Date Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="w-5 h-5" />
+            <Card className={styles.card}>
+              <CardHeader className={styles.cardHeader}>
+                <CardTitle className={styles.cardTitle}>
+                  <Calendar className={styles.cardTitleIcon} />
                   <span>Select Your Dates</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className={styles.cardContent}>
+                <div className={styles.grid}>
                   <div>
                     <Label>Start Date</Label>
                     <Popover>
@@ -431,15 +389,15 @@ const BookingPage = () => {
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !startDate && "text-muted-foreground"
+                            styles.dateButton,
+                            !startDate && styles.dateButtonMuted
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <CalendarIcon className={styles.dateButtonIcon} />
                           {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className={styles.datePopoverContent}>
                         <CalendarComponent
                           mode="single"
                           selected={startDate}
@@ -456,7 +414,7 @@ const BookingPage = () => {
                       type="text"
                       value={endDate ? format(endDate, 'PPP') : ''}
                       readOnly
-                      className="w-full bg-gray-100 cursor-not-allowed"
+                      className={styles.endDateInput}
                       placeholder="End date will be auto-calculated"
                     />
                   </div>
@@ -465,14 +423,14 @@ const BookingPage = () => {
             </Card>
 
             {/* Travelers */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" />
+            <Card className={styles.card}>
+              <CardHeader className={styles.cardHeader}>
+                <CardTitle className={styles.cardTitle}>
+                  <Users className={styles.cardTitleIcon} />
                   <span>Who's Traveling?</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className={styles.cardContent}>
                 <QuantitySelector
                   label="Adults (12+)"
                   value={adults}
@@ -493,8 +451,8 @@ const BookingPage = () => {
                 <Separator />
 
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Contact Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className={styles.sectionTitle}>Contact Details</h3>
+                  <div className={styles.grid}>
                     <div>
                       <Label htmlFor="fullName">Full Name</Label>
                       <Input
@@ -516,7 +474,7 @@ const BookingPage = () => {
                         required
                       />
                     </div>
-                    <div className="md:col-span-2">
+                    <div className={styles.colSpan2}>
                       <Label htmlFor="phoneNumber">Phone Number</Label>
                       <Input
                         id="phoneNumber"
@@ -532,8 +490,8 @@ const BookingPage = () => {
 
                 {(adults + children) > 0 && (
                   <div>
-                    <h3 className="text-lg font-medium mb-4">Traveler Names</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 className={styles.sectionTitle}>Traveler Names</h3>
+                    <div className={styles.grid}>
                       {Array.from({ length: adults + children }).map((_, index) => (
                         <div key={index}>
                           <Label htmlFor={`traveler-name-${index}`}>Traveler {index + 1} Name</Label>
@@ -553,55 +511,46 @@ const BookingPage = () => {
             </Card>
 
             {/* Insurance */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="w-5 h-5" />
+            <Card className={styles.card}>
+              <CardHeader className={styles.cardHeader}>
+                <CardTitle className={styles.cardTitle}>
+                  <Shield className={styles.cardTitleIcon} />
                   <span>Enhance Your Trip</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
+              <CardContent className={styles.cardContent}>
+                <div className={styles.spaceY4}>
+                  <div className={styles.flexItemsCenter}>
                     <Checkbox
                       id="addInsurance"
                       checked={hasInsurance}
-                      onCheckedChange={(checked) => {
-                        setHasInsurance(checked as boolean);
-                        if (checked) {
-                          handleGoToInsurance();
-                        } else {
-                          setSelectedInsurancePlan(null);
-                        }
-                      }}
+                      onCheckedChange={(checked) => setHasInsurance(checked as boolean)}
                     />
-                    <Label htmlFor="addInsurance" className="text-sm font-medium">
-                      Add Travel Insurance
+                    <Label htmlFor="addInsurance" className={styles.checkboxLabel}>
+                      I want travel insurance
                     </Label>
                   </div>
-                  
-                  {/* Removed inline InsuranceOptions selector */}
                 </div>
               </CardContent>
             </Card>
 
             {/* Terms */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2">
+            <Card className={styles.card}>
+              <CardContent className={styles.cardContent}>
+                <div className={styles.flexItemsCenter}>
                   <Checkbox
                     id="agreeTerms"
                     checked={agreedToTerms}
                     onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                     required
                   />
-                  <Label htmlFor="agreeTerms" className="text-sm">
+                  <Label htmlFor="agreeTerms" className={styles.checkboxLabel}>
                     I have read and agree to the{' '}
-                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-palette-teal hover:underline">
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className={styles.link}>
                       Terms & Conditions
                     </a>{' '}
                     and{' '}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-palette-teal hover:underline">
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className={styles.link}>
                       Privacy Policy
                     </a>
                     .
@@ -612,52 +561,52 @@ const BookingPage = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Booking Summary</CardTitle>
+          <div className={styles.sidebar}>
+            <Card className={styles.card}>
+              <CardHeader className={styles.cardHeader}>
+                <CardTitle className={styles.cardTitle}>Booking Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex space-x-4">
+              <CardContent className={styles.cardContent}>
+                <div className={styles.flexSpaceX4}>
                   <img 
                     src={packageSummary.image} 
                     alt={packageSummary.title} 
-                    className="w-20 h-16 object-cover rounded-lg"
+                    className={styles.packageImage}
                   />
                   <div>
-                    <h3 className="font-medium">{packageSummary.title}</h3>
-                    <p className="text-sm text-gray-600">{packageSummary.duration}</p>
-                    <p className="text-sm text-gray-600">{packageSummary.selectedDates}</p>
+                    <h3 className={styles.fontMedium}>{packageSummary.title}</h3>
+                    <p className={styles.textSm}>{packageSummary.duration}</p>
+                    <p className={styles.textSm}>{packageSummary.selectedDates}</p>
                   </div>
                 </div>
                 
-                <div className="text-sm">
+                <div className={styles.textSm}>
                   <p><strong>Travelers:</strong> {adults} Adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants !== 1 ? 's' : ''}` : ''}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Price Breakdown</CardTitle>
+            <Card className={styles.card}>
+              <CardHeader className={styles.cardHeader}>
+                <CardTitle className={styles.cardTitle}>Price Breakdown</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
+              <CardContent className={styles.cardContent}>
+                <div className={styles.flexJustifyBetween}>
                   <span>Package Price:</span>
                   <span>{formatIndianRupees(priceBreakdown.packagePrice)}</span>
                 </div>
                 {hasInsurance && (
-                  <div className="flex justify-between">
+                  <div className={styles.flexJustifyBetween}>
                     <span>Travel Insurance:</span>
                     <span>{formatIndianRupees(priceBreakdown.travelInsurance)}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
+                <div className={styles.flexJustifyBetween}>
                   <span>Taxes & Fees:</span>
                   <span>{formatIndianRupees(priceBreakdown.taxesFees)}</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between font-bold text-lg">
+                <div className={styles.flexJustifyBetween}>
                   <span>Total Amount:</span>
                   <span>{formatIndianRupees(priceBreakdown.totalAmount)}</span>
                 </div>
@@ -665,14 +614,13 @@ const BookingPage = () => {
             </Card>
 
             <Button
-              className="w-full bg-palette-orange hover:bg-palette-orange/90"
+              className={styles.proceedButton}
               onClick={handleSubmitBooking}
               disabled={
                 !startDate || !agreedToTerms ||
                 fullName === '' || email === '' || phoneNumber === '' ||
                 adults === 0 ||
-                travelerNames.slice(0, adults + children).some(name => name.trim() === '') ||
-                (hasInsurance && !selectedInsurancePlan)
+                travelerNames.slice(0, adults + children).some(name => name.trim() === '')
               }
             >
               Proceed to Payment

@@ -1,0 +1,354 @@
+/* InsurancePage.module.css */
+
+.insurancePageContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fdf6e3 0%, #fff 60%, #fdf6e3 100%);
+  padding: 32px 0;
+}
+
+.maxWidthContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.backButton {
+  margin-bottom: 16px;
+  color: #008080;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.arrowLeft {
+  margin-right: 8px;
+}
+
+.travelInsuranceTitle {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.travelInsuranceDescription {
+  color: #666;
+  font-size: 1.1em;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 900px) {
+  .gridContainer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.insurancePlans {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.insuranceCard {
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.selectedPlan {
+  border: 2px solid #008080;
+  box-shadow: 0 0 0 2px #00808022;
+}
+.recommendedPlan {
+  border: 2px solid #ff9800;
+}
+.cardHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+.shieldIcon {
+  color: #008080;
+  width: 22px;
+  height: 22px;
+}
+.recommendedBadge {
+  background: #ff9800;
+  color: #fff;
+  font-size: 0.75em;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+.coverageDetails {
+  color: #666;
+  margin-top: 4px;
+  font-size: 0.98em;
+}
+.priceContainer {
+  text-align: right;
+}
+.price {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #008080;
+}
+.pricePerPerson {
+  font-size: 0.9em;
+  color: #888;
+}
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.providerInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #666;
+  font-size: 0.95em;
+}
+.coverageSummary {
+  margin-top: 8px;
+}
+.coverageSummaryTitle {
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 6px;
+}
+.coverageSummaryDetails {
+  background: #f7f7f7;
+  padding: 12px;
+  border-radius: 8px;
+}
+.coverageSummaryText {
+  color: #444;
+  font-size: 0.97em;
+}
+.termsCard {
+  margin-top: 12px;
+}
+.termsCardContent {
+  padding-top: 18px;
+}
+.termsCheckbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.termsLabel {
+  font-size: 0.98em;
+  color: #444;
+  line-height: 1.5;
+}
+.termsLink {
+  color: #008080;
+  text-decoration: underline;
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.whyInsuranceCard {
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+.whyInsuranceTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+.whyInsuranceContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.whyInsuranceItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.whyInsuranceIcon {
+  width: 20px;
+  height: 20px;
+}
+.whyInsuranceSubtitle {
+  font-weight: 500;
+  font-size: 1em;
+}
+.whyInsuranceText {
+  font-size: 0.92em;
+  color: #666;
+}
+.summaryCard {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.08);
+}
+.summaryTitle {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+.summaryContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.summaryItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1em;
+  color: #444;
+}
+.summarySeparator {
+  margin: 8px 0;
+}
+.summaryTotal {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 1.15em;
+  color: #008080;
+}
+.actionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.proceedButton {
+  width: 100%;
+  background: #ff9800;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1em;
+  border-radius: 8px;
+  padding: 12px 0;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.proceedButton:disabled {
+  background: #ffd699;
+  color: #fff;
+  cursor: not-allowed;
+}
+.skipButton {
+  width: 100%;
+  background: #fff;
+  color: #008080;
+  border: 1.5px solid #008080;
+  border-radius: 8px;
+  padding: 12px 0;
+  font-weight: 500;
+  font-size: 1.05em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.skipButton:hover {
+  background: #f0fdfa;
+}
+.trustIndicatorsCard {
+  border: 1.5px solid #b2dfdb;
+  background: #e0f7fa;
+  border-radius: 10px;
+}
+.trustIndicatorsContent {
+  padding-top: 18px;
+}
+.trustIndicatorsTextCenter {
+  text-align: center;
+}
+.trustIndicatorsStars {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.trustIndicatorsStar {
+  width: 18px;
+  height: 18px;
+  color: #ffd600;
+  fill: #ffd600;
+}
+.trustIndicatorsText {
+  font-size: 0.98em;
+  color: #388e3c;
+}
+.loadingContainer {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.textCenter {
+  text-align: center;
+}
+.loader {
+  width: 36px;
+  height: 36px;
+  color: #008080;
+  margin: 0 auto 16px auto;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+.loadingText {
+  color: #666;
+  font-size: 1.1em;
+}
+.failedTitle {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #c62828;
+  margin-bottom: 6px;
+}
+.failedMessage {
+  color: #888;
+  margin-bottom: 16px;
+}
+.tryAgainButton {
+  background: #008080;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tryAgainButton:hover {
+  background: #006666;
+} 

@@ -9,21 +9,23 @@ import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { fetchInsurancePackages, selectInsuranceForBooking, InsurancePlan } from '@/lib/insuranceApi';
 import { getCurrentUserFromStorage } from '@/lib/auth';
+import styles from '@/styles/InsurancePage.module.css';
 
 const InsurancePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId: navBookingId, totalAmount, userId, packageData } = (location.state || {}) as { 
+  const { bookingId, totalAmount, userId } = (location.state || {}) as { 
     bookingId: number; 
     totalAmount: number; 
     userId: number; 
-    packageData?: any;
   };
-  let bookingId = navBookingId;
-  if (!bookingId) {
-    const stored = localStorage.getItem('lastBookingId');
-    if (stored) bookingId = Number(stored);
-  }
+
+  // If bookingId or userId is missing, redirect to booking page
+  useEffect(() => {
+    if (!bookingId || !userId) {
+      navigate('/');
+    }
+  }, [bookingId, userId, navigate]);
 
   const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
@@ -60,12 +62,7 @@ const InsurancePage = () => {
     }).format(amount);
   };
 
-  const handleProceedToSummary = async () => {
-    let actualUserId = userId;
-    if (!actualUserId) {
-      const user = getCurrentUserFromStorage();
-      actualUserId = user?.userId;
-    }
+  const handleProceedToPayment = async () => {
     if (!selectedPlan) {
       toast.error('Please select an insurance plan');
       return;
@@ -74,35 +71,24 @@ const InsurancePage = () => {
       toast.error('Please agree to the terms and conditions');
       return;
     }
-    if (!actualUserId || !bookingId) {
-      toast.error('User or booking information missing. Please login and try again.');
-      navigate('/login');
-      return;
-    }
-    const selectedPlanData = insurancePlans.find(plan => plan.insuranceId === selectedPlan);
-    if (!selectedPlanData) {
-      toast.error('Invalid plan selected');
-      return;
-    }
     try {
       const insuranceSelection = await selectInsuranceForBooking(
         selectedPlan,
-        actualUserId,
+        userId,
         bookingId
       );
       toast.success('Insurance plan selected successfully!');
-      navigate('/booking-summary', {
+      navigate('/payment', {
         state: {
           bookingId: bookingId,
-          totalAmount: totalAmount + selectedPlanData.price,
-          userId: actualUserId,
+          totalAmount: totalAmount + (insurancePlans.find(p => p.insuranceId === selectedPlan)?.price || 0),
+          userId: userId,
           insurance: {
             planId: selectedPlan,
-            planName: selectedPlanData.packageType,
-            price: selectedPlanData.price,
+            planName: insurancePlans.find(p => p.insuranceId === selectedPlan)?.packageType,
+            price: insurancePlans.find(p => p.insuranceId === selectedPlan)?.price,
             insuranceId: insuranceSelection.insuranceId
-          },
-          packageData // <-- forward packageData
+          }
         }
       });
     } catch (error) {
@@ -112,22 +98,21 @@ const InsurancePage = () => {
   };
 
   const handleSkipInsurance = () => {
-    navigate('/booking-summary', {
+    navigate('/payment', {
       state: {
         bookingId: bookingId,
         totalAmount: totalAmount,
-        userId: userId,
-        packageData // <-- forward packageData
+        userId: userId
       }
     });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-palette-teal mx-auto mb-4" />
-          <p className="text-gray-600">Loading insurance packages...</p>
+      <div className={styles.loadingContainer}>
+        <div className={styles.textCenter}>
+          <Loader2 className={styles.loader} />
+          <p className={styles.loadingText}>Loading insurance packages...</p>
         </div>
       </div>
     );
@@ -135,12 +120,12 @@ const InsurancePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 flex items-center justify-center">
-        <div className="text-center">
-          <Shield className="w-12 h-12 text-palette-orange mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Failed to Load Insurance</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()} className="bg-palette-teal hover:bg-palette-teal/90">
+      <div className={styles.loadingContainer}>
+        <div className={styles.textCenter}>
+          <Shield className={styles.shieldIcon} />
+          <h2 className={styles.failedTitle}>Failed to Load Insurance</h2>
+          <p className={styles.failedMessage}>{error}</p>
+          <Button onClick={() => window.location.reload()} className={styles.tryAgainButton}>
             Try Again
           </Button>
         </div>
@@ -149,73 +134,67 @@ const InsurancePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={styles.insurancePageContainer}>
+      <div className={styles.maxWidthContainer}>
         {/* Header */}
-        <div className="mb-8">
+        <div className={styles.header}>
           <Button 
             variant="ghost" 
             onClick={() => navigate(-1)}
-            className="mb-4 flex items-center text-palette-teal hover:text-palette-teal/80"
+            className={styles.backButton}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className={styles.arrowLeft} />
             Back to Booking
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Travel Insurance</h1>
-          <p className="text-gray-600">Protect your journey with comprehensive travel insurance coverage</p>
+          <h1 className={styles.travelInsuranceTitle}>Travel Insurance</h1>
+          <p className={styles.travelInsuranceDescription}>Protect your journey with comprehensive travel insurance coverage</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={styles.gridContainer}>
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className={styles.mainContent}>
             {/* Insurance Plans */}
-            <div className="space-y-6">
+            <div className={styles.insurancePlans}>
               {insurancePlans.map((plan) => (
                 <Card 
                   key={plan.insuranceId} 
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg backdrop-blur-md bg-white/30 border border-white/40 shadow-xl ${
-                    selectedPlan === plan.insuranceId 
-                      ? 'ring-2 ring-palette-teal border-palette-teal' 
-                      : 'hover:border-gray-300'
-                  } ${plan.packageType === 'Medium' ? 'border-2 border-palette-orange' : ''}`}
-                  style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)', borderRadius: '1.25rem' }}
-                  onClick={() => setSelectedPlan(plan.insuranceId)}
+                  className={`${styles.insuranceCard} ${selectedPlan === plan.insuranceId ? styles.selectedPlan : ''} ${plan.packageType === 'Medium' ? styles.recommendedPlan : ''}`}
                 >
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className={styles.cardHeaderContent}>
                       <div>
-                        <CardTitle className="flex items-center space-x-2">
-                          <Shield className="w-5 h-5 text-palette-teal" />
+                        <CardTitle className={styles.cardTitle}>
+                          <Shield className={styles.shieldIcon} />
                           <span>{plan.packageType} Coverage</span>
                           {plan.packageType === 'Medium' && (
-                            <span className="bg-palette-orange text-white text-xs px-2 py-1 rounded-full">
+                            <span className={styles.recommendedBadge}>
                               Recommended
                             </span>
                           )}
                         </CardTitle>
-                        <p className="text-gray-600 mt-1">{plan.coverageDetails}</p>
+                        <p className={styles.coverageDetails}>{plan.coverageDetails}</p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-palette-teal">
+                      <div className={styles.priceContainer}>
+                        <div className={styles.price}>
                           {formatIndianRupees(plan.price)}
                         </div>
-                        <div className="text-sm text-gray-500">per person</div>
+                        <div className={styles.pricePerPerson}>per person</div>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className={styles.cardContent}>
                       {/* Provider Info */}
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Shield className="w-4 h-4" />
+                      <div className={styles.providerInfo}>
+                        <Shield className={styles.shieldIcon} />
                         <span>Provider: {plan.provider}</span>
                       </div>
                       
                       {/* Coverage Summary */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Coverage Summary</h4>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <p className="text-sm text-gray-700 leading-relaxed">{plan.coverageDetails}</p>
+                      <div className={styles.coverageSummary}>
+                        <h4 className={styles.coverageSummaryTitle}>Coverage Summary</h4>
+                        <div className={styles.coverageSummaryDetails}>
+                          <p className={styles.coverageSummaryText}>{plan.coverageDetails}</p>
                         </div>
                       </div>
                     </div>
@@ -225,17 +204,17 @@ const InsurancePage = () => {
             </div>
 
             {/* Terms and Conditions */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start space-x-3">
+            <Card className={styles.termsCard}>
+              <CardContent className={styles.termsCardContent}>
+                <div className={styles.termsCheckbox}>
                   <Checkbox
                     id="agreeTerms"
                     checked={agreedToTerms}
                     onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                   />
-                  <Label htmlFor="agreeTerms" className="text-sm leading-relaxed">
+                  <Label htmlFor="agreeTerms" className={styles.termsLabel}>
                     I have read and agree to the{' '}
-                    <a href="/insurance-terms" target="_blank" rel="noopener noreferrer" className="text-palette-teal hover:underline">
+                    <a href="/insurance-terms" target="_blank" rel="noopener noreferrer" className={styles.termsLink}>
                       Insurance Terms & Conditions
                     </a>{' '}
                     and understand that this insurance coverage is provided by our trusted insurance partner.
@@ -246,58 +225,58 @@ const InsurancePage = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className={styles.sidebar}>
             {/* Why Insurance */}
-            <Card>
+            <Card className={styles.whyInsuranceCard}>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="w-5 h-5" />
+                <CardTitle className={styles.whyInsuranceTitle}>
+                  <Shield className={styles.shieldIcon} />
                   <span>Why Travel Insurance?</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Heart className="w-5 h-5 text-red-500 mt-0.5" />
+              <CardContent className={styles.whyInsuranceContent}>
+                <div className={styles.whyInsuranceItem}>
+                  <Heart className={styles.whyInsuranceIcon} />
                   <div>
-                    <h4 className="font-medium text-sm">Medical Protection</h4>
-                    <p className="text-xs text-gray-600">Coverage for unexpected medical expenses abroad</p>
+                    <h4 className={styles.whyInsuranceSubtitle}>Medical Protection</h4>
+                    <p className={styles.whyInsuranceText}>Coverage for unexpected medical expenses abroad</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <Plane className="w-5 h-5 text-blue-500 mt-0.5" />
+                <div className={styles.whyInsuranceItem}>
+                  <Plane className={styles.whyInsuranceIcon} />
                   <div>
-                    <h4 className="font-medium text-sm">Trip Protection</h4>
-                    <p className="text-xs text-gray-600">Coverage for trip cancellation and delays</p>
+                    <h4 className={styles.whyInsuranceSubtitle}>Trip Protection</h4>
+                    <p className={styles.whyInsuranceText}>Coverage for trip cancellation and delays</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <Users className="w-5 h-5 text-green-500 mt-0.5" />
+                <div className={styles.whyInsuranceItem}>
+                  <Users className={styles.whyInsuranceIcon} />
                   <div>
-                    <h4 className="font-medium text-sm">24/7 Support</h4>
-                    <p className="text-xs text-gray-600">Round-the-clock emergency assistance</p>
+                    <h4 className={styles.whyInsuranceSubtitle}>24/7 Support</h4>
+                    <p className={styles.whyInsuranceText}>Round-the-clock emergency assistance</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Summary */}
-            <Card className="backdrop-blur-md bg-white/30 border border-white/40 shadow-xl" style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)', borderRadius: '1.25rem' }}>
+            <Card className={styles.summaryCard}>
               <CardHeader>
-                <CardTitle>Insurance Summary</CardTitle>
+                <CardTitle className={styles.summaryTitle}>Insurance Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
+              <CardContent className={styles.summaryContent}>
+                <div className={styles.summaryItem}>
                   <span>Booking Amount:</span>
                   <span>{formatIndianRupees(totalAmount)}</span>
                 </div>
                 {selectedPlan && (
                   <>
-                    <div className="flex justify-between">
+                    <div className={styles.summaryItem}>
                       <span>Insurance:</span>
                       <span>{formatIndianRupees(insurancePlans.find(p => p.insuranceId === selectedPlan)?.price || 0)}</span>
                     </div>
-                    <Separator />
-                    <div className="flex justify-between font-bold text-lg">
+                    <Separator className={styles.summarySeparator} />
+                    <div className={styles.summaryTotal}>
                       <span>Total:</span>
                       <span>{formatIndianRupees(totalAmount + (insurancePlans.find(p => p.insuranceId === selectedPlan)?.price || 0))}</span>
                     </div>
@@ -307,19 +286,17 @@ const InsurancePage = () => {
             </Card>
 
             {/* Action Buttons */}
-            <div className="space-y-3">
+            <div className={styles.actionButtons}>
               <Button
-                className="w-full bg-palette-orange hover:bg-palette-orange/90 backdrop-blur-md bg-white/30 border border-white/40 shadow-lg"
-                style={{ boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.12)', borderRadius: '0.75rem' }}
-                onClick={handleProceedToSummary}
+                className={styles.proceedButton}
+                onClick={handleProceedToPayment}
                 disabled={!selectedPlan || !agreedToTerms}
               >
                 Continue with Insurance
               </Button>
               <Button
                 variant="outline"
-                className="w-full backdrop-blur-md bg-white/30 border border-white/40 shadow"
-                style={{ borderRadius: '0.75rem' }}
+                className={styles.skipButton}
                 onClick={handleSkipInsurance}
               >
                 Skip Insurance
@@ -327,15 +304,15 @@ const InsurancePage = () => {
             </div>
 
             {/* Trust Indicators */}
-            <Card className="border-green-200 bg-green-50">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="flex justify-center space-x-1 mb-2">
+            <Card className={styles.trustIndicatorsCard}>
+              <CardContent className={styles.trustIndicatorsContent}>
+                <div className={styles.trustIndicatorsTextCenter}>
+                  <div className={styles.trustIndicatorsStars}>
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 text-yellow-400 fill-current" />
+                      <Star key={star} className={styles.trustIndicatorsStar} />
                     ))}
                   </div>
-                  <p className="text-sm text-green-700">
+                  <p className={styles.trustIndicatorsText}>
                     Trusted by travelers
                   </p>
                 </div>
