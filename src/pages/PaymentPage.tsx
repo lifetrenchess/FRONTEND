@@ -59,7 +59,37 @@ const PaymentPage = () => {
       insuranceId: number;
     };
   };
-  if (!userId) userId = getCurrentUserFromStorage()?.userId;
+  
+  // Improved userId fallback logic
+  if (!userId) {
+    const currentUser = getCurrentUserFromStorage();
+    if (currentUser?.userId) {
+      userId = currentUser.userId;
+    } else {
+      // Try to get from localStorage directly
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          userId = userData.userId;
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+        }
+      }
+    }
+  }
+
+  // Final check - if still no userId, redirect to login
+  if (!userId) {
+    toast.error('User authentication required. Please login again.');
+    navigate('/');
+    return null;
+  }
+
+  // Debug logging
+  console.log('PaymentPage - userId:', userId);
+  console.log('PaymentPage - bookingId:', bookingId);
+  console.log('PaymentPage - totalAmount:', totalAmount);
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('CREDIT_DEBIT_CARD');
   const [isLoading, setIsLoading] = useState(false);
@@ -142,6 +172,13 @@ const PaymentPage = () => {
     setIsLoading(true);
     setError(null);
 
+    // Additional check for userId before proceeding
+    if (!userId) {
+      toast.error('User ID is missing. Please login again.');
+      navigate('/');
+      return;
+    }
+
     if (selectedPaymentMethod === 'CREDIT_DEBIT_CARD' && (!cardDetails.cardNumber || !cardDetails.cardholderName || !cardDetails.expiryMonth || !cardDetails.expiryYear || !cardDetails.cvv)) {
       toast.error('Please fill in all card details.');
       setIsLoading(false);
@@ -163,6 +200,8 @@ const PaymentPage = () => {
         paymentMethod: selectedPaymentMethod,
       };
 
+      console.log('Sending payment data:', paymentData);
+
       const orderResponse = await fetch(getApiUrl('PAYMENT_SERVICE', ''), {
         method: 'POST',
         headers: {
@@ -182,11 +221,11 @@ const PaymentPage = () => {
       // Initialize Razorpay
       const options = {
         key: orderData.keyId, // Use the keyId returned from backend
-        amount: orderData.amount,
+        amount: orderData.amount * 100, // Convert to paisa for Razorpay (backend returns original amount)
         currency: orderData.currency,
         name: 'Aventra Travel',
         description: `Payment for Booking #${bookingId}`,
-        order_id: orderData.id,
+        order_id: orderData.orderId, // Use orderId from backend response
         handler: async function (response: any) {
           try {
             // Verify payment
