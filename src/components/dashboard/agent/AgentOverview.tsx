@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Calendar, DollarSign, TrendingUp, Users, MessageSquare } from 'lucide-react';
+import { Package, Calendar, DollarSign, TrendingUp, Users } from 'lucide-react';
 import { getAgentStats, AgentStats } from '@/lib/agentApi';
 
 interface UserData {
@@ -25,12 +25,8 @@ const AgentOverview = ({ user }: AgentOverviewProps) => {
         setStats(statsData);
       } catch (error) {
         console.error('Failed to fetch agent stats:', error);
-        // Use fallback data
-        setStats({
-          packagesManaged: 12,
-          bookings: 45,
-          earnings: 125000
-        });
+        // Don't use fallback data, keep it null to show loading state
+        setStats(null);
       } finally {
         setLoading(false);
       }
@@ -124,19 +120,6 @@ const AgentOverview = ({ user }: AgentOverviewProps) => {
             </p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Customer Inquiries</CardTitle>
-            <MessageSquare className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{Math.floor((stats?.bookings || 0) * 0.5)}</div>
-            <p className="text-xs text-muted-foreground">
-              New messages this month
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Recent Activity */}
@@ -163,7 +146,7 @@ const AgentOverview = ({ user }: AgentOverviewProps) => {
             <div className="flex items-center space-x-4">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium">Customer inquiry about "Himalayan Trek"</p>
+                <p className="text-sm font-medium">New package "Himalayan Trek" created</p>
                 <p className="text-xs text-gray-500">2 days ago</p>
               </div>
             </div>

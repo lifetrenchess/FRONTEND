@@ -40,7 +40,11 @@ const PackageDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>('');
-  const [isLiked, setIsLiked] = useState(false);
+  const getWishlist = () => {
+    const stored = localStorage.getItem('wishlist');
+    return stored ? JSON.parse(stored) as number[] : [];
+  };
+  const [isLiked, setIsLiked] = useState(() => pkg ? getWishlist().includes(pkg.packageId) : false);
   const [animateHeader, setAnimateHeader] = useState(false);
   const [animateContent, setAnimateContent] = useState(false);
   const { handleBookNow, showLoginDialog, setShowLoginDialog, onAuthSuccess } = useBookingAuth();
@@ -62,6 +66,28 @@ const PackageDetails: React.FC = () => {
         setLoading(false);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (!pkg) return;
+    const syncWishlist = () => setIsLiked(getWishlist().includes(pkg.packageId));
+    window.addEventListener('storage', syncWishlist);
+    return () => window.removeEventListener('storage', syncWishlist);
+  }, [pkg]);
+
+  const toggleWishlist = () => {
+    if (!pkg) return;
+    const wishlist = getWishlist();
+    let updated;
+    if (wishlist.includes(pkg.packageId)) {
+      updated = wishlist.filter(id => id !== pkg.packageId);
+      setIsLiked(false);
+    } else {
+      updated = [...wishlist, pkg.packageId];
+      setIsLiked(true);
+    }
+    localStorage.setItem('wishlist', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
+  };
 
   const getImages = (): string[] => {
     if (!pkg) return [];
@@ -156,7 +182,7 @@ const PackageDetails: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsLiked(!isLiked)}
+                onClick={toggleWishlist}
                 className={`transition-all duration-300 ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
               >
                 <Heart className={`w-5 h-5 ${isLiked ? 'fill-current animate-pulse' : ''}`} />

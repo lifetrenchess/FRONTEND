@@ -7,14 +7,12 @@ import BookingManagement from '@/components/dashboard/agent/BookingManagement';
 import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
 import CustomerManagement from '@/components/dashboard/agent/CustomerManagement';
 import AgentProfile from '@/components/dashboard/agent/AgentProfile';
-import CustomerInquiries from '@/components/dashboard/agent/CustomerInquiries';
 import { 
   Package, 
   Calendar, 
   Star, 
   Users, 
   User, 
-  MessageSquare,
   BarChart3
 } from 'lucide-react';
 
@@ -54,12 +52,6 @@ const AgentDashboard = () => {
       description: 'Manage customer information'
     },
     {
-      id: 'inquiries',
-      label: 'Customer Inquiries',
-      icon: MessageSquare,
-      description: 'Handle customer inquiries'
-    },
-    {
       id: 'profile',
       label: 'Agent Profile',
       icon: User,
@@ -87,8 +79,6 @@ const AgentDashboard = () => {
         return <ReviewManagement />;
       case 'customers':
         return <CustomerManagement />;
-      case 'inquiries':
-        return <CustomerInquiries user={userData} />;
       case 'profile':
         return <AgentProfile user={userData} />;
       default:

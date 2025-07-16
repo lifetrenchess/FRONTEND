@@ -54,7 +54,7 @@ const DashboardSidebar = ({
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-50 w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
@@ -70,8 +70,8 @@ const DashboardSidebar = ({
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 pb-4">
-            <div className="space-y-2">
+          <nav className="flex-1 px-6 pb-4">
+            <div className="space-y-3">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
@@ -81,7 +81,7 @@ const DashboardSidebar = ({
                     key={item.id}
                     variant={isActive ? "default" : "ghost"}
                     className={`
-                      w-full justify-start space-x-3 h-12
+                      w-full justify-start space-x-4 h-14 px-4
                       ${isActive 
                         ? 'bg-palette-teal text-white hover:bg-palette-teal/90' 
                         : 'text-gray-700 hover:bg-gray-100 hover:text-palette-teal'
@@ -92,10 +92,10 @@ const DashboardSidebar = ({
                       setIsOpen(false);
                     }}
                   >
-                    <Icon className="w-5 h-5" />
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">{item.label}</span>
-                      <span className="text-xs opacity-75">{item.description}</span>
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <div className="flex flex-col items-start min-w-0 flex-1">
+                      <span className="font-medium text-sm">{item.label}</span>
+                      <span className="text-xs opacity-75 truncate w-full">{item.description}</span>
                     </div>
                   </Button>
                 );
@@ -104,13 +104,13 @@ const DashboardSidebar = ({
               {/* Back to Home Button */}
               <Button
                 variant="outline"
-                className="w-full justify-start space-x-3 h-12 text-palette-orange border-palette-orange hover:bg-palette-orange hover:text-white mt-2"
+                className="w-full justify-start space-x-4 h-14 px-4 text-palette-orange border-palette-orange hover:bg-palette-orange hover:text-white mt-4"
                 onClick={handleBackToHome}
               >
-                <ArrowLeft className="w-5 h-5" />
-                <div className="flex flex-col items-start">
-                  <span className="font-medium">Back to Home</span>
-                  <span className="text-xs opacity-75">Return to main site</span>
+                <ArrowLeft className="w-5 h-5 flex-shrink-0" />
+                <div className="flex flex-col items-start min-w-0 flex-1">
+                  <span className="font-medium text-sm">Back to Home</span>
+                  <span className="text-xs opacity-75 truncate w-full">Return to main site</span>
                 </div>
               </Button>
             </div>
@@ -118,7 +118,7 @@ const DashboardSidebar = ({
 
           {/* Quick Actions */}
           {quickActions && (
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-6 border-t border-gray-200">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h3>
               <div className="space-y-2">
                 {quickActions}

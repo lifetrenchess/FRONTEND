@@ -8,9 +8,10 @@ import { register } from '@/lib/auth';
 
 interface RegisterProps {
   children: React.ReactNode;
+  onRegistrationSuccess?: () => void;
 }
 
-const Register: React.FC<RegisterProps> = ({ children }) => {
+const Register: React.FC<RegisterProps> = ({ children, onRegistrationSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     userName: '',
@@ -109,6 +110,8 @@ const Register: React.FC<RegisterProps> = ({ children }) => {
         });
         setSuccess('');
         setFieldErrors({});
+        // Dispatch custom event to open login
+        window.dispatchEvent(new CustomEvent('openLogin'));
       }, 2000);
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');

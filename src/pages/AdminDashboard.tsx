@@ -5,7 +5,6 @@ import AdminOverview from '@/components/dashboard/admin/AdminOverview';
 import UserManagement from '@/components/dashboard/admin/UserManagement';
 import PackageManagement from '@/components/dashboard/admin/PackageManagement';
 import AssistanceManagement from '@/components/dashboard/admin/AssistanceManagement';
-import Analytics from '@/components/dashboard/admin/Analytics';
 import SystemSettings from '@/components/dashboard/admin/SystemSettings';
 import { 
   Users, 
@@ -46,12 +45,6 @@ const AdminDashboard = () => {
       description: 'Handle assistance requests'
     },
     {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: BarChart3,
-      description: 'System analytics and reports'
-    },
-    {
       id: 'settings',
       label: 'System Settings',
       icon: Settings,
@@ -77,8 +70,6 @@ const AdminDashboard = () => {
         return <PackageManagement />;
       case 'assistance':
         return <AssistanceManagement />;
-      case 'analytics':
-        return <Analytics />;
       case 'settings':
         return <SystemSettings />;
       default:

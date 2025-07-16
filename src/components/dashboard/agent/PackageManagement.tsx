@@ -5,7 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Search, Filter, RefreshCw, MapPin, Calendar, DollarSign, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,13 +22,46 @@ interface Package {
   title: string;
   description: string;
   destination: string;
-  duration: string;
+  duration: number;
   price: number;
-  includedServices: string;
+  includeService: string;
+  excludeService?: string;
+  highlights?: string;
   status: string;
-  availableSeats?: number;
   mainImage?: string;
   images?: string[];
+  active?: boolean;
+  createdByAgentId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  flights?: Flight[];
+  hotels?: Hotel[];
+  sightseeingList?: Sightseeing[];
+}
+
+interface Flight {
+  flightId?: number;
+  airline: string;
+  departure: string;
+  arrival: string;
+  departureTime: string;
+  arrivalTime: string;
+}
+
+interface Hotel {
+  hotelId?: number;
+  name: string;
+  location: string;
+  starRating: number;
+  checkInTime: string;
+  checkOutTime: string;
+}
+
+interface Sightseeing {
+  sightseeingId?: number;
+  placeName: string;
+  description: string;
+  time: string;
 }
 
 const PackageManagement = () => {
@@ -45,8 +84,41 @@ const PackageManagement = () => {
     destination: '',
     duration: '',
     price: '',
-    includedServices: '',
-    availableSeats: ''
+    includeService: '',
+    excludeService: '',
+    highlights: '',
+    active: true
+  });
+
+  // Flight states
+  const [flights, setFlights] = useState<Flight[]>([]);
+  const [showFlightForm, setShowFlightForm] = useState(false);
+  const [flightForm, setFlightForm] = useState({
+    airline: '',
+    departure: '',
+    arrival: '',
+    departureTime: '',
+    arrivalTime: ''
+  });
+
+  // Hotel states
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [showHotelForm, setShowHotelForm] = useState(false);
+  const [hotelForm, setHotelForm] = useState({
+    name: '',
+    location: '',
+    starRating: 3,
+    checkInTime: '14:00',
+    checkOutTime: '12:00'
+  });
+
+  // Sightseeing states
+  const [sightseeingList, setSightseeingList] = useState<Sightseeing[]>([]);
+  const [showSightseeingForm, setShowSightseeingForm] = useState(false);
+  const [sightseeingForm, setSightseeingForm] = useState({
+    placeName: '',
+    description: '',
+    time: ''
   });
 
   // Image upload states
@@ -58,16 +130,31 @@ const PackageManagement = () => {
 
   const fetchPackages = async () => {
     try {
-    setLoading(true);
-      const response = await fetch(getApiUrl('PACKAGE_SERVICE', '/agent/1')); // Get agent packages
+      setLoading(true);
+      setError('');
+      
+      // Get current user to get agent ID
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const agentId = currentUser.userId || 1; // Default to 1 if no user found
+      
+      const response = await fetch(getApiUrl('PACKAGE_SERVICE', `/agent/${agentId}`), {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
-      setPackages(data);
+        setPackages(data);
       } else {
-        console.error('Failed to fetch packages');
+        const errorText = await response.text();
+        setError(`Failed to fetch packages: ${errorText}`);
+        console.error('Failed to fetch packages:', response.status, errorText);
       }
     } catch (error) {
       console.error('Error fetching packages:', error);
+      setError('Failed to fetch packages. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -180,82 +267,82 @@ const PackageManagement = () => {
 
 
 
-  // Handle form submission with images in single request
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.description || !formData.destination || !formData.duration || !formData.price) {
-      toast.error('Please fill in all required fields');
+    if (!formData.title || !formData.description || !formData.destination || !formData.duration || !formData.price || !formData.includeService) {
+      toast.error('Please fill in all required fields.');
       return;
     }
 
     setUploading(true);
-
+    
     try {
-      // Create FormData with package data and images in single request
-      const formDataToSend = new FormData();
-      
       // Add package data as JSON string
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const agentId = currentUser.userId || 1;
+      
       const packageData = {
         title: formData.title,
         description: formData.description,
         destination: formData.destination,
-        duration: formData.duration,
+        duration: parseInt(formData.duration),
         price: parseFloat(formData.price),
-        includedServices: formData.includedServices,
-        availableSeats: formData.availableSeats ? parseInt(formData.availableSeats) : null,
-        status: 'Active',
-        mainImage: editingPackage?.mainImage || '',
-        images: editingPackage?.images || []
+        includeService: formData.includeService,
+        excludeService: formData.excludeService || '',
+        highlights: formData.highlights || '',
+        active: formData.active,
+        createdByAgentId: agentId,
+        flights: flights,
+        hotels: hotels,
+        sightseeingList: sightseeingList
       };
+
+      // Create FormData for multipart/form-data request
+      const formDataToSend = new FormData();
       
+      // Add package data as JSON string
       formDataToSend.append('packageData', JSON.stringify(packageData));
       
-      // Add images if provided
+      // Add main image if selected
       if (mainImage) {
         formDataToSend.append('mainImage', mainImage);
       }
       
+      // Add additional images if selected
       if (additionalImages.length > 0) {
-        additionalImages.forEach((image) => {
+        additionalImages.forEach((image, index) => {
           formDataToSend.append('additionalImages', image);
         });
       }
 
-      const url = editingPackage 
-        ? getApiUrl('PACKAGE_SERVICE', `/${editingPackage.packageId}`)
-        : getApiUrl('PACKAGE_SERVICE', '');
-      
-      const method = editingPackage ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        body: formDataToSend, // Send as FormData, not JSON
+      const response = await fetch(`${getApiUrl('PACKAGE_SERVICE', '')}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formDataToSend // Send as FormData, not JSON
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save package');
-      }
-
-      const savedPackage: Package = await response.json();
-      
-      if (editingPackage) {
-        setPackages(prev => 
-          prev.map(pkg => 
-            pkg.packageId === savedPackage.packageId ? savedPackage : pkg
-          )
-        );
-        toast.success('Package updated successfully!');
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(editingPackage 
+          ? "Package updated successfully!" 
+          : "Package created successfully!");
+        
+        // Refresh the packages list
         await fetchPackages();
+        
+        // Reset form
+        resetForm();
       } else {
-        setPackages(prev => [...prev, savedPackage]);
-        toast.success('Package created successfully!');
-        await fetchPackages();
+        const errorData = await response.text();
+        toast.error(`Failed to ${editingPackage ? 'update' : 'create'} package: ${errorData}`);
       }
-      
-      resetForm();
-    } catch (err: any) {
-      toast.error(`Failed to save package: ${err.message}`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error(`Failed to ${editingPackage ? 'update' : 'create'} package. Please try again.`);
     } finally {
       setUploading(false);
     }
@@ -269,9 +356,14 @@ const PackageManagement = () => {
       destination: '',
       duration: '',
       price: '',
-      includedServices: '',
-      availableSeats: ''
+      includeService: '',
+      excludeService: '',
+      highlights: '',
+      active: true
     });
+    setFlights([]);
+    setHotels([]);
+    setSightseeingList([]);
     setMainImage(null);
     setMainImagePreview('');
     setAdditionalImages([]);
@@ -287,11 +379,18 @@ const PackageManagement = () => {
       title: pkg.title,
       description: pkg.description,
       destination: pkg.destination,
-      duration: pkg.duration,
+      duration: pkg.duration.toString(),
       price: pkg.price.toString(),
-      includedServices: pkg.includedServices,
-      availableSeats: pkg.availableSeats?.toString() || ''
+      includeService: pkg.includeService,
+      excludeService: pkg.excludeService || '',
+      highlights: pkg.highlights || '',
+      active: pkg.active || true
     });
+    
+    // Set existing flights, hotels, and sightseeing
+    setFlights(pkg.flights || []);
+    setHotels(pkg.hotels || []);
+    setSightseeingList(pkg.sightseeingList || []);
     
     // Set existing images
     if (pkg.mainImage) {
@@ -310,6 +409,10 @@ const PackageManagement = () => {
     try {
       const response = await fetch(getApiUrl('PACKAGE_SERVICE', `/${packageId}`), {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       if (!response.ok) {
@@ -487,15 +590,15 @@ const PackageManagement = () => {
           <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {editingPackage ? 'Edit Package' : 'Create New Package'}
+                {editingPackage ? 'Edit Travel Package' : 'Create New Travel Package'}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {editingPackage ? 'Update package details below.' : 'Fill in the package details below.'}
+                Fill in the package details. Fields marked with * are required.
               </AlertDialogDescription>
             </AlertDialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
+              {/* Basic Package Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="title">Package Title *</Label>
@@ -503,41 +606,45 @@ const PackageManagement = () => {
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g., Explore the Alps"
+                    placeholder="e.g., Paris Adventure"
                     required
                   />
                 </div>
+                
                 <div>
                   <Label htmlFor="destination">Destination *</Label>
                   <Input
                     id="destination"
                     value={formData.destination}
                     onChange={(e) => setFormData(prev => ({ ...prev, destination: e.target.value }))}
-                    placeholder="e.g., Swiss Alps"
+                    placeholder="e.g., Paris, France"
                     required
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
                 <div>
-                  <Label htmlFor="duration">Duration *</Label>
+                  <Label htmlFor="duration">Duration (Days) *</Label>
                   <Input
                     id="duration"
+                    type="number"
+                    min="1"
                     value={formData.duration}
                     onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                    placeholder="e.g., 7 Days"
+                    placeholder="e.g., 7"
                     required
                   />
                 </div>
+                
                 <div>
                   <Label htmlFor="price">Price (USD) *</Label>
                   <Input
                     id="price"
                     type="number"
+                    min="0"
+                    step="0.01"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="e.g., 2500"
+                    placeholder="e.g., 2500.00"
                     required
                   />
                 </div>
@@ -549,41 +656,183 @@ const PackageManagement = () => {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe the package details..."
-                  rows={3}
+                  placeholder="Describe the travel package in detail..."
+                  rows={4}
                   required
                 />
               </div>
               
               <div>
-                <Label htmlFor="includedServices">Included Services</Label>
+                <Label htmlFor="includeService">Included Services *</Label>
                 <Textarea
-                  id="includedServices"
-                  value={formData.includedServices}
-                  onChange={(e) => setFormData(prev => ({ ...prev, includedServices: e.target.value }))}
+                  id="includeService"
+                  value={formData.includeService}
+                  onChange={(e) => setFormData(prev => ({ ...prev, includeService: e.target.value }))}
                   placeholder="e.g., Flights, Hotel, Meals, Transportation"
                   rows={2}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="availableSeats">Available Seats</Label>
-                <Input
-                  id="availableSeats"
-                  type="number"
-                  value={formData.availableSeats}
-                  onChange={(e) => setFormData(prev => ({ ...prev, availableSeats: e.target.value }))}
-                  placeholder="e.g., 20"
+                  required
                 />
               </div>
 
-              {/* Image Upload Section */}
+              {/* Optional Information */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Optional Information</h3>
+                
+                {/* Services and Highlights */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <Label htmlFor="excludeService">Excluded Services (Optional)</Label>
+                    <Textarea
+                      id="excludeService"
+                      value={formData.excludeService}
+                      onChange={(e) => setFormData(prev => ({ ...prev, excludeService: e.target.value }))}
+                      placeholder="e.g., Lunch, Personal Expenses, Optional Tours"
+                      rows={2}
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <Label htmlFor="highlights">Highlights (Optional)</Label>
+                    <Textarea
+                      id="highlights"
+                      value={formData.highlights}
+                      onChange={(e) => setFormData(prev => ({ ...prev, highlights: e.target.value }))}
+                      placeholder="e.g., Eiffel Tower, Louvre Museum, Seine River Cruise"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+              {/* Flights Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800">Package Images</h3>
+                <div className="flex items-center justify-between">
+                  <Label>Flights</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFlightForm(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Flight
+                  </Button>
+                </div>
+                
+                {flights.length > 0 && (
+                  <div className="space-y-2">
+                    {flights.map((flight, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{flight.airline}</p>
+                          <p className="text-sm text-gray-600">
+                            {flight.departure} → {flight.arrival}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {flight.departureTime} - {flight.arrivalTime}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFlights(prev => prev.filter((_, i) => i !== index))}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Hotels Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Hotels</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowHotelForm(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Hotel
+                  </Button>
+                </div>
+                
+                {hotels.length > 0 && (
+                  <div className="space-y-2">
+                    {hotels.map((hotel, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{hotel.name}</p>
+                          <p className="text-sm text-gray-600">{hotel.location}</p>
+                          <p className="text-sm text-gray-500">
+                            {hotel.starRating}★ • Check-in: {hotel.checkInTime} • Check-out: {hotel.checkOutTime}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setHotels(prev => prev.filter((_, i) => i !== index))}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Sightseeing Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Sightseeing</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSightseeingForm(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Sightseeing
+                  </Button>
+                </div>
+                
+                {sightseeingList.length > 0 && (
+                  <div className="space-y-2">
+                    {sightseeingList.map((sightseeing, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{sightseeing.placeName}</p>
+                          <p className="text-sm text-gray-600">{sightseeing.description}</p>
+                          <p className="text-sm text-gray-500">Time: {sightseeing.time}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSightseeingList(prev => prev.filter((_, i) => i !== index))}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Image Upload Section (Optional) */}
+              <div className="space-y-4">
+                <h4 className="text-md font-medium">Package Images (Optional)</h4>
                 
                 {/* Main Image Upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="mainImage">Main Image *</Label>
+                  <Label htmlFor="mainImage">Main Image</Label>
                   <div className="flex items-center space-x-4">
                     <div className="flex-1">
                       <Input
@@ -618,7 +867,7 @@ const PackageManagement = () => {
 
                 {/* Additional Images Upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="additionalImages">Additional Images (Optional)</Label>
+                  <Label htmlFor="additionalImages">Additional Images</Label>
                   <div className="flex items-center space-x-4">
                     <div className="flex-1">
                       <Input
@@ -658,6 +907,7 @@ const PackageManagement = () => {
                   )}
                 </div>
               </div>
+            </div>
             </form>
 
             <AlertDialogFooter>
@@ -680,6 +930,271 @@ const PackageManagement = () => {
                     {editingPackage ? 'Update Package' : 'Create Package'}
                   </>
                 )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Flight Form Dialog */}
+      {showFlightForm && (
+        <AlertDialog open={showFlightForm} onOpenChange={setShowFlightForm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Add Flight</AlertDialogTitle>
+              <AlertDialogDescription>
+                Add flight details for this travel package.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="airline">Airline</Label>
+                <Input
+                  id="airline"
+                  value={flightForm.airline}
+                  onChange={(e) => setFlightForm(prev => ({ ...prev, airline: e.target.value }))}
+                  placeholder="e.g., Air France"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="departure">Departure Airport</Label>
+                <Input
+                  id="departure"
+                  value={flightForm.departure}
+                  onChange={(e) => setFlightForm(prev => ({ ...prev, departure: e.target.value }))}
+                  placeholder="e.g., CDG"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="arrival">Arrival Airport</Label>
+                <Input
+                  id="arrival"
+                  value={flightForm.arrival}
+                  onChange={(e) => setFlightForm(prev => ({ ...prev, arrival: e.target.value }))}
+                  placeholder="e.g., JFK"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="departureTime">Departure Time</Label>
+                <Input
+                  id="departureTime"
+                  type="datetime-local"
+                  value={flightForm.departureTime}
+                  onChange={(e) => setFlightForm(prev => ({ ...prev, departureTime: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="arrivalTime">Arrival Time</Label>
+                <Input
+                  id="arrivalTime"
+                  type="datetime-local"
+                  value={flightForm.arrivalTime}
+                  onChange={(e) => setFlightForm(prev => ({ ...prev, arrivalTime: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setShowFlightForm(false);
+                setFlightForm({
+                  airline: '',
+                  departure: '',
+                  arrival: '',
+                  departureTime: '',
+                  arrivalTime: ''
+                });
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setFlights(prev => [...prev, flightForm]);
+                setShowFlightForm(false);
+                setFlightForm({
+                  airline: '',
+                  departure: '',
+                  arrival: '',
+                  departureTime: '',
+                  arrivalTime: ''
+                });
+              }}>
+                Add Flight
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Hotel Form Dialog */}
+      {showHotelForm && (
+        <AlertDialog open={showHotelForm} onOpenChange={setShowHotelForm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Add Hotel</AlertDialogTitle>
+              <AlertDialogDescription>
+                Add hotel details for this travel package.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="hotelName">Hotel Name</Label>
+                <Input
+                  id="hotelName"
+                  value={hotelForm.name}
+                  onChange={(e) => setHotelForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Hotel Le Meurice"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="hotelLocation">Location</Label>
+                <Input
+                  id="hotelLocation"
+                  value={hotelForm.location}
+                  onChange={(e) => setHotelForm(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="e.g., Paris"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="starRating">Star Rating</Label>
+                <Select value={hotelForm.starRating.toString()} onValueChange={(value) => setHotelForm(prev => ({ ...prev, starRating: parseInt(value) }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Star</SelectItem>
+                    <SelectItem value="2">2 Stars</SelectItem>
+                    <SelectItem value="3">3 Stars</SelectItem>
+                    <SelectItem value="4">4 Stars</SelectItem>
+                    <SelectItem value="5">5 Stars</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="checkInTime">Check-in Time</Label>
+                <Input
+                  id="checkInTime"
+                  type="time"
+                  value={hotelForm.checkInTime}
+                  onChange={(e) => setHotelForm(prev => ({ ...prev, checkInTime: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="checkOutTime">Check-out Time</Label>
+                <Input
+                  id="checkOutTime"
+                  type="time"
+                  value={hotelForm.checkOutTime}
+                  onChange={(e) => setHotelForm(prev => ({ ...prev, checkOutTime: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setShowHotelForm(false);
+                setHotelForm({
+                  name: '',
+                  location: '',
+                  starRating: 3,
+                  checkInTime: '14:00',
+                  checkOutTime: '12:00'
+                });
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setHotels(prev => [...prev, hotelForm]);
+                setShowHotelForm(false);
+                setHotelForm({
+                  name: '',
+                  location: '',
+                  starRating: 3,
+                  checkInTime: '14:00',
+                  checkOutTime: '12:00'
+                });
+              }}>
+                Add Hotel
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {/* Sightseeing Form Dialog */}
+      {showSightseeingForm && (
+        <AlertDialog open={showSightseeingForm} onOpenChange={setShowSightseeingForm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Add Sightseeing</AlertDialogTitle>
+              <AlertDialogDescription>
+                Add sightseeing details for this travel package.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="placeName">Place Name</Label>
+                <Input
+                  id="placeName"
+                  value={sightseeingForm.placeName}
+                  onChange={(e) => setSightseeingForm(prev => ({ ...prev, placeName: e.target.value }))}
+                  placeholder="e.g., Eiffel Tower"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="sightseeingDescription">Description</Label>
+                <Textarea
+                  id="sightseeingDescription"
+                  value={sightseeingForm.description}
+                  onChange={(e) => setSightseeingForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="e.g., Visit the iconic Eiffel Tower"
+                  rows={3}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="sightseeingTime">Time</Label>
+                <Input
+                  id="sightseeingTime"
+                  type="datetime-local"
+                  value={sightseeingForm.time}
+                  onChange={(e) => setSightseeingForm(prev => ({ ...prev, time: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setShowSightseeingForm(false);
+                setSightseeingForm({
+                  placeName: '',
+                  description: '',
+                  time: ''
+                });
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setSightseeingList(prev => [...prev, sightseeingForm]);
+                setShowSightseeingForm(false);
+                setSightseeingForm({
+                  placeName: '',
+                  description: '',
+                  time: ''
+                });
+              }}>
+                Add Sightseeing
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -724,9 +1239,6 @@ const PackageManagement = () => {
                             <DollarSign className="w-4 h-4 inline mr-1" />
                             ${pkg.price.toLocaleString()}
                           </span>
-                          {pkg.availableSeats && (
-                            <span>Available Seats: {pkg.availableSeats}</span>
-                          )}
                           {pkg.mainImage && (
                             <span className="flex items-center text-blue-600">
                               <ImageIcon className="w-4 h-4 mr-1" />
@@ -735,9 +1247,9 @@ const PackageManagement = () => {
                           )}
                         </div>
                         
-                        {pkg.includedServices && (
+                        {pkg.includeService && (
                           <p className="text-sm text-gray-500 mt-2">
-                            <strong>Includes:</strong> {pkg.includedServices}
+                            <strong>Includes:</strong> {pkg.includeService}
                           </p>
                         )}
                       </div>

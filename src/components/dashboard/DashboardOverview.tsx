@@ -14,6 +14,7 @@ import {
   Package
 } from 'lucide-react';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
+import { getBookingsByUser, BookingResponse } from '@/lib/bookingApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
 import Login from '@/components/Login';
 
@@ -31,9 +32,16 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
   const navigate = useNavigate();
   const [packages, setPackages] = useState<TravelPackageDto[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
+  const [bookings, setBookings] = useState<BookingResponse[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
   const { handleBookNow, showLoginDialog, setShowLoginDialog, onAuthSuccess } = useBookingAuth();
 
+  // Get current user ID from localStorage
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const userId = currentUser.userId || 1;
+
   useEffect(() => {
+    // Fetch packages
     fetchAllPackages()
       .then((data) => {
         setPackages(data.slice(0, 3)); // Show first 3 packages
@@ -43,71 +51,118 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
         console.error('Failed to load packages:', err);
         setPackagesLoading(false);
       });
-  }, []);
+
+    // Fetch user bookings
+    getBookingsByUser(userId)
+      .then((data) => {
+        setBookings(data);
+        setBookingsLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load bookings:', err);
+        setBookingsLoading(false);
+      });
+  }, [userId]);
+
+  // Calculate stats from real data
+  const totalBookings = bookings.length;
+  const confirmedBookings = bookings.filter(b => b.status === 'CONFIRMED').length;
+  const pendingBookings = bookings.filter(b => b.status === 'PENDING').length;
+  const completedBookings = bookings.filter(b => b.status === 'COMPLETED').length;
+  
+  // Calculate unique destinations visited
+  const visitedDestinations = new Set(
+    bookings
+      .filter(b => b.status === 'COMPLETED')
+      .map(b => {
+        const packageData = packages.find(p => p.packageId === b.packageId);
+        return packageData?.destination || 'Unknown';
+      })
+  ).size;
+
+  // Calculate total spent
+  const totalSpent = bookings
+    .filter(b => b.status === 'COMPLETED' || b.status === 'CONFIRMED')
+    .reduce((sum, b) => {
+      const packageData = packages.find(p => p.packageId === b.packageId);
+      return sum + (packageData?.price || 0);
+    }, 0);
+
+  // Get upcoming trips (confirmed bookings with future dates)
+  const upcomingTrips = bookings
+    .filter(b => b.status === 'CONFIRMED' && new Date(b.startDate) > new Date())
+    .slice(0, 1) // Show only the next upcoming trip
+    .map(b => {
+      const packageData = packages.find(p => p.packageId === b.packageId);
+      const startDate = new Date(b.startDate);
+      const daysLeft = Math.ceil((startDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      
+      return {
+        destination: packageData?.destination || 'Unknown Destination',
+        date: startDate.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }),
+        daysLeft: Math.max(0, daysLeft),
+        image: packageData?.mainImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'
+      };
+    });
+
+  // Get recent bookings (last 3)
+  const recentBookings = bookings
+    .slice(0, 3)
+    .map(b => {
+      const packageData = packages.find(p => p.packageId === b.packageId);
+      const startDate = new Date(b.startDate);
+      const endDate = new Date(b.endDate);
+      
+      return {
+        id: b.bookingId,
+        destination: packageData?.destination || 'Unknown Destination',
+        date: `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+        status: b.status,
+        amount: `$${packageData?.price?.toLocaleString() || '0'}`,
+        image: packageData?.mainImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'
+      };
+    });
+
+  // Get wishlisted packages from localStorage
+  const getWishlist = () => {
+    const stored = localStorage.getItem('wishlist');
+    return stored ? JSON.parse(stored) as number[] : [];
+  };
+  const wishlistedIds = getWishlist();
+  const wishlistedPackages = packages.filter(pkg => wishlistedIds.includes(pkg.packageId));
+
   const stats = [
     {
       title: 'Total Bookings',
-      value: '12',
-      change: '+2 this month',
+      value: totalBookings.toString(),
+      change: `+${pendingBookings} pending`,
       icon: Calendar,
       color: 'text-palette-teal'
     },
     {
       title: 'Visited Countries',
-      value: '8',
-      change: '+1 this year',
+      value: visitedDestinations.toString(),
+      change: `${confirmedBookings} confirmed`,
       icon: MapPin,
       color: 'text-palette-orange'
     },
     {
-      title: 'Loyalty Points',
-      value: '2,450',
-      change: '+150 this week',
+      title: 'Total Spent',
+      value: `$${totalSpent.toLocaleString()}`,
+      change: `${completedBookings} completed`,
       icon: Star,
       color: 'text-yellow-500'
     },
     {
-      title: 'Travel Miles',
-      value: '15,230',
-      change: '+1,200 this month',
+      title: 'Upcoming Trips',
+      value: upcomingTrips.length.toString(),
+      change: `${upcomingTrips.length > 0 ? `${upcomingTrips[0].daysLeft} days left` : 'No upcoming trips'}`,
       icon: Plane,
       color: 'text-blue-500'
-    }
-  ];
-
-  const recentBookings = [
-    {
-      id: 1,
-      destination: 'Bali, Indonesia',
-      date: 'Dec 15-22, 2024',
-      status: 'Confirmed',
-      amount: '$1,299',
-      image: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=400'
-    },
-    {
-      id: 2,
-      destination: 'Paris, France',
-      date: 'Jan 10-17, 2025',
-      status: 'Pending',
-      amount: '$2,199',
-      image: 'https://images.unsplash.com/photo-1502602898534-47d6c5c0b0b3?w=400'
-    },
-    {
-      id: 3,
-      destination: 'Tokyo, Japan',
-      date: 'Feb 5-12, 2025',
-      status: 'Confirmed',
-      amount: '$1,899',
-      image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400'
-    }
-  ];
-
-  const upcomingTrips = [
-    {
-      destination: 'Bali, Indonesia',
-      date: 'Dec 15, 2024',
-      daysLeft: 5,
-      image: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=400'
     }
   ];
 
@@ -117,7 +172,9 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-palette-teal to-palette-orange rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold mb-2">Welcome back, {user?.fullName?.split(' ')[0] || 'Traveler'}! 👋</h1>
-          <p className="text-palette-cream/90">Ready for your next adventure? You have 1 upcoming trip.</p>
+          <p className="text-palette-cream/90">
+            Ready for your next adventure? You have {upcomingTrips.length} upcoming trip{upcomingTrips.length !== 1 ? 's' : ''}.
+          </p>
         </div>
 
         {/* Stats Grid */}
@@ -179,7 +236,7 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
                   </div>
                 ))}
               </div>
-              <Button variant="outline" className="w-full mt-4 text-palette-teal border-palette-teal hover:bg-palette-teal hover:text-white">
+              <Button variant="outline" className="w-full mt-4 text-palette-teal border-palette-teal hover:bg-palette-teal hover:text-white" onClick={() => navigate('/dashboard?tab=bookings')}>
                 View All Bookings
               </Button>
             </CardContent>
@@ -303,7 +360,7 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
                 <p className="text-gray-500">Check back later for exciting travel packages!</p>
               </div>
             )}
-            <Button variant="outline" className="w-full mt-4 text-palette-teal border-palette-teal hover:bg-palette-teal hover:text-white">
+            <Button variant="outline" className="w-full mt-4 text-palette-teal border-palette-teal hover:bg-palette-teal hover:text-white" onClick={() => navigate('/packages')}>
               View All Packages
             </Button>
           </CardContent>
@@ -319,11 +376,11 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button className="h-20 flex flex-col space-y-2 bg-gradient-to-br from-palette-teal to-palette-teal/80 hover:from-palette-teal/90 hover:to-palette-teal text-white">
+              <Button className="h-20 flex flex-col space-y-2 bg-gradient-to-br from-palette-teal to-palette-teal/80 hover:from-palette-teal/90 hover:to-palette-teal text-white" onClick={() => navigate('/')}> 
                 <MapPin className="w-6 h-6" />
                 <span className="text-sm">New Booking</span>
               </Button>
-              <Button className="h-20 flex flex-col space-y-2 bg-gradient-to-br from-palette-orange to-palette-orange/80 hover:from-palette-orange/90 hover:to-palette-orange text-white">
+              <Button className="h-20 flex flex-col space-y-2 bg-gradient-to-br from-palette-orange to-palette-orange/80 hover:from-palette-orange/90 hover:to-palette-orange text-white" onClick={() => navigate('/wishlist')}>
                 <Heart className="w-6 h-6" />
                 <span className="text-sm">Wishlist</span>
               </Button>
@@ -332,6 +389,55 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
                 <span className="text-sm">Rewards</span>
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Wishlisted Packages */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Heart className="w-5 h-5 text-palette-orange" />
+              <span>Wishlisted Packages</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {wishlistedPackages.length === 0 ? (
+              <div className="text-center py-8">
+                <Heart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No wishlisted packages</h3>
+                <p className="text-gray-500">Add packages to your wishlist to see them here!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {wishlistedPackages.map(pkg => (
+                  <Card key={pkg.packageId} className="group cursor-pointer hover:shadow-lg transition-all duration-300 rounded-lg p-2" onClick={() => navigate(`/packages/${pkg.packageId}`)}>
+                    <div className="relative overflow-hidden rounded-lg">
+                      <img 
+                        src={pkg.mainImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'} 
+                        alt={pkg.title}
+                        className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-3 left-3 text-white">
+                        <h4 className="font-semibold text-sm">{pkg.title}</h4>
+                        <p className="text-xs opacity-90">₹{pkg.price?.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <CardContent>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <MapPin className="w-4 h-4 text-palette-teal" />
+                        <span className="text-xs text-gray-700">{pkg.destination}</span>
+                        <Clock className="w-4 h-4 text-palette-orange ml-2" />
+                        <span className="text-xs text-gray-700">{pkg.duration} days</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+            <Button variant="outline" className="w-full mt-4 text-palette-orange border-palette-orange hover:bg-palette-orange hover:text-white" onClick={() => navigate('/wishlist')}>
+              View Wishlist
+            </Button>
           </CardContent>
         </Card>
       </div>

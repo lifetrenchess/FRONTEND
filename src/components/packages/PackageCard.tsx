@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,36 @@ interface PackageCardProps {
 }
 
 const PackageCard = ({ pkg }: PackageCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
+  // Persist wishlist in localStorage
+  const getWishlist = () => {
+    const stored = localStorage.getItem('wishlist');
+    return stored ? JSON.parse(stored) as number[] : [];
+  };
+  const [isLiked, setIsLiked] = useState(() => getWishlist().includes(pkg.packageId));
+
+  useEffect(() => {
+    // Keep isLiked in sync with localStorage changes (e.g., from other tabs)
+    const syncWishlist = () => setIsLiked(getWishlist().includes(pkg.packageId));
+    window.addEventListener('storage', syncWishlist);
+    return () => window.removeEventListener('storage', syncWishlist);
+  }, [pkg.packageId]);
+
+  const toggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const wishlist = getWishlist();
+    let updated;
+    if (wishlist.includes(pkg.packageId)) {
+      updated = wishlist.filter(id => id !== pkg.packageId);
+      setIsLiked(false);
+    } else {
+      updated = [...wishlist, pkg.packageId];
+      setIsLiked(true);
+    }
+    localStorage.setItem('wishlist', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
+  };
+
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
@@ -64,11 +93,7 @@ const PackageCard = ({ pkg }: PackageCardProps) => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsLiked(!isLiked);
-                  }}
+                  onClick={toggleWishlist}
                   className={`like-btn w-8 h-8 p-0 rounded-full backdrop-blur-sm ${
                     isLiked ? 'bg-red-500 text-white' : 'bg-white/80 text-gray-700 hover:bg-red-500 hover:text-white'
                   } transition-all duration-300`}

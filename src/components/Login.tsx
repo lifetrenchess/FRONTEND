@@ -24,7 +24,13 @@ const Login: React.FC<LoginProps> = ({ isOpen, onClose, onAuthSuccess, children 
 
   // Use controlled open state if provided, otherwise use internal state
   const isDialogOpen = isOpen !== undefined ? isOpen : open;
-  const handleOpenChange = onClose || (() => setOpen(false));
+  const handleOpenChange = (newOpen: boolean) => {
+    if (onClose) {
+      onClose();
+    } else {
+      setOpen(newOpen);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +39,7 @@ const Login: React.FC<LoginProps> = ({ isOpen, onClose, onAuthSuccess, children 
     
     try {
       const result = await login(email, password);
-      handleOpenChange();
+      handleOpenChange(false);
       
       // Call onAuthSuccess if provided, otherwise use default navigation
       if (onAuthSuccess) {

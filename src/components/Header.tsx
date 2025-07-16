@@ -10,11 +10,19 @@ import AventraLogo from '@/components/AventraLogo';
 const Header = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(getCurrentUser());
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     const handleStorage = () => setUser(getCurrentUser());
+    const handleOpenLogin = () => setLoginOpen(true);
+    
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener('openLogin', handleOpenLogin);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('openLogin', handleOpenLogin);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -40,8 +48,7 @@ const Header = () => {
   return (
     <header className="w-full bg-white shadow-sm px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}> 
-        <AventraLogo size={48} />
-        <span className="font-bold text-xl text-palette-teal">Aventra Travel</span>
+        <AventraLogo size={64} />
       </div>
       <nav className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => navigate('/about')}>About</Button>
@@ -67,6 +74,10 @@ const Header = () => {
                 Sign Up
               </Button>
             </Register>
+            {/* Hidden Login component for auto-opening after registration */}
+            <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)}>
+              <div style={{ display: 'none' }}></div>
+            </Login>
           </div>
         )}
       </nav>

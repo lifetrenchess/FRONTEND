@@ -32,12 +32,7 @@ export interface AgentBooking {
   status: string;
 }
 
-export interface CustomerInquiry {
-  id: number;
-  customer: string;
-  message: string;
-  time: string;
-}
+
 
 // Updated to use API Gateway for package service
 const packageApi = axios.create({
@@ -143,20 +138,6 @@ export async function getAgentBookings(): Promise<AgentBooking[]> {
   }
 }
 
-export async function getCustomerInquiries(): Promise<CustomerInquiry[]> {
-  try {
-    const response = await userApi.get('/inquiries');
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch customer inquiries:', error);
-    // Return mock data as fallback
-    return [
-      { id: 1, customer: 'Rohit Verma', message: 'Can I get a discount?', time: '5 min ago' },
-      { id: 2, customer: 'Neha Patel', message: 'Is breakfast included?', time: '20 min ago' },
-    ];
-  }
-}
-
 export async function createAgentPackage(packageData: Partial<AgentPackage>): Promise<AgentPackage> {
   try {
     // Get current user to set agent ID
@@ -231,15 +212,6 @@ export async function updateBookingStatus(bookingId: number, status: string): Pr
     await userApi.put(`/bookings/${bookingId}/status`, { status });
   } catch (error) {
     console.error('Failed to update booking status:', error);
-    throw error;
-  }
-}
-
-export async function respondToInquiry(inquiryId: number, response: string): Promise<void> {
-  try {
-    await userApi.post(`/inquiries/${inquiryId}/respond`, { response });
-  } catch (error) {
-    console.error('Failed to respond to inquiry:', error);
     throw error;
   }
 } 

@@ -1,4 +1,4 @@
-import { getApiUrl } from './apiConfig';
+import { getApiUrl, getAuthHeaders } from './apiConfig';
 
 export interface BookingDTO {
   userId: number;
@@ -46,9 +46,7 @@ export const createBooking = async (bookingData: BookingDTO): Promise<BookingRes
   try {
     const response = await fetch(getApiUrl('BOOKING_SERVICE', ''), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(bookingData),
     });
 
@@ -67,7 +65,9 @@ export const createBooking = async (bookingData: BookingDTO): Promise<BookingRes
 // Get booking by ID
 export const getBookingById = async (bookingId: number): Promise<BookingResponse> => {
   try {
-    const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}`));
+    const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}`), {
+      headers: getAuthHeaders(),
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch booking: ${response.statusText}`);
@@ -83,7 +83,9 @@ export const getBookingById = async (bookingId: number): Promise<BookingResponse
 // Get bookings by user ID
 export const getBookingsByUser = async (userId: number): Promise<BookingResponse[]> => {
   try {
-    const response = await fetch(getApiUrl('BOOKING_SERVICE', `/user/${userId}`));
+    const response = await fetch(getApiUrl('BOOKING_SERVICE', `/user/${userId}`), {
+      headers: getAuthHeaders(),
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch user bookings: ${response.statusText}`);
@@ -99,7 +101,9 @@ export const getBookingsByUser = async (userId: number): Promise<BookingResponse
 // Get all bookings (admin/agent)
 export const getAllBookings = async (): Promise<BookingResponse[]> => {
   try {
-    const response = await fetch(getApiUrl('BOOKING_SERVICE', ''));
+    const response = await fetch(getApiUrl('BOOKING_SERVICE', ''), {
+      headers: getAuthHeaders(),
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch bookings: ${response.statusText}`);
@@ -117,9 +121,7 @@ export const updateBookingStatus = async (bookingId: number, status: string): Pr
   try {
     const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}/status`), {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ status }),
     });
 
@@ -140,6 +142,7 @@ export const cancelBooking = async (bookingId: number): Promise<BookingResponse>
   try {
     const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}/cancel`), {
       method: 'PUT',
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {

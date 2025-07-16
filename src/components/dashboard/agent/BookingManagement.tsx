@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Calendar, Users, CreditCard, Search, Filter, RefreshCw, Eye, Edit, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { getApiUrl } from '@/lib/apiConfig';
+import { getAllBookings, updateBookingStatus, BookingResponse } from '@/lib/bookingApi';
 
 interface Booking {
   bookingId: number;
@@ -37,7 +37,7 @@ interface Booking {
   };
   paymentStatus?: string;
   createdAt?: string;
-  insurancePlan?: number; // Added for insurance plan info
+  insurancePlan?: number;
 }
 
 const BookingManagement = () => {
@@ -55,24 +55,46 @@ const BookingManagement = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [viewingDetails, setViewingDetails] = useState(false);
 
+  // Convert BookingResponse to Booking interface
+  const convertBookingResponse = (bookingResponse: BookingResponse): Booking => {
+    return {
+      bookingId: bookingResponse.bookingId,
+      userId: bookingResponse.userId,
+      packageId: bookingResponse.packageId,
+      startDate: bookingResponse.startDate,
+      endDate: bookingResponse.endDate,
+      status: bookingResponse.status,
+      travelers: {
+        adults: bookingResponse.adults,
+        children: bookingResponse.children,
+        infants: bookingResponse.infants,
+        contact: {
+          fullName: bookingResponse.contactFullName,
+          email: bookingResponse.contactEmail,
+          phoneNumber: bookingResponse.contactPhone,
+        },
+        names: bookingResponse.travelerNames ? bookingResponse.travelerNames.split(',') : [],
+      },
+      hasInsurance: bookingResponse.hasInsurance,
+      insurancePlan: bookingResponse.insurancePlan,
+      createdAt: bookingResponse.createdAt,
+    };
+  };
+
   // Load all bookings
   const loadBookings = async () => {
     setLoading(true);
     setError('');
     
     try {
-      const response = await fetch(getApiUrl('BOOKING_SERVICE', ''));
-      
-      if (!response.ok) {
-        throw new Error('Failed to load bookings');
-      }
-      
-      const data = await response.json();
-      setBookings(data);
-      setFilteredBookings(data);
+      const bookingResponses = await getAllBookings();
+      const convertedBookings = bookingResponses.map(convertBookingResponse);
+      setBookings(convertedBookings);
+      setFilteredBookings(convertedBookings);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to load bookings');
       toast.error('Failed to load bookings');
+      console.error('Error loading bookings:', err);
     } finally {
       setLoading(false);
     }
@@ -112,21 +134,10 @@ const BookingManagement = () => {
   }, []);
 
   // Update booking status
-  const updateBookingStatus = async (bookingId: number, newStatus: string) => {
+  const handleUpdateBookingStatus = async (bookingId: number, newStatus: string) => {
     try {
-      const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}/status`), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update booking status');
-      }
-
-      const updatedBooking: Booking = await response.json();
+      const updatedBookingResponse = await updateBookingStatus(bookingId, newStatus);
+      const updatedBooking = convertBookingResponse(updatedBookingResponse);
       
       // Update the bookings list
       setBookings(prev => 
@@ -138,6 +149,7 @@ const BookingManagement = () => {
       toast.success(`Booking status updated to ${newStatus}`);
     } catch (err: any) {
       toast.error(`Failed to update status: ${err.message}`);
+      console.error('Error updating booking status:', err);
     }
   };
 
@@ -370,7 +382,7 @@ const BookingManagement = () => {
                           )}
                           {booking.totalAmount && (
                             <span className="font-medium">
-                              ${booking.totalAmount.toLocaleString()}
+                              ₹{booking.totalAmount.toLocaleString()}
                             </span>
                           )}
                         </div>
@@ -407,7 +419,7 @@ const BookingManagement = () => {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction 
-                                  onClick={() => updateBookingStatus(booking.bookingId, 'CONFIRMED')}
+                                  onClick={() => handleUpdateBookingStatus(booking.bookingId, 'CONFIRMED')}
                                   className="bg-green-600 hover:bg-green-700"
                                 >
                                   Confirm Booking
@@ -435,7 +447,7 @@ const BookingManagement = () => {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Keep Booking</AlertDialogCancel>
                                 <AlertDialogAction 
-                                  onClick={() => updateBookingStatus(booking.bookingId, 'CANCELLED')}
+                                  onClick={() => handleUpdateBookingStatus(booking.bookingId, 'CANCELLED')}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Cancel Booking
@@ -560,7 +572,7 @@ const BookingManagement = () => {
                     {selectedBooking.totalAmount && (
                       <div>
                         <Label className="text-sm text-gray-600">Total Amount</Label>
-                        <p className="font-medium text-lg">${selectedBooking.totalAmount.toLocaleString()}</p>
+                        <p className="font-medium text-lg">₹{selectedBooking.totalAmount.toLocaleString()}</p>
                       </div>
                     )}
                     {selectedBooking.paymentStatus && (

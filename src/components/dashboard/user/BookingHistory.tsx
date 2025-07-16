@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Package } from 'lucide-react';
+import { getBookingsByUser, BookingResponse } from '@/lib/bookingApi';
+import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 
 interface Booking {
   id: number;
   packageName: string;
   bookingDate: string;
   travelDate: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'COMPLETED';
+  status: string;
   price: number;
   destination: string;
 }
@@ -17,43 +19,49 @@ const BookingHistory = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Mock data for now - replace with actual API call
-    const mockBookings: Booking[] = [
-      {
-        id: 1,
-        packageName: "Paris Adventure",
-        bookingDate: "2024-01-15",
-        travelDate: "2024-03-20",
-        status: "CONFIRMED",
-        price: 1299.99,
-        destination: "Paris, France"
-      },
-      {
-        id: 2,
-        packageName: "Tokyo Discovery",
-        bookingDate: "2024-01-10",
-        travelDate: "2024-04-15",
-        status: "PENDING",
-        price: 1899.99,
-        destination: "Tokyo, Japan"
-      },
-      {
-        id: 3,
-        packageName: "Bali Paradise",
-        bookingDate: "2023-12-20",
-        travelDate: "2024-02-10",
-        status: "COMPLETED",
-        price: 1699.99,
-        destination: "Bali, Indonesia"
-      }
-    ];
+  // Get current user ID from localStorage
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const userId = currentUser.userId || 1;
 
-    setTimeout(() => {
-      setBookings(mockBookings);
-      setLoading(false);
-    }, 1000);
-  }, []);
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch bookings and packages in parallel
+        const [bookingsData, packagesData] = await Promise.all([
+          getBookingsByUser(userId),
+          fetchAllPackages()
+        ]);
+
+        // Transform booking data to match the interface
+        const transformedBookings: Booking[] = bookingsData.map(booking => {
+          const packageData = packagesData.find(p => p.packageId === booking.packageId);
+          const startDate = new Date(booking.startDate);
+          const endDate = new Date(booking.endDate);
+          
+          return {
+            id: booking.bookingId,
+            packageName: packageData?.title || 'Unknown Package',
+            bookingDate: booking.createdAt || new Date().toISOString().split('T')[0],
+            travelDate: startDate.toISOString().split('T')[0],
+            status: booking.status,
+            price: packageData?.price || 0,
+            destination: packageData?.destination || 'Unknown Destination'
+          };
+        });
+
+        setBookings(transformedBookings);
+      } catch (error) {
+        console.error('Failed to fetch bookings:', error);
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [userId]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAllUsers } from '@/lib/userApi';
+import { fetchAllPackages } from '@/lib/packagesApi';
+import { getAllBookings } from '@/lib/bookingApi';
+import { UserResponse } from '@/lib/userApi';
+import { TravelPackageDto } from '@/lib/packagesApi';
+import { BookingResponse } from '@/lib/bookingApi';
 
 interface UserData {
   fullName: string;
@@ -13,13 +19,62 @@ interface AdminOverviewProps {
 }
 
 const AdminOverview = ({ user }: AdminOverviewProps) => {
-  // These would be fetched from backend in real app
-  const stats = {
-    totalUsers: 1234,
-    totalPackages: 567,
-    totalBookings: 890,
-    revenue: 123456
-  };
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalPackages: 0,
+    totalBookings: 0,
+    revenue: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [users, packages, bookings] = await Promise.all([
+          getAllUsers(),
+          fetchAllPackages(),
+          getAllBookings()
+        ]);
+
+        // Calculate revenue from completed bookings
+        const revenue = bookings
+          .filter(b => b.status === 'COMPLETED' || b.status === 'CONFIRMED')
+          .reduce((sum, booking) => {
+            // Find the package to get the price
+            const packageData = packages.find(p => p.packageId === booking.packageId);
+            return sum + (packageData?.price || 0);
+          }, 0);
+
+        setStats({
+          totalUsers: users.length,
+          totalPackages: packages.length,
+          totalBookings: bookings.length,
+          revenue: revenue
+        });
+      } catch (error) {
+        console.error('Failed to fetch admin stats:', error);
+        // Keep default values if API fails
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-palette-teal border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading admin overview...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -54,7 +109,7 @@ const AdminOverview = ({ user }: AdminOverviewProps) => {
             <CardTitle>Revenue Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">${stats.revenue.toLocaleString()}</div>
+            <div className="text-3xl font-bold">₹{stats.revenue.toLocaleString()}</div>
           </CardContent>
         </Card>
       </div>

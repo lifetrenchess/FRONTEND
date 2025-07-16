@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getApiUrl } from './apiConfig';
 
 // User interface
 export interface UserInfo {
@@ -60,35 +61,65 @@ export function getStoredCurrentUser(): { fullName: string; email: string; isAut
 // API functions
 export async function login(email: string, password: string) {
   try {
-    const response = await axios.post('/api/users/login', {
-      username: email,
-      password,
+    const response = await axios.post(getApiUrl('USER_SERVICE', '/login'), {
+      userEmail: email,
+      userPassword: password,
     });
 
-    const { token, message } = response.data;
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const roles: string[] = payload.roles?.map((r: any) => r.roleName) || [];
-    const name: string = payload.name || email;
-
-    if (!roles.length) {
-      throw new Error('Access denied: No roles assigned.');
+    console.log('Login response:', response.data);
+    const token = response.data;
+    
+    if (!token) {
+      throw new Error('No token received from server');
     }
-
-    // Store token and user info
+    
+    // Store token
     localStorage.setItem('token', token);
     localStorage.setItem('user-email', email);
-    localStorage.setItem('user-name', name);
+    
+    // Fetch user details from database to get actual role
+    try {
+      const userResponse = await axios.get(getApiUrl('USER_SERVICE', '/me'), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const userData = userResponse.data;
+      const name = userData.userName || email.split('@')[0];
+      const role = userData.userRole || 'USER';
+      
+      // Store user info
+      localStorage.setItem('user-name', name);
 
-    // Use our auth helper to store user info
-    const user: UserInfo = {
-      userId: payload.userId || 1,
-      fullName: name,
-      email,
-      role: roles[0] as 'USER' | 'ADMIN' | 'TRAVEL_AGENT',
-    };
-    loginUser(user);
+      // Use our auth helper to store user info
+      const user: UserInfo = {
+        userId: userData.userId || 1,
+        fullName: name,
+        email,
+        role: role as 'USER' | 'ADMIN' | 'TRAVEL_AGENT',
+      };
+      loginUser(user);
 
-    return { success: true, message, user };
+      return { success: true, message: 'Login successful', user };
+    } catch (userError) {
+      // If /me endpoint fails, assume USER role (for new registrations)
+      console.log('Could not fetch user details, assuming USER role');
+      const name = email.split('@')[0];
+      const role = 'USER';
+      
+      localStorage.setItem('user-name', name);
+
+      const user: UserInfo = {
+        userId: 1,
+        fullName: name,
+        email,
+        role: role as 'USER' | 'ADMIN' | 'TRAVEL_AGENT',
+      };
+      loginUser(user);
+
+      return { success: true, message: 'Login successful', user };
+    }
   } catch (error: any) {
     console.error('Login error:', error);
     if (error.response) {
@@ -107,7 +138,7 @@ export async function register(userData: {
   userContactNumber: string;
 }) {
   try {
-    const response = await axios.post('/api/users', userData);
+    const response = await axios.post(getApiUrl('USER_SERVICE', ''), userData);
     const { message } = response.data;
     return { success: true, message };
   } catch (error: any) {
