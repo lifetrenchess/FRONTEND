@@ -22,6 +22,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import BookingSummaryPage from '@/pages/BookingSummaryPage';
 import AboutPage from '@/pages/AboutPage';
 import ContactPage from '@/pages/ContactPage';
+import MockPaymentPage from '@/pages/MockPaymentPage';
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/insurance" element={<InsurancePage />} />
             <Route path="/confirmation" element={<ConfirmationPage />} />
+            <Route path="/mock-payment" element={<MockPaymentPage />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -90,6 +90,10 @@ const BookingPage = () => {
     totalAmount: 1550.00,
   });
 
+  // Add step indicator state
+  const [step, setStep] = useState(1);
+  const totalSteps = 3;
+
   const formatIndianRupees = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -344,288 +348,200 @@ const BookingPage = () => {
     </div>
   );
 
-  return (
-    <div className={styles.bookingPageContainer}>
-      <div className={styles.bookingPageContent}>
-        {/* Header */}
-        <div className={styles.header}>
-          <h1 className={styles.headerTitle}>Confirm Your Booking</h1>
-          <div className={styles.headerSubtitle}>
-            <div className={styles.headerSubtitleItem}>
-              <CheckCircle className={styles.headerSubtitleIcon} />
-              <span>Package Details</span>
-            </div>
-            <div className={styles.headerSubtitleDivider}></div>
-            <div className={styles.headerSubtitleItem}>
-              <CreditCard className={styles.headerSubtitleIcon} />
-              <span>Confirm & Pay</span>
-            </div>
-            <div className={styles.headerSubtitleDivider}></div>
-            <div className={styles.headerSubtitleItem}>
-              <CheckCircle className={styles.headerSubtitleIcon} />
-              <span>Confirmation</span>
-            </div>
-          </div>
-        </div>
+  // Add step indicator component
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      {[1, 2, 3].map((s, i) => (
+        <React.Fragment key={s}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white transition-all duration-300 ${step === s ? 'bg-palette-teal scale-110 shadow-lg' : 'bg-gray-300'}`}>{s}</div>
+          {i < 2 && <div className={`w-12 h-1 ${step > s ? 'bg-palette-orange' : 'bg-gray-200'} transition-all duration-300`}></div>}
+        </React.Fragment>
+      ))}
+    </div>
+  );
 
-        <div className={styles.grid}>
-          {/* Main Content */}
-          <div className={styles.mainContent}>
-            {/* Date Selection */}
-            <Card className={styles.card}>
-              <CardHeader className={styles.cardHeader}>
-                <CardTitle className={styles.cardTitle}>
-                  <Calendar className={styles.cardTitleIcon} />
-                  <span>Select Your Dates</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className={styles.cardContent}>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <StepIndicator />
+        {/* Animate form sections */}
+        <div className={`transition-all duration-700 ${step === 1 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8 pointer-events-none'}`}> {/* Step 1: Dates */}
+          <Card className={styles.card}>
+            <CardHeader className={styles.cardHeader}>
+              <CardTitle className={styles.cardTitle}>
+                <Calendar className={styles.cardTitleIcon} />
+                <span>Select Your Dates</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className={styles.cardContent}>
+              <div className={styles.grid}>
+                <div>
+                  <Label>Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          styles.dateButton,
+                          !startDate && styles.dateButtonMuted
+                        )}
+                      >
+                        <CalendarIcon className={styles.dateButtonIcon} />
+                        {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className={styles.datePopoverContent}>
+                      <CalendarComponent
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        disabled={(date) => date < new Date()}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label>End Date</Label>
+                  <Input
+                    type="text"
+                    value={endDate ? format(endDate, 'PPP') : ''}
+                    readOnly
+                    className={styles.endDateInput}
+                    placeholder="End date will be auto-calculated"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Button className="bg-palette-orange hover:bg-palette-teal text-white font-bold mt-6" onClick={() => setStep(2)}>Next</Button>
+        </div>
+        <div className={`transition-all duration-700 ${step === 2 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8 pointer-events-none'}`}> {/* Step 2: Traveler Info */}
+          <Card className={styles.card}>
+            <CardHeader className={styles.cardHeader}>
+              <CardTitle className={styles.cardTitle}>
+                <Users className={styles.cardTitleIcon} />
+                <span>Who's Traveling?</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className={styles.cardContent}>
+              <QuantitySelector
+                label="Adults (12+)"
+                value={adults}
+                onChange={setAdults}
+                min={1}
+              />
+              <QuantitySelector
+                label="Children (2-11)"
+                value={children}
+                onChange={setChildren}
+              />
+              <QuantitySelector
+                label="Infants (under 2)"
+                value={infants}
+                onChange={setInfants}
+              />
+
+              <Separator />
+
+              <div>
+                <h3 className={styles.sectionTitle}>Contact Details</h3>
                 <div className={styles.grid}>
                   <div>
-                    <Label>Start Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            styles.dateButton,
-                            !startDate && styles.dateButtonMuted
-                          )}
-                        >
-                          <CalendarIcon className={styles.dateButtonIcon} />
-                          {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className={styles.datePopoverContent}>
-                        <CalendarComponent
-                          mode="single"
-                          selected={startDate}
-                          onSelect={setStartDate}
-                          initialFocus
-                          disabled={(date) => date < new Date()}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div>
-                    <Label>End Date</Label>
+                    <Label htmlFor="fullName">Full Name</Label>
                     <Input
-                      type="text"
-                      value={endDate ? format(endDate, 'PPP') : ''}
-                      readOnly
-                      className={styles.endDateInput}
-                      placeholder="End date will be auto-calculated"
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="john.doe@example.com"
+                      required
+                    />
+                  </div>
+                  <div className={styles.colSpan2}>
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                      required
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Travelers */}
-            <Card className={styles.card}>
-              <CardHeader className={styles.cardHeader}>
-                <CardTitle className={styles.cardTitle}>
-                  <Users className={styles.cardTitleIcon} />
-                  <span>Who's Traveling?</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className={styles.cardContent}>
-                <QuantitySelector
-                  label="Adults (12+)"
-                  value={adults}
-                  onChange={setAdults}
-                  min={1}
-                />
-                <QuantitySelector
-                  label="Children (2-11)"
-                  value={children}
-                  onChange={setChildren}
-                />
-                <QuantitySelector
-                  label="Infants (under 2)"
-                  value={infants}
-                  onChange={setInfants}
-                />
-
-                <Separator />
-
+              {(adults + children) > 0 && (
                 <div>
-                  <h3 className={styles.sectionTitle}>Contact Details</h3>
+                  <h3 className={styles.sectionTitle}>Traveler Names</h3>
                   <div className={styles.grid}>
-                    <div>
-                      <Label htmlFor="fullName">Full Name</Label>
-                      <Input
-                        id="fullName"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="John Doe"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="john.doe@example.com"
-                        required
-                      />
-                    </div>
-                    <div className={styles.colSpan2}>
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
-                      <Input
-                        id="phoneNumber"
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="+1 (555) 123-4567"
-                        required
-                      />
-                    </div>
+                    {Array.from({ length: adults + children }).map((_, index) => (
+                      <div key={index}>
+                        <Label htmlFor={`traveler-name-${index}`}>Traveler {index + 1} Name</Label>
+                        <Input
+                          id={`traveler-name-${index}`}
+                          value={travelerNames[index] || ''}
+                          onChange={(e) => handleTravelerNameChange(index, e.target.value)}
+                          placeholder={`Traveler ${index + 1} Full Name`}
+                          required
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                {(adults + children) > 0 && (
-                  <div>
-                    <h3 className={styles.sectionTitle}>Traveler Names</h3>
-                    <div className={styles.grid}>
-                      {Array.from({ length: adults + children }).map((_, index) => (
-                        <div key={index}>
-                          <Label htmlFor={`traveler-name-${index}`}>Traveler {index + 1} Name</Label>
-                          <Input
-                            id={`traveler-name-${index}`}
-                            value={travelerNames[index] || ''}
-                            onChange={(e) => handleTravelerNameChange(index, e.target.value)}
-                            placeholder={`Traveler ${index + 1} Full Name`}
-                            required
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Insurance */}
-            <Card className={styles.card}>
-              <CardHeader className={styles.cardHeader}>
-                <CardTitle className={styles.cardTitle}>
-                  <Shield className={styles.cardTitleIcon} />
-                  <span>Enhance Your Trip</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className={styles.cardContent}>
-                <div className={styles.spaceY4}>
-                  <div className={styles.flexItemsCenter}>
-                    <Checkbox
-                      id="addInsurance"
-                      checked={hasInsurance}
-                      onCheckedChange={(checked) => setHasInsurance(checked as boolean)}
-                    />
-                    <Label htmlFor="addInsurance" className={styles.checkboxLabel}>
-                      I want travel insurance
-                    </Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Terms */}
-            <Card className={styles.card}>
-              <CardContent className={styles.cardContent}>
-                <div className={styles.flexItemsCenter}>
-                  <Checkbox
-                    id="agreeTerms"
-                    checked={agreedToTerms}
-                    onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                    required
-                  />
-                  <Label htmlFor="agreeTerms" className={styles.checkboxLabel}>
-                    I have read and agree to the{' '}
-                    <a href="/terms" target="_blank" rel="noopener noreferrer" className={styles.link}>
-                      Terms & Conditions
-                    </a>{' '}
-                    and{' '}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className={styles.link}>
-                      Privacy Policy
-                    </a>
-                    .
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className={styles.sidebar}>
-            <Card className={styles.card}>
-              <CardHeader className={styles.cardHeader}>
-                <CardTitle className={styles.cardTitle}>Booking Summary</CardTitle>
-              </CardHeader>
-              <CardContent className={styles.cardContent}>
-                <div className={styles.flexSpaceX4}>
-                  <img 
-                    src={packageSummary.image} 
-                    alt={packageSummary.title} 
-                    className={styles.packageImage}
-                  />
-                  <div>
-                    <h3 className={styles.fontMedium}>{packageSummary.title}</h3>
-                    <p className={styles.textSm}>{packageSummary.duration}</p>
-                    <p className={styles.textSm}>{packageSummary.selectedDates}</p>
-                  </div>
-                </div>
-                
-                <div className={styles.textSm}>
-                  <p><strong>Travelers:</strong> {adults} Adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants !== 1 ? 's' : ''}` : ''}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={styles.card}>
-              <CardHeader className={styles.cardHeader}>
-                <CardTitle className={styles.cardTitle}>Price Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className={styles.cardContent}>
-                <div className={styles.flexJustifyBetween}>
-                  <span>Package Price:</span>
-                  <span>{formatIndianRupees(priceBreakdown.packagePrice)}</span>
-                </div>
-                {hasInsurance && (
-                  <div className={styles.flexJustifyBetween}>
-                    <span>Travel Insurance:</span>
-                    <span>{formatIndianRupees(priceBreakdown.travelInsurance)}</span>
-                  </div>
-                )}
-                <div className={styles.flexJustifyBetween}>
-                  <span>Taxes & Fees:</span>
-                  <span>{formatIndianRupees(priceBreakdown.taxesFees)}</span>
-                </div>
-                <Separator />
-                <div className={styles.flexJustifyBetween}>
-                  <span>Total Amount:</span>
-                  <span>{formatIndianRupees(priceBreakdown.totalAmount)}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Button
-              className={styles.proceedButton}
-              onClick={handleSubmitBooking}
-              disabled={
-                !startDate || !agreedToTerms ||
-                fullName === '' || email === '' || phoneNumber === '' ||
-                adults === 0 ||
-                travelerNames.slice(0, adults + children).some(name => name.trim() === '')
-              }
-            >
-              Proceed to Payment
-            </Button>
+              )}
+            </CardContent>
+          </Card>
+          <div className="flex gap-4 mt-6">
+            <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+            <Button className="bg-palette-orange hover:bg-palette-teal text-white font-bold" onClick={() => setStep(3)}>Next</Button>
           </div>
         </div>
+        <div className={`transition-all duration-700 ${step === 3 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8 pointer-events-none'}`}> {/* Step 3: Review & Confirm */}
+          <Card className="shadow-xl bg-gradient-to-br from-palette-teal/10 to-palette-orange/10 border-0 animate-pop-in">
+            <CardHeader>
+              <CardTitle className="text-palette-teal">Review & Confirm</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={styles.flexSpaceX4}>
+                <img 
+                  src={packageSummary.image} 
+                  alt={packageSummary.title} 
+                  className={styles.packageImage}
+                />
+                <div>
+                  <h3 className={styles.fontMedium}>{packageSummary.title}</h3>
+                  <p className={styles.textSm}>{packageSummary.duration}</p>
+                  <p className={styles.textSm}>{packageSummary.selectedDates}</p>
+                </div>
+              </div>
+              
+              <div className={styles.textSm}>
+                <p><strong>Travelers:</strong> {adults} Adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants !== 1 ? 's' : ''}` : ''}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="flex gap-4 mt-6">
+            <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+            <Button className="bg-palette-orange hover:bg-palette-teal text-white font-bold" onClick={handleSubmitBooking}>Confirm Booking</Button>
+          </div>
+        </div>
+        <style>{`
+          .animate-pop-in { animation: pop-in 0.6s cubic-bezier(.23,1.02,.57,1.01); }
+          @keyframes pop-in { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+          input:focus, select:focus, textarea:focus { outline: 2px solid #1B9AAA; box-shadow: 0 0 0 2px #FF8800; transition: box-shadow 0.2s; }
+        `}</style>
       </div>
     </div>
   );

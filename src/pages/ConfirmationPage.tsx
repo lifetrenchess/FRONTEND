@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Calendar, Users, MapPin, CreditCard, Download, Mail, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiConfig';
+// Add confetti import
+import Confetti from 'react-confetti';
 
 interface BookingDetails {
   bookingId: number;
@@ -39,6 +41,8 @@ const ConfirmationPage = () => {
   
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(true);
+  const [detailsVisible, setDetailsVisible] = useState(false);
 
   useEffect(() => {
     if (!bookingId) {
@@ -67,6 +71,11 @@ const ConfirmationPage = () => {
 
     fetchBookingDetails();
   }, [bookingId, navigate]);
+
+  useEffect(() => {
+    setTimeout(() => setShowConfetti(false), 2500);
+    setTimeout(() => setDetailsVisible(true), 400);
+  }, []);
 
   const formatIndianRupees = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -174,22 +183,22 @@ const ConfirmationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 py-8">
+      {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} numberOfPieces={180} recycle={false} gravity={0.25} />} 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4 animate-pop-in">
+            <CheckCircle className="w-12 h-12 text-green-600 animate-checkmark" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Booking Confirmed!</h1>
-          <p className="text-gray-600">Your travel booking has been successfully confirmed.</p>
+          <h1 className="text-3xl font-bold text-palette-teal mb-2 animate-fade-in">Booking Confirmed!</h1>
+          <p className="text-gray-600 animate-fade-in">Your travel booking has been successfully confirmed.</p>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 transition-opacity duration-700 ${detailsVisible ? 'opacity-100' : 'opacity-0'}`}> 
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Booking Details */}
-            <Card>
+            <Card className="bg-gradient-to-br from-palette-teal/10 to-palette-orange/10 border-0 shadow-xl animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Calendar className="w-5 h-5" />
@@ -219,7 +228,7 @@ const ConfirmationPage = () => {
             </Card>
 
             {/* Traveler Information */}
-            <Card>
+            <Card className="bg-gradient-to-br from-palette-orange/10 to-palette-teal/10 border-0 shadow-xl animate-fade-in">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Users className="w-5 h-5" />
@@ -261,7 +270,7 @@ const ConfirmationPage = () => {
 
             {/* Payment Information */}
             {bookingDetails.payment && (
-              <Card>
+              <Card className="bg-gradient-to-br from-palette-teal/10 to-palette-orange/10 border-0 shadow-xl animate-fade-in">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <CreditCard className="w-5 h-5" />
@@ -292,8 +301,9 @@ const ConfirmationPage = () => {
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Sidebar or actions */}
+          <div className="flex flex-col gap-4 animate-fade-in">
+            <Button className="bg-palette-orange hover:bg-palette-teal text-white font-bold py-3 transition-transform duration-200 hover:scale-105" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
             {/* Action Buttons */}
             <Card>
               <CardHeader>
@@ -379,6 +389,14 @@ const ConfirmationPage = () => {
             </Button>
           </div>
         </div>
+        <style>{`
+          .animate-pop-in { animation: pop-in 0.6s cubic-bezier(.23,1.02,.57,1.01); }
+          @keyframes pop-in { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+          .animate-checkmark { animation: checkmark 0.7s cubic-bezier(.23,1.02,.57,1.01); }
+          @keyframes checkmark { 0% { stroke-dasharray: 0 100; opacity: 0; } 100% { stroke-dasharray: 100 0; opacity: 1; } }
+          .animate-fade-in { animation: fade-in 0.7s ease; }
+          @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        `}</style>
       </div>
     </div>
   );

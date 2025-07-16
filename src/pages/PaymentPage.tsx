@@ -47,11 +47,14 @@ const PaymentPage = () => {
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
+    script.onload = () => setRazorpayLoaded(true);
+    script.onerror = () => setRazorpayLoaded(false);
     document.body.appendChild(script);
     return () => {
       document.body.removeChild(script);
     };
   }, []);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,6 +69,11 @@ const PaymentPage = () => {
 
   const handlePayNow = async () => {
     setIsLoading(true);
+    if (!razorpayLoaded) {
+      // Fallback to mock payment page
+      navigate('/mock-payment', { state: { bookingId, totalAmount, userId } });
+      return;
+    }
     try {
       const paymentData = {
         amount: totalAmount,

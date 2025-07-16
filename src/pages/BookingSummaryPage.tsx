@@ -37,39 +37,27 @@ const BookingSummaryPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30 py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Card className="shadow-xl">
+        <Card className="shadow-xl bg-gradient-to-br from-palette-teal/10 to-palette-orange/10 border-0 animate-pop-in">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-palette-teal">Booking Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Package Details */}
+            {/* Enhanced Package Details */}
             {packageData && (
-              <div className="space-y-2">
-                <h3 className="font-semibold text-lg mb-2">Package Details</h3>
-                <div className="flex items-center space-x-4">
-                  {packageData.mainImage && (
-                    <img src={packageData.mainImage} alt={packageData.title} className="w-28 h-20 object-cover rounded-lg border" />
+              <div className="flex flex-col md:flex-row gap-6 items-center bg-white/80 rounded-xl p-4 shadow-md mb-4 animate-pop-in">
+                {packageData.mainImage && (
+                  <img src={packageData.mainImage} alt={packageData.title} className="w-40 h-28 object-cover rounded-lg border shadow" />
+                )}
+                <div className="flex-1">
+                  <div className="font-bold text-xl text-palette-teal mb-1">{packageData.title}</div>
+                  <div className="text-sm text-gray-600 mb-1">{packageData.destination} &bull; {packageData.duration} days</div>
+                  {packageData.highlights && (
+                    <div className="text-xs text-gray-700 mb-1"><span className="font-semibold">Highlights:</span> {packageData.highlights}</div>
                   )}
-                  <div>
-                    <div className="font-bold text-xl text-palette-teal">{packageData.title}</div>
-                    <div className="text-sm text-gray-600">{packageData.destination} &bull; {packageData.duration} days</div>
-                    {packageData.packageType && (
-                      <div className="text-xs text-blue-700 mt-1">Type: {packageData.packageType}</div>
-                    )}
-                    {packageData.difficultyLevel && (
-                      <div className="text-xs text-orange-700">Difficulty: {packageData.difficultyLevel}</div>
-                    )}
-                    {packageData.maxGroupSize && (
-                      <div className="text-xs text-green-700">Max Group Size: {packageData.maxGroupSize}</div>
-                    )}
-                  </div>
+                  {packageData.description && (
+                    <div className="text-xs text-gray-600 line-clamp-2">{packageData.description}</div>
+                  )}
                 </div>
-                {packageData.highlights && (
-                  <div className="text-xs text-gray-700 mt-2"><span className="font-semibold">Highlights:</span> {packageData.highlights}</div>
-                )}
-                {packageData.description && (
-                  <div className="text-xs text-gray-600 mt-1">{packageData.description}</div>
-                )}
               </div>
             )}
             {/* Inclusions */}
@@ -106,9 +94,9 @@ const BookingSummaryPage = () => {
             </div>
             <Separator />
             {/* Total */}
-            <div className="flex justify-between font-bold text-lg">
+            <div className="flex justify-between font-bold text-lg mt-4">
               <span>Total Amount:</span>
-              <span>{formatIndianRupees(totalAmount)}</span>
+              <span className="shimmer-highlight">{formatIndianRupees(totalAmount)}</span>
             </div>
             <div className="flex flex-col md:flex-row gap-4 mt-6">
               <Button
@@ -131,6 +119,21 @@ const BookingSummaryPage = () => {
             </div>
           </CardContent>
         </Card>
+        <style>{`
+          .animate-pop-in { animation: pop-in 0.6s cubic-bezier(.23,1.02,.57,1.01); }
+          @keyframes pop-in { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+          .shimmer-highlight {
+            background: linear-gradient(90deg, #fffbe6 25%, #ffe0b2 50%, #fffbe6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 6px;
+            padding: 0 8px;
+          }
+          @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+          }
+        `}</style>
       </div>
     </div>
   );
