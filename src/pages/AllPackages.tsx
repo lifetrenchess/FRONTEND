@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
+import Login from '@/components/Login';
 import { ReviewList } from '@/components/reviews';
 
 // Add seeded titles for frontend-only badge logic
@@ -457,9 +457,7 @@ const AllPackages = () => {
 
       {/* Login Dialog for Booking Authentication */}
       {showLoginDialog && (
-        <LoginDialog onAuthSuccess={onAuthSuccess}>
-          <div style={{ display: 'none' }} />
-        </LoginDialog>
+        <Login isOpen={showLoginDialog} onClose={() => setShowLoginDialog(false)} onAuthSuccess={onAuthSuccess} />
       )}
     </div>
   );

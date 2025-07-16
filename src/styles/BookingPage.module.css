@@ -418,3 +418,269 @@
   .react-datepicker__month-container {
       width: auto; /* Allow natural width */
   }
+
+/* --- BookingPage.module.css (Enhanced) --- */
+
+.bookingPageContainer {
+  min-height: 100vh;
+  background: #f7f9fc;
+  padding: 40px 0;
+}
+
+.bookingPageContent {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.headerTitle {
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.headerSubtitle {
+  display: flex;
+  gap: 24px;
+  font-size: 1em;
+  color: #888;
+  align-items: center;
+}
+.headerSubtitleItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.headerSubtitleIcon {
+  width: 18px;
+  height: 18px;
+}
+.headerSubtitleDivider {
+  width: 32px;
+  height: 2px;
+  background: #e0e0e0;
+  border-radius: 1px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.07);
+  margin-bottom: 18px;
+  padding: 0;
+}
+.cardHeader {
+  padding: 24px 32px 0 32px;
+}
+.cardTitle {
+  font-size: 1.3em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cardTitleIcon {
+  width: 22px;
+  height: 22px;
+}
+.cardContent {
+  padding: 18px 32px 32px 32px;
+}
+
+.sectionTitle {
+  font-size: 1.1em;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.quantitySelector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.quantitySelectorLabel {
+  font-size: 1em;
+  color: #444;
+}
+.quantitySelectorButtons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.quantityButton {
+  width: 32px;
+  height: 32px;
+  font-size: 1.2em;
+  border-radius: 6px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.quantityButton:disabled {
+  background: #f0f0f0;
+  color: #bbb;
+  cursor: not-allowed;
+}
+.quantityValue {
+  width: 32px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 1.1em;
+}
+
+.endDateInput {
+  width: 100%;
+  background: #f5f5f5;
+  color: #888;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 1em;
+  cursor: not-allowed;
+}
+
+.flexItemsCenter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.spaceY4 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkboxLabel {
+  font-size: 1em;
+  color: #444;
+}
+.link {
+  color: #008080;
+  text-decoration: underline;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  align-self: flex-start;
+  position: sticky;
+  top: 20px;
+}
+.packageImage {
+  width: 80px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 12px;
+}
+.fontMedium {
+  font-weight: 500;
+  font-size: 1.05em;
+}
+.textSm {
+  font-size: 0.97em;
+  color: #666;
+}
+.flexSpaceX4 {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.flexJustifyBetween {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.proceedButton {
+  width: 100%;
+  background: #ff9800;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1em;
+  border-radius: 8px;
+  padding: 14px 0;
+  border: none;
+  cursor: pointer;
+  margin-top: 18px;
+  transition: background 0.2s;
+}
+.proceedButton:disabled {
+  background: #ffd699;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+/* Responsive tweaks */
+@media (max-width: 700px) {
+  .bookingPageContent {
+    padding: 0 6px;
+  }
+  .cardHeader, .cardContent {
+    padding: 12px 10px;
+  }
+  .sidebar {
+    padding: 12px;
+  }
+}
+
+/* Input fields */
+input[type="text"], input[type="email"], input[type="tel"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+  color: #333;
+  margin-bottom: 8px;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus {
+  border-color: #008080;
+  outline: none;
+}
+
+/* Label styling */
+label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.98em;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.colSpan2 {
+  grid-column: span 2;
+}

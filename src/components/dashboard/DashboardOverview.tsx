@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
+import Login from '@/components/Login';
 
 interface UserData {
   fullName: string;
@@ -337,9 +337,7 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
       </div>
       {/* Login Dialog for Booking Authentication */}
       {showLoginDialog && (
-        <LoginDialog onAuthSuccess={onAuthSuccess}>
-          <div style={{ display: 'none' }} />
-        </LoginDialog>
+        <Login isOpen={showLoginDialog} onClose={() => setShowLoginDialog(false)} onAuthSuccess={onAuthSuccess} />
       )}
     </>
   );

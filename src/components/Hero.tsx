@@ -85,9 +85,9 @@ const Hero = () => {
                 </div>
               </div>
               <Button type="submit" className="w-full mt-6 bg-palette-orange hover:bg-palette-orange/90 text-white py-3 text-lg">
-                <Search className="w-5 h-5 mr-2" />
-                Search Packages
-              </Button>
+              <Search className="w-5 h-5 mr-2" />
+              Search Packages
+            </Button>
             </form>
           </CardContent>
         </Card>

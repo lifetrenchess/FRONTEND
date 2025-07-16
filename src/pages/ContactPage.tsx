@@ -40,13 +40,13 @@ const ContactPage = () => {
     {
       icon: Phone,
       title: 'Phone',
-      details: '+1 (555) 123-4567',
+      details: '+91 8296755162',
       description: 'Call us anytime'
     },
     {
       icon: Mail,
       title: 'Email',
-      details: 'hello@aventra.com',
+      details: 'lifetrenchess@gmail.com',
       description: 'Send us an email'
     },
     {

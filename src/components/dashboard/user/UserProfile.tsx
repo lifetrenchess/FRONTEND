@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User, Mail, Phone, Shield, Edit, Save, X } from 'lucide-react';
 import { getCurrentUser, updateUserProfile, UserResponse, UserProfileDto } from '@/lib/userApi';
-import { getCurrentUserFromStorage } from '@/lib/auth';
 import { toast } from 'sonner';
 
 const UserProfile = () => {
@@ -29,19 +28,8 @@ const UserProfile = () => {
           userEmail: userData.userEmail,
           userContactNumber: userData.userContactNumber
         });
-      } catch (err) {
-        // Fallback to localStorage if API fails
-        const storedUser = getCurrentUserFromStorage();
-        if (storedUser) {
-          setUser(storedUser);
-          setEditForm({
-            userName: storedUser.userName,
-            userEmail: storedUser.userEmail,
-            userContactNumber: storedUser.userContactNumber
-          });
-        } else {
-          setError('Failed to load user profile');
-        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load user profile');
       } finally {
         setLoading(false);
       }
@@ -182,7 +170,7 @@ const UserProfile = () => {
             <Label className="text-sm font-medium text-gray-500">Role</Label>
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
               <Shield className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-900">{getRoleDisplayName(user.userRole || 'USER')}</span>
+              <span className="text-gray-900">{getRoleDisplayName(user.userRole)}</span>
             </div>
           </div>
         </div>
@@ -207,19 +195,14 @@ const UserProfile = () => {
               </Button>
             </>
           ) : (
-            <>
-              <Button 
-                onClick={handleEditClick} 
-                variant="outline" 
-                className="flex-1"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-              <Button variant="outline" className="flex-1">
-                Change Password
-              </Button>
-            </>
+            <Button 
+              onClick={handleEditClick} 
+              variant="outline" 
+              className="flex-1"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
           )}
         </div>
       </CardContent>

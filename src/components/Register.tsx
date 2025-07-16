@@ -1,47 +1,39 @@
 import React, { useState } from 'react';
-import { User as UserIcon, AlertCircle, CheckCircle } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { registerUser, User } from '@/lib/userApi';
-import LoginDialog from './LoginDialog';
+import { register } from '@/lib/auth';
 
-interface RegisterDialogProps {
+interface RegisterProps {
   children: React.ReactNode;
-  onRegisterSuccess?: (userData?: any) => void;
 }
 
-const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) => {
+const Register: React.FC<RegisterProps> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
-  const [showLoginAfterRegister, setShowLoginAfterRegister] = useState(false);
   const [formData, setFormData] = useState({
     userName: '',
     userEmail: '',
     userPassword: '',
     confirmPassword: '',
-    userContactNumber: ''
+    userContactNumber: '',
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
     // Clear field error when user starts typing
     if (fieldErrors[e.target.name]) {
       setFieldErrors({
         ...fieldErrors,
-        [e.target.name]: ''
+        [e.target.name]: '',
       });
     }
   };
@@ -72,75 +64,62 @@ const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) =>
     
     // Required fields
     if (!formData.userName || !formData.userEmail || !formData.userContactNumber) {
-      setMessage({ type: 'error', text: 'All fields are required' });
+      setError('All fields are required');
       return false;
     }
     
     setFieldErrors(errors);
     
     if (Object.keys(errors).length > 0) {
-      setMessage({ type: 'error', text: 'Please fix the errors above.' });
+      setError('Please fix the errors above.');
       return false;
     }
     
     return true;
   };
 
-  const handleRegister = async () => {
-    if (!validateForm()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
     
-    setIsLoading(true);
-    setMessage(null);
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
     
     try {
-      const userData: User = {
+      const result = await register({
         userName: formData.userName,
         userEmail: formData.userEmail,
         userPassword: formData.userPassword,
-        userRole: 'USER', // Always set to USER role by default
-        userContactNumber: formData.userContactNumber
-      };
-      
-      await registerUser(userData);
-      
-      setMessage({ type: 'success', text: 'Registration successful! Redirecting to login...' });
-      
-      if (onRegisterSuccess) onRegisterSuccess();
-      
-      // Close registration dialog and open login dialog after 2 seconds
+        userRole: 'USER',
+        userContactNumber: formData.userContactNumber,
+      });
+      setSuccess(result.message || 'Registration successful!');
       setTimeout(() => {
         setIsOpen(false);
-        setShowLoginAfterRegister(true);
         setFormData({
           userName: '',
           userEmail: '',
           userPassword: '',
           confirmPassword: '',
-          userContactNumber: ''
+          userContactNumber: '',
         });
-        setMessage(null);
+        setSuccess('');
         setFieldErrors({});
       }, 2000);
-      
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
-      setMessage({ type: 'error', text: errorMessage });
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleRegister();
-  };
-
   return (
-    <>
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-palette-cream">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-palette-teal">
@@ -148,7 +127,6 @@ const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) =>
             Create Account
           </DialogTitle>
         </DialogHeader>
-        
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto px-2">
           <div>
             <Label htmlFor="userName">Full Name</Label>
@@ -221,41 +199,28 @@ const RegisterDialog = ({ children, onRegisterSuccess }: RegisterDialogProps) =>
               <p className="text-red-500 text-xs mt-1">{fieldErrors.confirmPassword}</p>
             )}
           </div>
-
-          {message && (
-            <div className={`flex items-center gap-2 p-3 rounded-md ${
-              message.type === 'error' 
-                ? 'bg-red-50 text-red-700 border border-red-200' 
-                : 'bg-green-50 text-green-700 border border-green-200'
-            }`}>
-              {message.type === 'error' ? (
-                <AlertCircle className="w-4 h-4" />
-              ) : (
-                <CheckCircle className="w-4 h-4" />
-              )}
-              <span className="text-sm">{message.text}</span>
+          
+          {error && (
+            <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md border border-red-200">
+              {error}
             </div>
           )}
-
+          {success && (
+            <div className="text-green-500 text-sm bg-green-50 p-3 rounded-md border border-green-200">
+              {success}
+            </div>
+          )}
           <Button 
             type="submit" 
             className="w-full bg-[#01E8B2] hover:bg-[#00d4a1] text-white"
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </Button>
         </form>
       </DialogContent>
     </Dialog>
-
-      {/* Auto-open login dialog after successful registration */}
-      {showLoginAfterRegister && (
-        <LoginDialog onAuthSuccess={onRegisterSuccess}>
-          <div style={{ display: 'none' }} />
-        </LoginDialog>
-      )}
-    </>
   );
 };
 
-export default RegisterDialog; 
+export default Register; 

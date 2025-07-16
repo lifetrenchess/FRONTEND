@@ -58,7 +58,7 @@ const Home = () => {
       <button className="btn btn-primary me-2" onClick={submitFeedback}>
         Submit
       </button>
-      <button className="btn btn-outline-secondary" onClick={() => navigate("/view")}>
+      <button className="btn btn-outline-secondary" onClick={() => navigate("/reviews")}>
         View Feedbacks
       </button>
     </div>

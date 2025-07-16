@@ -14,7 +14,7 @@ const ViewFeedbacks = () => {
 
   return (
     <div className="container mt-5">
-      <button className="btn btn-outline-primary mb-3" onClick={() => navigate("/")}>
+      <button className="btn btn-outline-primary mb-3" onClick={() => navigate("/reviews")}>
         ← Back
       </button>
       <h4>All Feedbacks</h4>

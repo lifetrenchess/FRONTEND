@@ -13,7 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { getApiUrl } from '@/lib/apiConfig';
-import InsuranceOptions from '@/components/InsuranceOptions';
 import { getCurrentUserFromStorage } from '@/lib/auth';
 import { fetchPackageById, TravelPackageDto } from '@/lib/packagesApi';
 import styles from '@/styles/BookingPage.module.css';
@@ -298,13 +297,13 @@ const BookingPage = () => {
           },
         });
       } else {
-        navigate('/payment', {
-          state: {
-            bookingId: createdBooking.bookingId,
-            totalAmount: priceBreakdown.totalAmount,
-            userId: currentUser.userId,
-          },
-        });
+      navigate('/payment', {
+        state: {
+          bookingId: createdBooking.bookingId,
+          totalAmount: priceBreakdown.totalAmount,
+          userId: currentUser.userId,
+        },
+      });
       }
     } catch (error: any) {
       console.error('Booking error:', error);

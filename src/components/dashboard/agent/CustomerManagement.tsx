@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, RefreshCw, User, Mail, Phone, Edit, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { searchUsers, updateUser, User as UserType } from '@/lib/userApi';
-import PublicUserProfile from '@/components/user/PublicUserProfile';
+import PublicUserProfile from '@/components/dashboard/user/PublicUserProfile';
 
 interface Customer {
   userId: number;

@@ -30,7 +30,7 @@ import {
   Globe
 } from 'lucide-react';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
+import Login from '@/components/Login';
 
 const PackageDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -532,9 +532,7 @@ const PackageDetails: React.FC = () => {
       
       {/* Login Dialog for Booking Authentication */}
       {showLoginDialog && (
-        <LoginDialog onAuthSuccess={onAuthSuccess}>
-          <div style={{ display: 'none' }} />
-        </LoginDialog>
+        <Login isOpen={showLoginDialog} onClose={() => setShowLoginDialog(false)} onAuthSuccess={onAuthSuccess} />
       )}
 
     </div>

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Index from '@/pages/Index';
-import TestDashboard from '@/pages/TestDashboard';
+
 import Dashboard from '@/pages/Dashboard';
 import AdminDashboard from '@/pages/AdminDashboard';
 import AgentDashboard from '@/pages/AgentDashboard';
@@ -32,7 +32,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/test" element={<TestDashboard />} />
+
           <Route path="/packages" element={<AllPackages />} />
           
           {/* Role-specific dashboards */}

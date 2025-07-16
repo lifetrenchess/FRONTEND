@@ -1,63 +1,121 @@
-import { UserResponse } from './userApi';
+import axios from 'axios';
 
-export function getCurrentUserFromStorage(): UserResponse | null {
-  const user = localStorage.getItem('user');
-  return user ? JSON.parse(user) : null;
+// User interface
+export interface UserInfo {
+  userId: number;
+  fullName: string;
+  email: string;
+  role: 'USER' | 'ADMIN' | 'TRAVEL_AGENT';
 }
 
-export function getUserRole(): 'USER' | 'ADMIN' | 'TRAVEL_AGENT' | null {
-  // Check both 'user' and 'currentUser' in localStorage
-  const user = getCurrentUserFromStorage();
-  const currentUser = localStorage.getItem('currentUser');
-  
-  console.log('getUserRole - user from localStorage:', user);
-  console.log('getUserRole - currentUser from localStorage:', currentUser);
-  
-  let role: string | undefined;
-  
-  // First try to get role from user data (from backend)
-  if (user?.userRole) {
-    role = user.userRole;
-    console.log('getUserRole - using role from user:', role);
-  } 
-  // Then try to get role from currentUser data (frontend state)
-  else if (currentUser) {
-    try {
-      const currentUserData = JSON.parse(currentUser);
-      role = currentUserData.role;
-      console.log('getUserRole - using role from currentUser:', role);
-    } catch (error) {
-      console.error('Error parsing currentUser:', error);
-    }
+const USER_KEY = 'currentUser';
+
+// Core user management functions
+export function loginUser(user: UserInfo) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export function logoutUser() {
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem('token');
+  localStorage.removeItem('user-email');
+  localStorage.removeItem('user-name');
+}
+
+export function getCurrentUser(): UserInfo | null {
+  const data = localStorage.getItem(USER_KEY);
+  if (!data) return null;
+  try {
+    return JSON.parse(data) as UserInfo;
+  } catch {
+    return null;
   }
-  
-  console.log('getUserRole - final role before normalization:', role);
-  
-  // Normalize role names to match expected values
-  if (role) {
-    const normalizedRole = role.toUpperCase().trim();
-    console.log('getUserRole - normalized role:', normalizedRole);
-    
-    if (normalizedRole === 'USER' || normalizedRole === 'ADMIN' || normalizedRole === 'TRAVEL_AGENT') {
-      console.log('getUserRole - returning normalized role:', normalizedRole);
-      return normalizedRole as 'USER' | 'ADMIN' | 'TRAVEL_AGENT';
-    }
-    // Handle potential variations
-    if (normalizedRole === 'AGENT') {
-      console.log('getUserRole - converting AGENT to TRAVEL_AGENT');
-      return 'TRAVEL_AGENT';
-    }
-  }
-  
-  console.log('getUserRole - no valid role found, returning null');
-  return null;
+}
+
+export function getUserRole(): UserInfo['role'] | null {
+  const user = getCurrentUser();
+  return user ? user.role : null;
 }
 
 export function isAuthenticated(): boolean {
-  return !!localStorage.getItem('token');
-} 
+  return !!getCurrentUser();
+}
 
-export const getStoredCurrentUser = (): { fullName: string; email: string; isAuthenticated: boolean; role: string } | null => {
-  const currentUserStr = localStorage.getItem('currentUser');
-  return currentUserStr ? JSON.parse(currentUserStr) : null;
-}; 
+// Additional functions that other files expect
+export function getCurrentUserFromStorage(): UserInfo | null {
+  return getCurrentUser();
+}
+
+export function getStoredCurrentUser(): { fullName: string; email: string; isAuthenticated: boolean; role: string } | null {
+  const user = getCurrentUser();
+  if (!user) return null;
+  return {
+    fullName: user.fullName,
+    email: user.email,
+    isAuthenticated: true,
+    role: user.role
+  };
+}
+
+// API functions
+export async function login(email: string, password: string) {
+  try {
+    const response = await axios.post('/api/users/login', {
+      username: email,
+      password,
+    });
+
+    const { token, message } = response.data;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const roles: string[] = payload.roles?.map((r: any) => r.roleName) || [];
+    const name: string = payload.name || email;
+
+    if (!roles.length) {
+      throw new Error('Access denied: No roles assigned.');
+    }
+
+    // Store token and user info
+    localStorage.setItem('token', token);
+    localStorage.setItem('user-email', email);
+    localStorage.setItem('user-name', name);
+
+    // Use our auth helper to store user info
+    const user: UserInfo = {
+      userId: payload.userId || 1,
+      fullName: name,
+      email,
+      role: roles[0] as 'USER' | 'ADMIN' | 'TRAVEL_AGENT',
+    };
+    loginUser(user);
+
+    return { success: true, message, user };
+  } catch (error: any) {
+    console.error('Login error:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Invalid credentials');
+    } else {
+      throw new Error('Login failed: Network error');
+    }
+  }
+}
+
+export async function register(userData: {
+  userName: string;
+  userEmail: string;
+  userPassword: string;
+  userRole: string;
+  userContactNumber: string;
+}) {
+  try {
+    const response = await axios.post('/api/users', userData);
+    const { message } = response.data;
+    return { success: true, message };
+  } catch (error: any) {
+    console.error('Registration error:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Registration failed');
+    } else {
+      throw new Error('Registration failed: Network error');
+    }
+  }
+} 

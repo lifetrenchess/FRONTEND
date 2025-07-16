@@ -1,64 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Home, Package, Calendar, MessageSquare, Users, Plus, TrendingUp, Settings, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { getCurrentUser } from '@/lib/auth';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AgentOverview from '@/components/dashboard/agent/AgentOverview';
 import PackageManagement from '@/components/dashboard/agent/PackageManagement';
 import BookingManagement from '@/components/dashboard/agent/BookingManagement';
-import CustomerInquiries from '@/components/dashboard/agent/CustomerInquiries';
 import ReviewManagement from '@/components/dashboard/agent/ReviewManagement';
+import CustomerManagement from '@/components/dashboard/agent/CustomerManagement';
 import AgentProfile from '@/components/dashboard/agent/AgentProfile';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { isAuthenticated, getStoredCurrentUser } from '@/lib/auth';
-
-interface UserData {
-  fullName: string;
-  email: string;
-  isAuthenticated: boolean;
-  role?: string;
-}
-
-// Add seeded titles for frontend-only badge logic
-const seededTitles = [
-  "Paris Adventure",
-  "Tokyo Discovery",
-  "New York City Explorer",
-  "Bali Paradise",
-  "London Royal Tour",
-  "Santorini Dream",
-  "Dubai Luxury",
-  "Machu Picchu Trek",
-  "Sydney Coastal"
-];
+import CustomerInquiries from '@/components/dashboard/agent/CustomerInquiries';
+import { 
+  Package, 
+  Calendar, 
+  Star, 
+  Users, 
+  User, 
+  MessageSquare,
+  BarChart3
+} from 'lucide-react';
 
 const AgentDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
-  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate('/');
-      return;
-    }
-    const user = getStoredCurrentUser();
-    if (user && user.isAuthenticated && user.role === 'AGENT') {
-      setCurrentUser(user);
-    } else {
-      navigate('/');
-    }
-    setIsLoading(false);
-  }, [navigate]);
+  const user = getCurrentUser();
 
   const menuItems = [
     {
       id: 'overview',
       label: 'Overview',
-      icon: Home,
-      description: 'Dashboard summary'
+      icon: BarChart3,
+      description: 'Dashboard overview and statistics'
     },
     {
       id: 'packages',
@@ -70,100 +39,71 @@ const AgentDashboard = () => {
       id: 'bookings',
       label: 'Booking Management',
       icon: Calendar,
-      description: 'Manage bookings'
+      description: 'Handle customer bookings'
     },
     {
       id: 'reviews',
       label: 'Review Management',
       icon: Star,
-      description: 'Respond to reviews'
+      description: 'Manage customer reviews'
+    },
+    {
+      id: 'customers',
+      label: 'Customer Management',
+      icon: Users,
+      description: 'Manage customer information'
     },
     {
       id: 'inquiries',
       label: 'Customer Inquiries',
       icon: MessageSquare,
-      description: 'Respond to inquiries'
+      description: 'Handle customer inquiries'
     },
     {
       id: 'profile',
-      label: 'Profile',
-      icon: Users,
-      description: 'Agent profile'
+      label: 'Agent Profile',
+      icon: User,
+      description: 'Update your profile'
     }
   ];
 
-  const quickActions = (
-    <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full justify-start space-x-2 text-palette-orange border-palette-orange hover:bg-palette-orange hover:text-white"
-      >
-        <Plus className="w-4 h-4" />
-        <span>Add Package</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full justify-start space-x-2 text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
-      >
-        <Star className="w-4 h-4" />
-        <span>Manage Reviews</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full justify-start space-x-2 text-palette-teal border-palette-teal hover:bg-palette-teal hover:text-white"
-      >
-        <TrendingUp className="w-4 h-4" />
-        <span>View Analytics</span>
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full justify-start space-x-2 text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
-      >
-        <Settings className="w-4 h-4" />
-        <span>Settings</span>
-      </Button>
-    </>
-  );
+  // Convert UserInfo to UserData format expected by dashboard components
+  const userData = user ? {
+    fullName: user.fullName,
+    email: user.email,
+    isAuthenticated: true,
+    role: user.role
+  } : null;
 
-  // Helper to check if user is admin/agent (replace with your actual auth logic)
-  const getCurrentUserRole = () => {
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    return user?.role || 'USER';
-  };
-  const userRole = getCurrentUserRole();
-
-  const renderActiveSection = () => {
+  const renderSection = () => {
     switch (activeSection) {
       case 'overview':
-        return <AgentOverview user={currentUser} />;
+        return <AgentOverview user={userData} />;
       case 'packages':
         return <PackageManagement />;
       case 'bookings':
         return <BookingManagement />;
       case 'reviews':
         return <ReviewManagement />;
+      case 'customers':
+        return <CustomerManagement />;
       case 'inquiries':
-        return <CustomerInquiries user={currentUser} />;
+        return <CustomerInquiries user={userData} />;
       case 'profile':
-        return <AgentProfile user={currentUser} />;
+        return <AgentProfile user={userData} />;
       default:
-        return <AgentOverview user={currentUser} />;
-  }
+        return <AgentOverview user={userData} />;
+    }
   };
 
   return (
     <DashboardLayout
-      user={currentUser}
+      user={userData}
       menuItems={menuItems}
-      quickActions={quickActions}
       onSectionChange={setActiveSection}
       activeSection={activeSection}
     >
-      {renderActiveSection()}
+      {renderSection()}
     </DashboardLayout>
   );
 };
