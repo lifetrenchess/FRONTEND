@@ -1,6 +1,3 @@
-// Auth components
-export * from './auth';
-
 // User components
 export * from './dashboard/user';
 
