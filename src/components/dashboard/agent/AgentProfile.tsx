@@ -110,10 +110,10 @@ const AgentProfile = ({ user }: AgentProfileProps) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Agent Profile</h1>
-          <p className="text-gray-600">Manage your agent profile and settings.</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Agent Profile</h1>
+        <p className="text-gray-600">Manage your agent profile and settings.</p>
+      </div>
         {!isEditing && (
           <Button onClick={() => setIsEditing(true)} className="bg-palette-teal hover:bg-palette-teal/90">
             <Edit className="w-4 h-4 mr-2" />
@@ -210,13 +210,13 @@ const AgentProfile = ({ user }: AgentProfileProps) => {
         </Card>
 
         {/* Account Information */}
-        <Card>
-          <CardHeader>
+      <Card>
+        <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <User className="w-5 h-5 text-palette-orange" />
               <span>Account Information</span>
             </CardTitle>
-          </CardHeader>
+        </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label>User ID</Label>
@@ -238,8 +238,8 @@ const AgentProfile = ({ user }: AgentProfileProps) => {
                 {profile?.userUpdatedAt ? new Date(profile.userUpdatedAt).toLocaleDateString() : 'Unknown'}
               </p>
             </div>
-          </CardContent>
-        </Card>
+        </CardContent>
+      </Card>
       </div>
     </div>
   );

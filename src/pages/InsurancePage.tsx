@@ -292,7 +292,7 @@ const InsurancePage = () => {
                 onClick={handleProceedToSummary}
                 disabled={!selectedPlan || !agreedToTerms}
               >
-                Continue with Insurance
+                Continue to Payment
               </Button>
               <Button
                 variant="outline"

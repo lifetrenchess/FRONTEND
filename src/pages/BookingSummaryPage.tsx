@@ -102,12 +102,12 @@ const BookingSummaryPage = () => {
               <Button
                 className="bg-palette-orange hover:bg-palette-orange/90 flex-1"
                 onClick={() => {
-                  navigate('/payment', {
+                  navigate('/mock-payment', {
                     state: { bookingId, totalAmount, userId, insurance, packageData }
                   });
                 }}
               >
-                Confirm & Proceed to Payment
+                Pay
               </Button>
               <Button
                 variant="outline"
