@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { getApiUrl } from '@/lib/apiConfig';
 import { fetchPackageById, TravelPackageDto } from '@/lib/packagesApi';
+import { createBooking } from '@/lib/bookingApi';
+import { toast } from 'sonner';
 import styles from '@/styles/BookingPage.module.css';
 
 const BookingPage = () => {
@@ -17,7 +18,6 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Form states
   const [startDate, setStartDate] = useState('');
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
@@ -46,20 +46,56 @@ const BookingPage = () => {
       alert('Please fill all required fields and agree to terms.');
       return;
     }
-    // Simulate booking creation and pass data to next page
-    const bookingId = Math.floor(Math.random() * 1000000); // Replace with real booking creation
+
+    const selectedDate = new Date(startDate);
+    const today = new Date();
+    today.setHours(0,0);
+    
+    if (selectedDate < today) {
+      alert('Start date must be today or in the future.');
+      return;
+    }
+
     const userId = JSON.parse(localStorage.getItem('currentUser') || '{}').userId || 1;
     const totalAmount = packageData ? packageData.price * adults + (children * packageData.price * 0.5) : 0;
-    const state = {
-      bookingId,
-      totalAmount,
-      userId,
-      packageData
-    };
-    if (hasInsurance) {
-      navigate('/insurance', { state });
-    } else {
-      navigate('/booking-summary', { state });
+
+    try {
+      const bookingData = {
+        userId: userId,
+        packageId: Number(id),
+        startDate: startDate,
+        endDate: new Date(new Date(startDate).getTime() + (packageData?.duration || 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status: 'PENDING',
+        adults: adults || 0,
+        children: children || 0,
+        infants: infants || 0,
+        contactFullName: fullName || '',
+        contactEmail: email || '',
+        contactPhone: phoneNumber || '',
+        travelerNames: fullName || '',
+        hasInsurance: hasInsurance || false,
+        insurancePlan: null // Always send this field
+      };
+
+      console.log('Creating booking with data:', bookingData);
+      const createdBooking = await createBooking(bookingData);
+      console.log('Booking created successfully:', createdBooking);
+      
+      const state = {
+        bookingId: createdBooking.bookingId,
+        totalAmount,
+        userId,
+        packageData
+      };
+
+      if (hasInsurance) {
+        navigate('/insurance', { state });
+      } else {
+        navigate('/booking-summary', { state });
+      }
+    } catch (error) {
+      console.error('Failed to create booking:', error);
+      toast.error('Failed to create booking. Please try again.');
     }
   };
 
@@ -81,7 +117,13 @@ const BookingPage = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label>Start Date</Label>
-                <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+                <Input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={e => setStartDate(e.target.value)} 
+                  min={new Date().toISOString().split('T')[0]}
+                  required 
+                />
               </div>
               <div className="flex gap-4">
                 <div>

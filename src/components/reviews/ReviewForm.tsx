@@ -14,7 +14,7 @@ interface ReviewFormProps {
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ 
-  packageId = 101, 
+  packageId = 1, 
   onReviewSubmitted 
 }) => {
   const [rating, setRating] = useState(0);
@@ -34,14 +34,29 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       return;
     }
 
+    // Validate packageId - ensure it's a valid positive number
+    const validPackageId = packageId && packageId > 0 ? packageId : 1;
+    if (validPackageId <= 0) {
+      toast.error("Invalid package ID. Please try again.");
+      return;
+    }
+
+    // Validate userId
+    if (!currentUser.userId || currentUser.userId <= 0) {
+      toast.error("Invalid user ID. Please log in again.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const feedback = {
-      userID: currentUser.userId,
-      packageID: packageId,
+      userId: currentUser.userId,
+      packageId: validPackageId,
       rating,
       comment,
     };
+
+    console.log('Submitting review with data:', feedback);
 
     try {
       const response = await fetch(getApiUrl('REVIEW_SERVICE', ''), {
@@ -54,6 +69,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('Review submission error:', errorText);
         throw new Error(errorText || 'Failed to submit review');
       }
 

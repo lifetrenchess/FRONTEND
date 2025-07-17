@@ -159,10 +159,19 @@ const InsurancePage = () => {
                 <Card 
                   key={plan.insuranceId} 
                   className={`${styles.insuranceCard} ${selectedPlan === plan.insuranceId ? styles.selectedPlan : ''} ${plan.packageType === 'Medium' ? styles.recommendedPlan : ''}`}
+                  onClick={() => setSelectedPlan(plan.insuranceId)}
+                  style={{ cursor: 'pointer' }}
                 >
                   <CardHeader>
                     <div className={styles.cardHeaderContent}>
-                      <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input
+                          type="radio"
+                          name="insurancePlan"
+                          checked={selectedPlan === plan.insuranceId}
+                          onChange={() => setSelectedPlan(plan.insuranceId)}
+                          style={{ marginRight: 8 }}
+                        />
                         <CardTitle className={styles.cardTitle}>
                           <Shield className={styles.shieldIcon} />
                           <span>{plan.packageType} Coverage</span>
@@ -172,7 +181,6 @@ const InsurancePage = () => {
                             </span>
                           )}
                         </CardTitle>
-                        <p className={styles.coverageDetails}>{plan.coverageDetails}</p>
                       </div>
                       <div className={styles.priceContainer}>
                         <div className={styles.price}>
@@ -220,6 +228,13 @@ const InsurancePage = () => {
                     and understand that this insurance coverage is provided by our trusted insurance partner.
                   </Label>
                 </div>
+                <Button
+                  className={styles.continueButton}
+                  onClick={handleProceedToSummary}
+                  disabled={!selectedPlan || !agreedToTerms}
+                >
+                  Continue to Payment
+                </Button>
               </CardContent>
             </Card>
           </div>

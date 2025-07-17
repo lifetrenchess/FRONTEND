@@ -6,17 +6,13 @@ export interface BookingDTO {
   startDate: string;
   endDate: string;
   status: string;
-  travelers: {
-    adults: number;
-    children: number;
-    infants: number;
-    contact: {
-      fullName: string;
-      email: string;
-      phoneNumber: string;
-    };
-    names: string[];
-  };
+  adults: number;
+  children: number;
+  infants: number;
+  contactFullName: string;
+  contactEmail: string;
+  contactPhone: string;
+  travelerNames: string;
   hasInsurance: boolean;
   insurancePlan?: number;
 }
@@ -135,8 +131,8 @@ export const updateBookingStatus = async (bookingId: number, status: string): Pr
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update booking status');
+      let errorText = await response.text();
+      throw new Error(errorText || 'Failed to update booking status');
     }
 
     return await response.json();

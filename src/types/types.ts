@@ -10,17 +10,13 @@ export interface BookingDTO {
     startDate: string;
     endDate: string;
     status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-    travelers: {
-        adults: number;
-        children: number;
-        infants: number;
-        contact: {
-            fullName: string;
-            email: string;
-            phoneNumber: string;
-        };
-        names: string[];
-    };
+    adults: number;
+    children: number;
+    infants: number;
+    contactFullName: string;
+    contactEmail: string;
+    contactPhone: string;
+    travelerNames: string;
     hasInsurance: boolean;
 }
 

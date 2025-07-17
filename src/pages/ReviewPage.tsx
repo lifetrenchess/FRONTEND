@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -7,11 +7,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import ReviewList from '@/components/reviews/ReviewList';
 import { Star, MessageCircle, PenTool, Eye } from 'lucide-react';
+import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 
 const ReviewPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('form');
+  const [activeTab, setActiveTab] = useState('list'); // Default to list view
+  const [packages, setPackages] = useState<TravelPackageDto[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
   const location = useLocation();
   const packageId = location.state?.packageId;
+
+  // Load packages for selection
+  useEffect(() => {
+    const loadPackages = async () => {
+      try {
+        const allPackages = await fetchAllPackages();
+        setPackages(allPackages);
+      } catch (error) {
+        console.error('Failed to load packages:', error);
+      }
+    };
+    loadPackages();
+  }, []);
+
+  // If packageId is provided from navigation, use it
+  useEffect(() => {
+    if (packageId) {
+      setSelectedPackageId(packageId);
+      setActiveTab('form'); // Switch to form when package is selected
+    }
+  }, [packageId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-cream via-white to-palette-cream/30">
@@ -59,7 +83,46 @@ const ReviewPage: React.FC = () => {
               </TabsList>
               
               <TabsContent value="form" className="mt-0">
-                <ReviewForm onReviewSubmitted={() => setActiveTab('list')} packageId={packageId} />
+                {selectedPackageId ? (
+                  <div>
+                    <div className="mb-4 p-4bg-palette-teal/10 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        Reviewing: <span className="font-semibold text-palette-teal">
+                        {packages.find(p => p.packageId === selectedPackageId)?.destination}
+                        </span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setSelectedPackageId(null)}
+                          className="ml-2 text-xs"
+                        >
+                          Change Package
+                        </Button>
+                      </p>
+                    </div>
+                    <ReviewForm onReviewSubmitted={() => setActiveTab('list')} packageId={selectedPackageId} />
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <h3 className="text-xl font-semibold text-gray-900">Select a Package to Review</h3>
+                    <p className="text-gray-600">Please select a travel package you'd like to review:</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96overflow-y-auto">
+                      {packages.map((pkg) => (
+                        <Card 
+                          key={pkg.packageId} 
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => setSelectedPackageId(pkg.packageId)}
+                        >
+                          <CardContent className="p-4">
+                            <h4 className="font-semibold text-gray-900 mb-2">{pkg.destination}</h4>
+                            <p className="text-sm text-gray-600 mb-2">{pkg.description?.substring(0, 100)}...</p>
+                            <p className="text-palette-teal font-semibold">₹{pkg.price}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </TabsContent>
               
               <TabsContent value="list" className="mt-0">
