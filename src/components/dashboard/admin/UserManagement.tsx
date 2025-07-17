@@ -47,6 +47,9 @@ const UserManagement = () => {
   // Load users on component mount
   useEffect(() => {
     fetchUsers();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchUsers, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Filter users based on search and role

@@ -7,18 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Star, MessageSquare, Search, Filter, RefreshCw, Reply, CheckCircle } from 'lucide-react';
+import { Star, MessageSquare, Search, Filter, RefreshCw, Reply, CheckCircle, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiConfig';
 
 interface Review {
-  reviewID: number;
-  userId: number;
-  packageId: number;
+  id: number;
+  userID: number;
+  packageID: number;
   rating: number;
   comment: string;
   agentResponse?: string;
-  timestamp?: string;
+  createdAt?: string;
 }
 
 const ReviewManagement = () => {
@@ -87,8 +87,8 @@ const ReviewManagement = () => {
       filtered = filtered.filter(review => 
         review.comment.toLowerCase().includes(term) ||
         (review.agentResponse && review.agentResponse.toLowerCase().includes(term)) ||
-        review.reviewID.toString().includes(term) ||
-        review.userId.toString().includes(term)
+        review.id.toString().includes(term) ||
+        review.userID.toString().includes(term)
       );
     }
     
@@ -114,7 +114,7 @@ const ReviewManagement = () => {
     
     try {
       const response = await fetch(
-        getApiUrl('REVIEW_SERVICE', `/${selectedReview.reviewID}/response`),
+        getApiUrl('REVIEW_SERVICE', `/${selectedReview.id}/response`),
         {
           method: 'POST',
           headers: {
@@ -136,7 +136,7 @@ const ReviewManagement = () => {
       // Update the reviews list
       setReviews(prev => 
         prev.map(review => 
-          review.reviewID === updatedReview.reviewID ? updatedReview : review
+          review.id === updatedReview.id ? updatedReview : review
         )
       );
       
@@ -148,6 +148,29 @@ const ReviewManagement = () => {
       toast.error(errorMessage);
     } finally {
       setResponding(false);
+    }
+  };
+
+  // Handle review deletion
+  const handleDeleteReview = async (reviewId: number) => {
+    try {
+      const response = await fetch(
+        getApiUrl('REVIEW_SERVICE', `/${reviewId}`),
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to delete review');
+      }
+
+      setReviews(prev => prev.filter(review => review.id !== reviewId));
+      toast.success('Review deleted successfully!');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete review';
+      toast.error(errorMessage);
     }
   };
 
@@ -217,7 +240,7 @@ const ReviewManagement = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Review Management</h2>
-          <p className="text-gray-600">Respond to customer reviews and manage feedback</p>
+          <p className="text-gray-600">Manage all customer reviews and responses</p>
         </div>
         <Button onClick={loadReviews} variant="outline" size="sm">
           <RefreshCw className="w-4 h-4 mr-2" />
@@ -343,20 +366,20 @@ const ReviewManagement = () => {
           ) : (
             <div className="space-y-4">
               {filteredReviews.map((review) => (
-                <Card key={review.reviewID} className="border-l-4 border-l-blue-500">
+                <Card key={review.id} className="border-l-4 border-l-blue-500">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <span className="font-medium text-gray-900">
-                            Review #{review.reviewID}
+                            Review #{review.id}
                           </span>
                           {getRatingBadge(review.rating)}
                           <span className="text-sm text-gray-500">
-                            User ID: {review.userId}
+                            User ID: {review.userID}
                           </span>
                           <span className="text-sm text-gray-500">
-                            Package ID: {review.packageId}
+                            Package ID: {review.packageID}
                           </span>
                         </div>
                         
@@ -367,9 +390,9 @@ const ReviewManagement = () => {
                           <p className="text-gray-700">{review.comment}</p>
                         </div>
 
-                        {review.timestamp && (
+                        {review.createdAt && (
                           <p className="text-xs text-gray-500 mb-3">
-                            Posted: {formatDate(review.timestamp)}
+                            Posted: {formatDate(review.createdAt)}
                           </p>
                         )}
 
@@ -386,70 +409,97 @@ const ReviewManagement = () => {
                         )}
                       </div>
 
-                      {(!review.agentResponse || review.agentResponse.trim() === '') && (
+                      <div className="flex space-x-2">
+                        {(!review.agentResponse || review.agentResponse.trim() === '') && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" className="bg-palette-teal hover:bg-palette-teal/90">
+                                <Reply className="w-4 h-4 mr-2" />
+                                Respond
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="max-w-2xl">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Respond to Review</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Provide a response to Review #{review.id} from User {review.userID}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              
+                              <div className="space-y-4">
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                  <p className="text-sm font-medium text-gray-700 mb-2">Customer Review:</p>
+                                  <div className="flex items-center space-x-2 mb-2">
+                                    {renderStars(review.rating, 'w-4 h-4')}
+                                    <span className="text-sm text-gray-600">{review.rating} out of 5</span>
+                                  </div>
+                                  <p className="text-sm text-gray-600">{review.comment}</p>
+                                </div>
+                                
+                                <div>
+                                  <Label htmlFor="agent-response">Your Response</Label>
+                                  <Textarea
+                                    id="agent-response"
+                                    placeholder="Enter your response to this review..."
+                                    value={agentResponse}
+                                    onChange={(e) => setAgentResponse(e.target.value)}
+                                    rows={4}
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {agentResponse.length}/500 characters
+                                  </p>
+                                </div>
+                              </div>
+
+                              <AlertDialogFooter>
+                                <AlertDialogCancel 
+                                  onClick={() => {
+                                    setSelectedReview(null);
+                                    setAgentResponse('');
+                                  }}
+                                >
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => {
+                                    setSelectedReview(review);
+                                    handleRespond();
+                                  }}
+                                  disabled={responding || !agentResponse.trim()}
+                                  className="bg-palette-teal hover:bg-palette-teal/90"
+                                >
+                                  {responding ? 'Submitting...' : 'Submit Response'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                        
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" className="bg-palette-teal hover:bg-palette-teal/90">
-                              <Reply className="w-4 h-4 mr-2" />
-                              Respond
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent className="max-w-2xl">
+                          <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Respond to Review</AlertDialogTitle>
+                              <AlertDialogTitle>Delete Review</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Provide a response to Review #{review.reviewID} from User {review.userId}.
+                                Are you sure you want to delete Review #{review.id}? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            
-                            <div className="space-y-4">
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <p className="text-sm font-medium text-gray-700 mb-2">Customer Review:</p>
-                                <div className="flex items-center space-x-2 mb-2">
-                                  {renderStars(review.rating, 'w-4 h-4')}
-                                  <span className="text-sm text-gray-600">{review.rating} out of 5</span>
-                                </div>
-                                <p className="text-sm text-gray-600">{review.comment}</p>
-                              </div>
-                              
-                              <div>
-                                <Label htmlFor="agent-response">Your Response</Label>
-                                <Textarea
-                                  id="agent-response"
-                                  placeholder="Enter your response to this review..."
-                                  value={agentResponse}
-                                  onChange={(e) => setAgentResponse(e.target.value)}
-                                  rows={4}
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {agentResponse.length}/500 characters
-                                </p>
-                              </div>
-                            </div>
-
                             <AlertDialogFooter>
-                              <AlertDialogCancel 
-                                onClick={() => {
-                                  setSelectedReview(null);
-                                  setAgentResponse('');
-                                }}
-                              >
-                                Cancel
-                              </AlertDialogCancel>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction 
-                                onClick={() => {
-                                  setSelectedReview(review);
-                                  handleRespond();
-                                }}
-                                disabled={responding || !agentResponse.trim()}
-                                className="bg-palette-teal hover:bg-palette-teal/90"
+                                onClick={() => handleDeleteReview(review.id)}
+                                className="bg-red-600 hover:bg-red-700"
                               >
-                                {responding ? 'Submitting...' : 'Submit Response'}
+                                Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                      )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

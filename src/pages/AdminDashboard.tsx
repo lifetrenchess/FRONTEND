@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AdminOverview from '@/components/dashboard/admin/AdminOverview';
 import UserManagement from '@/components/dashboard/admin/UserManagement';
 import PackageManagement from '@/components/dashboard/admin/PackageManagement';
+import ReviewManagement from '@/components/dashboard/admin/ReviewManagement';
 import AssistanceManagement from '@/components/dashboard/admin/AssistanceManagement';
 import SystemSettings from '@/components/dashboard/admin/SystemSettings';
 import { 
@@ -12,7 +13,8 @@ import {
   MessageSquare, 
   BarChart3, 
   Settings,
-  Shield
+  Shield,
+  Star
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -37,6 +39,12 @@ const AdminDashboard = () => {
       label: 'Package Management',
       icon: Package,
       description: 'Manage travel packages'
+    },
+    {
+      id: 'reviews',
+      label: 'Review Management',
+      icon: Star,
+      description: 'Manage customer reviews'
     },
     {
       id: 'assistance',
@@ -68,6 +76,8 @@ const AdminDashboard = () => {
         return <UserManagement />;
       case 'packages':
         return <PackageManagement />;
+      case 'reviews':
+        return <ReviewManagement />;
       case 'assistance':
         return <AssistanceManagement />;
       case 'settings':

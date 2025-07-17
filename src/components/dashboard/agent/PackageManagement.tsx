@@ -70,6 +70,10 @@ const PackageManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   
+  // Get current user to get agent ID
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const agentId = currentUser.userId || 1;
+  
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [destinationFilter, setDestinationFilter] = useState<string>('all');
@@ -133,11 +137,8 @@ const PackageManagement = () => {
       setLoading(true);
       setError('');
       
-      // Get current user to get agent ID
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      const agentId = currentUser.userId || 1; // Default to 1 if no user found
-      
-      const response = await fetch(getApiUrl('PACKAGE_SERVICE', `/agent/${agentId}`), {
+      // Fetch ALL packages from the database - agents can manage all packages
+      const response = await fetch(getApiUrl('PACKAGE_SERVICE', ''), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -145,8 +146,8 @@ const PackageManagement = () => {
       });
       
       if (response.ok) {
-        const data = await response.json();
-        setPackages(data);
+        const allPackages = await response.json();
+        setPackages(allPackages);
       } else {
         const errorText = await response.text();
         setError(`Failed to fetch packages: ${errorText}`);
@@ -190,6 +191,9 @@ const PackageManagement = () => {
   // Load packages on component mount
   useEffect(() => {
     fetchPackages();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchPackages, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Handle main image upload
@@ -293,7 +297,7 @@ const PackageManagement = () => {
         excludeService: formData.excludeService || '',
         highlights: formData.highlights || '',
         active: formData.active,
-        createdByAgentId: agentId,
+        createdByAgentId: agentId, // Set current agent as creator for new packages
         flights: flights,
         hotels: hotels,
         sightseeingList: sightseeingList
@@ -467,7 +471,7 @@ const PackageManagement = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Package Management</h2>
-          <p className="text-gray-600">Create and manage travel packages</p>
+          <p className="text-gray-600">Manage all travel packages in the system. You can edit any package and create new ones.</p>
         </div>
         <div className="flex space-x-2">
           <Button onClick={fetchPackages} variant="outline" size="sm">
@@ -489,6 +493,9 @@ const PackageManagement = () => {
               <div>
                 <p className="text-sm text-gray-600">Total Packages</p>
                 <p className="text-2xl font-bold">{packages.length}</p>
+                <p className="text-xs text-gray-500">
+                  {packages.filter(p => p.createdByAgentId === agentId).length} created by you
+                </p>
               </div>
               <MapPin className="w-8 h-8 text-blue-500" />
             </div>
@@ -1230,6 +1237,12 @@ const PackageManagement = () => {
                             <Calendar className="w-4 h-4 inline mr-1" />
                             {pkg.duration}
                           </span>
+                          {/* Show if package was created by current agent */}
+                          {pkg.createdByAgentId === agentId && (
+                            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              My Package
+                            </Badge>
+                          )}
                         </div>
                         
                         <p className="text-gray-700 mb-2">{pkg.description}</p>

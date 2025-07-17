@@ -19,7 +19,7 @@ const columns = [
 ];
 
 const filters = [
-  { key: 'destination', label: 'Destination' },
+  { key: 'destination', label: 'Destination', options: [] },
   { key: 'active', label: 'Status', options: statusOptions },
 ];
 
@@ -29,6 +29,9 @@ const PackageManagement = () => {
 
   useEffect(() => {
     loadPackages();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(loadPackages, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadPackages = async () => {

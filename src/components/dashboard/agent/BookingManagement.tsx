@@ -131,6 +131,9 @@ const BookingManagement = () => {
   // Load bookings on component mount
   useEffect(() => {
     loadBookings();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(loadBookings, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Update booking status

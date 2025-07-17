@@ -41,7 +41,7 @@ const AdminOverview = ({ user }: AdminOverviewProps) => {
 
         // Calculate revenue from completed bookings
         const revenue = bookings
-          .filter(b => b.status === 'COMPLETED' || b.status === 'CONFIRMED')
+          .filter(b => b.status === 'COMPLETED' || b.status === 'CONFIRMED' || b.status === 'PAID')
           .reduce((sum, booking) => {
             // Find the package to get the price
             const packageData = packages.find(p => p.packageId === booking.packageId);
@@ -63,6 +63,9 @@ const AdminOverview = ({ user }: AdminOverviewProps) => {
     };
 
     fetchStats();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchStats, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

@@ -29,6 +29,7 @@ interface TableWithSearchAndFiltersProps<T> {
   filters?: FilterConfig[];
   rowActions?: (row: T) => React.ReactNode;
   pageSize?: number;
+  loading?: boolean;
 }
 
 function TableWithSearchAndFilters<T extends Record<string, any>>({
@@ -39,6 +40,7 @@ function TableWithSearchAndFilters<T extends Record<string, any>>({
   filters = [],
   rowActions,
   pageSize = 10,
+  loading = false,
 }: TableWithSearchAndFiltersProps<T>) {
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
@@ -113,7 +115,16 @@ function TableWithSearchAndFilters<T extends Record<string, any>>({
             </tr>
           </thead>
           <tbody>
-            {pagedData.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length + (rowActions ? 1 : 0)} className="text-center py-12">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-palette-teal border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading data...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : pagedData.length === 0 ? (
               <tr><td colSpan={columns.length + (rowActions ? 1 : 0)} className="text-center py-6 text-gray-400">No data found.</td></tr>
             ) : (
               pagedData.map((row, i) => (

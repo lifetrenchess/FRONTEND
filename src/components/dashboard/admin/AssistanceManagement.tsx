@@ -83,6 +83,9 @@ const AssistanceManagement = () => {
   // Load requests on component mount
   useEffect(() => {
     loadRequests();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(loadRequests, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Handle request resolution

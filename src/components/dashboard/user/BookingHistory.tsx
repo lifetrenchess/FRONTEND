@@ -61,6 +61,9 @@ const BookingHistory = () => {
     };
 
     fetchBookings();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchBookings, 5000);
+    return () => clearInterval(interval);
   }, [userId]);
 
   const getStatusColor = (status: string) => {

@@ -31,6 +31,9 @@ const CustomerManagement = () => {
   // Load customers on component mount
   useEffect(() => {
     fetchCustomers();
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(fetchCustomers, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Filter customers based on search
