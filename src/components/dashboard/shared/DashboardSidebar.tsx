@@ -93,9 +93,9 @@ const DashboardSidebar = ({
                     }}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    <div className="flex flex-col items-start min-w-0 flex-1">
-                      <span className="font-medium text-sm">{item.label}</span>
-                      <span className="text-xs opacity-75 truncate w-full">{item.description}</span>
+                    <div className="flex flex-col items-start min-w-0 flex-1 text-left">
+                      <span className="font-medium text-sm text-left w-full">{item.label}</span>
+                      <span className="text-xs opacity-75 truncate w-full text-left">{item.description}</span>
                     </div>
                   </Button>
                 );
@@ -108,9 +108,9 @@ const DashboardSidebar = ({
                 onClick={handleBackToHome}
               >
                 <ArrowLeft className="w-5 h-5 flex-shrink-0" />
-                <div className="flex flex-col items-start min-w-0 flex-1">
-                  <span className="font-medium text-sm">Back to Home</span>
-                  <span className="text-xs opacity-75 truncate w-full">Return to main site</span>
+                <div className="flex flex-col items-start min-w-0 flex-1 text-left">
+                  <span className="font-medium text-sm text-left w-full">Back to Home</span>
+                  <span className="text-xs opacity-75 truncate w-full text-left">Return to main site</span>
                 </div>
               </Button>
             </div>

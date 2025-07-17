@@ -405,9 +405,37 @@ export async function updatePackage(id: number, packageData: Partial<TravelPacka
 export async function deletePackage(id: number): Promise<void> {
   try {
     await api.delete(`/${id}`);
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Failed to delete package:', error);
-    throw new Error('Failed to delete package. Please try again.');
+    
+    // Extract more detailed error information
+    let errorMessage = 'Failed to delete package. Please try again.';
+    
+    if (error.response) {
+      // Server responded with error status
+      const status = error.response.status;
+      const data = error.response.data;
+      
+      if (status === 400) {
+        errorMessage = data?.message || 'Package cannot be deleted. It may have active bookings or dependencies.';
+      } else if (status === 403) {
+        errorMessage = 'You do not have permission to delete this package.';
+      } else if (status === 404) {
+        errorMessage = 'Package not found.';
+      } else if (status === 409) {
+        errorMessage = 'Package has active bookings and cannot be deleted.';
+      } else {
+        errorMessage = data?.message || `Delete failed with status ${status}.`;
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = 'No response from server. Please check your connection.';
+    } else {
+      // Something else happened
+      errorMessage = error.message || 'An unexpected error occurred.';
+    }
+    
+    throw new Error(errorMessage);
   }
 } 
 

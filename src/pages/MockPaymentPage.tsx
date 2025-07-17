@@ -405,7 +405,7 @@ const MockPaymentPage = () => {
         <div className="fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
           <div className="mb-8 flex flex-col items-center">
             <div className="mockpay-spin">
-              <AventraLogo size={64} />
+              <AventraLogo size={120} />
             </div>
             <div className="font-semibold text-2xl mt-4 text-palette-teal">Processing your payment...</div>
             <div className="text-gray-600 mt-2">Please wait while we complete your transaction</div>

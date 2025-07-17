@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Search, Filter, RefreshCw, MapPin, Calendar, DollarSign, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Filter, RefreshCw, MapPin, Calendar, Upload, X, Image as ImageIcon, IndianRupee } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiUrl } from '@/lib/apiConfig';
 
@@ -191,9 +191,6 @@ const PackageManagement = () => {
   // Load packages on component mount
   useEffect(() => {
     fetchPackages();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchPackages, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   // Handle main image upload
@@ -531,10 +528,10 @@ const PackageManagement = () => {
               <div>
                 <p className="text-sm text-gray-600">Average Price</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  ${packages.length > 0 ? (packages.reduce((sum, p) => sum + p.price, 0) / packages.length).toFixed(0) : '0'}
+                  ₹{packages.length > 0 ? (packages.reduce((sum, p) => sum + p.price, 0) / packages.length).toFixed(0) : '0'}
                 </p>
               </div>
-              <DollarSign className="w-8 h-8 text-yellow-500" />
+              <IndianRupee className="w-8 h-8 text-yellow-500" />
             </div>
           </CardContent>
         </Card>
@@ -654,15 +651,15 @@ const PackageManagement = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="price">Price (USD) *</Label>
+                  <Label htmlFor="price">Price (₹) *</Label>
                   <Input
                     id="price"
                     type="number"
-                    min="0"
-                    step="0.01"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="e.g., 2500.00"
+                    placeholder="Enter package price"
+                    min="0"
+                    step="0.01"
                     required
                   />
                 </div>
@@ -1260,8 +1257,8 @@ const PackageManagement = () => {
                         
                         <div className="flex items-center space-x-4 text-sm text-gray-600">
                           <span className="font-medium text-green-600">
-                            <DollarSign className="w-4 h-4 inline mr-1" />
-                            ${pkg.price.toLocaleString()}
+                            <IndianRupee className="w-4 h-4 inline mr-1" />
+                            ₹{pkg.price.toLocaleString()}
                           </span>
                           {pkg.mainImage && (
                             <span className="flex items-center text-blue-600">

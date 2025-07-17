@@ -122,7 +122,7 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
         destination: packageData?.destination || 'Unknown Destination',
         date: `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
         status: b.status,
-        amount: `$${packageData?.price?.toLocaleString() || '0'}`,
+        amount: `₹${packageData?.price?.toLocaleString() || '0'}`,
         image: packageData?.mainImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'
       };
     });
@@ -152,7 +152,7 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
     },
     {
       title: 'Total Spent',
-      value: `$${totalSpent.toLocaleString()}`,
+      value: `₹${totalSpent.toLocaleString()}`,
       change: `${completedBookings} completed`,
       icon: Star,
       color: 'text-yellow-500'

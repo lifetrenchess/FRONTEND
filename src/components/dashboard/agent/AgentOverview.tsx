@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Calendar, DollarSign, TrendingUp, Users } from 'lucide-react';
+import { Package, Calendar, IndianRupee, TrendingUp, Users } from 'lucide-react';
 import { getAllBookings, BookingResponse } from '@/lib/bookingApi';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { getApiUrl } from '@/lib/apiConfig';
@@ -83,9 +83,6 @@ const AgentOverview = ({ user }: AgentOverviewProps) => {
     };
 
     fetchStats();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -137,7 +134,7 @@ const AgentOverview = ({ user }: AgentOverviewProps) => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <IndianRupee className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">₹{stats.earnings.toLocaleString()}</div>

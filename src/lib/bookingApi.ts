@@ -94,6 +94,20 @@ export const getBookingsByUser = async (userId: number): Promise<BookingResponse
   }
 };
 
+// Check if user has booked a specific package
+export const hasUserBookedPackage = async (userId: number, packageId: number): Promise<boolean> => {
+  try {
+    const response = await fetch(getApiUrl('BOOKING_SERVICE', `/user/${userId}/package/${packageId}`), {
+      headers: getAuthHeaders(),
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Error checking if user has booked package:', error);
+    return false;
+  }
+};
+
 // Get all bookings (admin/agent)
 export const getAllBookings = async (): Promise<BookingResponse[]> => {
   try {

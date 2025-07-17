@@ -63,9 +63,6 @@ const AdminOverview = ({ user }: AdminOverviewProps) => {
     };
 
     fetchStats();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

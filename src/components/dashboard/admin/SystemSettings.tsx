@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { getAllBookings, BookingResponse } from '@/lib/bookingApi';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { getAllUsers } from '@/lib/userApi';
-import { RefreshCw, DollarSign, CreditCard, AlertCircle } from 'lucide-react';
+import { RefreshCw, IndianRupee, CreditCard, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PaymentData {
@@ -26,9 +26,6 @@ const SystemSettings = () => {
 
   useEffect(() => {
     fetchPaymentData();
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchPaymentData, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   const fetchPaymentData = async () => {
@@ -141,7 +138,7 @@ const SystemSettings = () => {
               <p className="text-sm text-gray-600">Total Transactions</p>
               <p className="text-2xl font-bold">{payments.length}</p>
             </div>
-            <DollarSign className="w-8 h-8 text-green-500" />
+            <IndianRupee className="w-8 h-8 text-green-500" />
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
@@ -172,7 +169,7 @@ const SystemSettings = () => {
                 ₹{payments.length > 0 ? (payments.reduce((sum, p) => sum + p.amount, 0) / payments.length).toLocaleString(undefined, { maximumFractionDigits: 0 }) : '0'}
               </p>
             </div>
-            <DollarSign className="w-8 h-8 text-purple-500" />
+            <IndianRupee className="w-8 h-8 text-purple-500" />
           </div>
         </div>
       </div>

@@ -306,12 +306,10 @@ const ConfirmationPage = () => {
           {/* Sidebar or actions */}
           <div className="flex flex-col gap-4 animate-fade-in">
             <Button className="bg-palette-orange hover:bg-palette-teal text-white font-bold py-3 transition-transform duration-200 hover:scale-105" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+            
             {/* Action Buttons */}
             <Card>
-              <CardHeader>
-                <CardTitle>Next Steps</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 p-4">
                 <Button 
                   onClick={handleDownloadReceipt}
                   variant="outline" 
@@ -364,31 +362,6 @@ const ConfirmationPage = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-
-        {/* Next Actions Section */}
-        <div className="mt-12 bg-white rounded-xl shadow-lg p-8 flex flex-col items-center">
-          <h2 className="text-2xl font-bold text-palette-teal mb-4">What would you like to do next?</h2>
-          <div className="flex flex-col md:flex-row gap-4">
-            <Button
-              className="bg-palette-orange hover:bg-palette-orange/90"
-              onClick={() => navigate('/reviews')}
-            >
-              Leave a Review
-            </Button>
-            <Button
-              className="bg-palette-teal hover:bg-palette-teal/90"
-              onClick={() => navigate('/packages')}
-            >
-              Book Another Trip
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/')}
-            >
-              Go to Home
-            </Button>
           </div>
         </div>
         <style>{`

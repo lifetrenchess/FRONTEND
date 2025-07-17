@@ -98,9 +98,6 @@ const ReviewManagement = () => {
   // Load reviews on component mount
   useEffect(() => {
     loadReviews();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(loadReviews, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   // Handle agent response submission

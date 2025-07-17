@@ -48,7 +48,7 @@ const Header = () => {
   return (
     <header className="w-full bg-white shadow-sm px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}> 
-        <AventraLogo size={64} />
+        <AventraLogo size={120} />
       </div>
       <nav className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => navigate('/about')}>About</Button>
