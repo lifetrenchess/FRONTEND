@@ -14,10 +14,11 @@ import styles from '@/styles/InsurancePage.module.css';
 const InsurancePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { bookingId, totalAmount, userId } = (location.state || {}) as { 
+  const { bookingId, totalAmount, userId, packageData } = (location.state || {}) as { 
     bookingId: number; 
     totalAmount: number; 
     userId: number; 
+    packageData?: any;
   };
 
   // If bookingId or userId is missing, redirect to booking page
@@ -83,6 +84,7 @@ const InsurancePage = () => {
           bookingId: bookingId,
           totalAmount: totalAmount + (insurancePlans.find(p => p.insuranceId === selectedPlan)?.price || 0),
           userId: userId,
+          packageData: packageData,
           insurance: {
             planId: selectedPlan,
             planName: insurancePlans.find(p => p.insuranceId === selectedPlan)?.packageType,
@@ -102,7 +104,8 @@ const InsurancePage = () => {
       state: {
         bookingId: bookingId,
         totalAmount: totalAmount,
-        userId: userId
+        userId: userId,
+        packageData: packageData
       }
     });
   };
@@ -214,27 +217,28 @@ const InsurancePage = () => {
             {/* Terms and Conditions */}
             <Card className={styles.termsCard}>
               <CardContent className={styles.termsCardContent}>
-                <div className={styles.termsCheckbox}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                   <Checkbox
                     id="agreeTerms"
                     checked={agreedToTerms}
                     onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                   />
-                  <Label htmlFor="agreeTerms" className={styles.termsLabel}>
+                  <Label htmlFor="agreeTerms" className={styles.termsLabel} style={{ marginBottom: 0 }}>
                     I have read and agree to the{' '}
                     <a href="/insurance-terms" target="_blank" rel="noopener noreferrer" className={styles.termsLink}>
                       Insurance Terms & Conditions
                     </a>{' '}
                     and understand that this insurance coverage is provided by our trusted insurance partner.
                   </Label>
+                  <Button
+                    className={styles.continueButton}
+                    onClick={handleProceedToSummary}
+                    disabled={!selectedPlan || !agreedToTerms}
+                    style={{ marginLeft: 'auto', minWidth: 180 }}
+                  >
+                    Continue to Payment
+                  </Button>
                 </div>
-                <Button
-                  className={styles.continueButton}
-                  onClick={handleProceedToSummary}
-                  disabled={!selectedPlan || !agreedToTerms}
-                >
-                  Continue to Payment
-                </Button>
               </CardContent>
             </Card>
           </div>

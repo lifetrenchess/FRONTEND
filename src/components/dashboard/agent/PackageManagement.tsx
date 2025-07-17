@@ -411,7 +411,11 @@ const PackageManagement = () => {
   // Delete package
   const handleDelete = async (packageId: number) => {
     try {
-      const response = await fetch(getApiUrl('PACKAGE_SERVICE', `/${packageId}`), {
+      console.log('Attempting to delete package:', packageId);
+      const url = getApiUrl('PACKAGE_SERVICE', `/${packageId}`);
+      console.log('Delete URL:', url);
+      
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -419,13 +423,20 @@ const PackageManagement = () => {
         }
       });
 
+      console.log('Delete response status:', response.status);
+      console.log('Delete response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error('Failed to delete package');
+        const errorText = await response.text();
+        console.error('Delete failed with status:', response.status, 'Error:', errorText);
+        throw new Error(`Failed to delete package: ${response.status} - ${errorText}`);
       }
 
+      console.log('Package deleted successfully');
       setPackages(prev => prev.filter(pkg => pkg.packageId !== packageId));
       toast.success('Package deleted successfully!');
     } catch (err: any) {
+      console.error('Delete error:', err);
       toast.error(`Failed to delete package: ${err.message}`);
     }
   };

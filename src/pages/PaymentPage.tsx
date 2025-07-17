@@ -169,15 +169,17 @@ const PaymentPage = () => {
             Back to Booking
           </Button>
           <h1 className="text-3xl font-bold text-gray-900 text-center">Complete Your Payment</h1>
-          <p className="text-gray-600 text-center mt-2 re payment powered by Razorpay</p>
+          <p className="text-gray-600 text-center mt-2">Secure payment powered by Razorpay</p>
         </div>
 
         {/* Payment Summary */}
-        <Card className="mb-6 shadow-lg border-0 bg-white/90 backdrop-blur-sm">       <CardHeader className="bg-gradient-to-r from-palette-teal/5 to-palette-orange/5">
+        <Card className="mb-6 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-palette-teal/5 to-palette-orange/5">
             <CardTitle className="text-xl font-bold text-gray-900">Payment Summary</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="space-y-3">              <div className="flex justify-between items-center">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
                 <span className="text-gray-600">Booking ID:</span>
                 <span className="font-semibold text-gray-900">#{bookingId}</span>
               </div>
@@ -195,26 +197,31 @@ const PaymentPage = () => {
         </Card>
 
         {/* Payment Methods */}
-        <Card className="mb-6 shadow-lg border-0 bg-white/90 backdrop-blur-sm">       <CardHeader>
+        <Card className="mb-6 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader>
             <CardTitle className="text-xl font-bold text-gray-900">Select Payment Method</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-3 gap-3 mb-6">           <Button
-                variant={selectedPaymentMethod === 'card' ? 'default' : 'outline'}           onClick={() => setSelectedPaymentMethod('card')}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <Button
+                variant={selectedPaymentMethod === 'card' ? 'default' : 'outline'}
+                onClick={() => setSelectedPaymentMethod('card')}
                 className={`h-12 ${selectedPaymentMethod === 'card' ? 'bg-palette-teal hover:bg-palette-teal/90' : ''}`}
               >
                 <CreditCard className="w-4 h-4 mr-2" />
                 Card
               </Button>
               <Button
-                variant={selectedPaymentMethod === 'upi' ? 'default' : 'outline'}           onClick={() => setSelectedPaymentMethod('upi')}
+                variant={selectedPaymentMethod === 'upi' ? 'default' : 'outline'}
+                onClick={() => setSelectedPaymentMethod('upi')}
                 className={`h-12 ${selectedPaymentMethod === 'upi' ? 'bg-palette-teal hover:bg-palette-teal/90' : ''}`}
               >
                 <Smartphone className="w-4 h-4 mr-2" />
                 UPI
               </Button>
               <Button
-                variant={selectedPaymentMethod === 'netbanking' ? 'default' : 'outline'}           onClick={() => setSelectedPaymentMethod('netbanking')}
+                variant={selectedPaymentMethod === 'netbanking' ? 'default' : 'outline'}
+                onClick={() => setSelectedPaymentMethod('netbanking')}
                 className={`h-12 ${selectedPaymentMethod === 'netbanking' ? 'bg-palette-teal hover:bg-palette-teal/90' : ''}`}
               >
                 <Building2 className="w-4 h-4 mr-2" />
@@ -248,7 +255,9 @@ const PaymentPage = () => {
                   <Input
                     id="cardNumber"
                     value={formData.cardNumber}
-                    onChange={(e) => handleInputChange('cardNumber', e.target.value.replace(/\D/g, '').slice(0, 16))}                   placeholder="1234                   maxLength={16}
+                    onChange={(e) => handleInputChange('cardNumber', e.target.value.replace(/\D/g, '').slice(0, 16))}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={16}
                     className={errors.cardNumber ? 'border-red-500' : ''}
                   />
                   {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
@@ -365,10 +374,12 @@ const PaymentPage = () => {
         </Card>
 
         {/* Security Notice */}
-        <Card className="mb-6 shadow-lg border-0 bg-green-50">      <CardContent className="p-4">
+        <Card className="mb-6 shadow-lg border-0 bg-green-50">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <Shield className="w-5 h-5 text-green-600" />
-              <p className="text-sm text-green-800">              Your payment is secured with bank-level encryption. We never store your card details.
+              <p className="text-sm text-green-800">
+                Your payment is secured with bank-level encryption. We never store your card details.
               </p>
             </div>
           </CardContent>
@@ -378,15 +389,17 @@ const PaymentPage = () => {
         <Button 
           onClick={handlePayNow} 
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 over:to-palette-teal text-white font-bold py-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white font-bold py-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           size="lg"
         >
           {isLoading ? (
-            <div className="flex items-center space-x-3">           <Loader2 className="w-5 h-5 animate-spin" />
+            <div className="flex items-center space-x-3">
+              <Loader2 className="w-5 h-5 animate-spin" />
               <span>Processing Payment...</span>
             </div>
           ) : (
-            <div className="flex items-center space-x-3">           <IndianRupee className="w-5 h-5" />
+            <div className="flex items-center space-x-3">
+              <IndianRupee className="w-5 h-5" />
               <span>Pay {formatIndianRupees(totalAmount)}</span>
             </div>
           )}

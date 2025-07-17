@@ -251,9 +251,11 @@ const ConfirmationPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Travelers</p>
-                    <p className="font-medium">
-                      {bookingDetails.adults} Adults, {bookingDetails.children} Children, {bookingDetails.infants} Infants
-                    </p>
+                    <ul className="font-medium list-disc list-inside">
+                      {bookingDetails.travelerNames.split(',').map((name, idx) => (
+                        <li key={idx}>{name.trim()}</li>
+                      ))}
+                    </ul>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-sm text-gray-600">Insurance</p>

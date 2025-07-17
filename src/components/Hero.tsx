@@ -9,7 +9,7 @@ import { fetchAllPackages } from '@/lib/packagesApi';
 const Hero = () => {
   const [destinations, setDestinations] = useState<string[]>([]);
   const [selectedDestination, setSelectedDestination] = useState('');
-  const [guests, setGuests] = useState('2 Adults');
+  const [guests, setGuests] = useState(2);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,11 +22,10 @@ const Hero = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Parse guests (e.g., '2 Adults' -> 2)
-    const guestsNumber = parseInt(guests);
+    localStorage.setItem('selectedGuests', String(guests));
     const params = new URLSearchParams();
     if (selectedDestination) params.append('destination', selectedDestination);
-    if (guestsNumber) params.append('guests', String(guestsNumber));
+    params.append('guests', String(guests));
     navigate(`/packages?${params.toString()}`);
   };
 
@@ -75,12 +74,11 @@ const Hero = () => {
                   <select
                     className="w-full bg-transparent text-gray-900 focus:outline-none text-center"
                     value={guests}
-                    onChange={e => setGuests(e.target.value)}
+                    onChange={e => setGuests(Number(e.target.value))}
                   >
-                    <option>2 Adults</option>
-                    <option>1 Adult</option>
-                    <option>3 Adults</option>
-                    <option>4+ Adults</option>
+                    {[1,2,3,4].map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
                   </select>
                 </div>
               </div>

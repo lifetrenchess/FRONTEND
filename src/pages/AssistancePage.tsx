@@ -332,17 +332,32 @@ const AssistancePage: React.FC = () => {
       });
 
       if (response.ok) {
-        const adminData = await response.json();
+        const token = await response.text(); // Login returns token as string
         
-        // Check if the logged-in user is actually an admin
-        if (adminData.userRole === 'ADMIN') {
-          setIsAdminMode(true);
-          setShowPasswordInput(false);
-          setPasswordError("");
-          setAdminPassword("");
-          toast.success("Admin access granted!");
+        // Use the token to fetch user details
+        const userResponse = await fetch(getApiUrl('USER_SERVICE', '/me'), {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          
+          // Check if the logged-in user is actually an admin
+          if (userData.userRole === 'ADMIN') {
+            setIsAdminMode(true);
+            setShowPasswordInput(false);
+            setPasswordError("");
+            setAdminPassword("");
+            toast.success("Admin access granted!");
+          } else {
+            setPasswordError("Access denied. Admin privileges required.");
+            setAdminPassword("");
+          }
         } else {
-          setPasswordError("Access denied. Admin privileges required.");
+          setPasswordError("Failed to verify admin privileges");
           setAdminPassword("");
         }
       } else {

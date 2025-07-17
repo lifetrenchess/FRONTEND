@@ -19,14 +19,13 @@ const BookingPage = () => {
   const [error, setError] = useState('');
 
   const [startDate, setStartDate] = useState('');
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [fullName, setFullName] = useState('');
+  const [numTravelers, setNumTravelers] = useState(1);
+  const [travelerNames, setTravelerNames] = useState<string[]>(['']);
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [hasInsurance, setHasInsurance] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -38,27 +37,51 @@ const BookingPage = () => {
         setLoading(false);
       });
     }
+    // Set number of travelers from localStorage
+    const stored = Number(localStorage.getItem('selectedGuests'));
+    if (stored && stored > 0) {
+      setNumTravelers(stored);
+      setTravelerNames(Array(stored).fill(''));
+    }
   }, [id]);
+
+  const handleTravelerNameChange = (idx: number, value: string) => {
+    setTravelerNames(prev => {
+      const arr = [...prev];
+      arr[idx] = value;
+      return arr;
+    });
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setPhoneNumber(value);
+    if (!/^[6-9]\d{9}$/.test(value)) {
+      setPhoneError('Please enter a valid 10-digit Indian mobile number starting with 6-9.');
+    } else {
+      setPhoneError('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!startDate || !fullName || !email || !phoneNumber || !agreedToTerms) {
+    if (!startDate || travelerNames.some(name => !name) || !email || !phoneNumber || !agreedToTerms) {
       alert('Please fill all required fields and agree to terms.');
       return;
     }
-
+    if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
+      setPhoneError('Please enter a valid 10-digit Indian mobile number starting with 6-9.');
+      return;
+    }
+    setPhoneError('');
     const selectedDate = new Date(startDate);
     const today = new Date();
     today.setHours(0,0);
-    
     if (selectedDate < today) {
       alert('Start date must be today or in the future.');
       return;
     }
-
     const userId = JSON.parse(localStorage.getItem('currentUser') || '{}').userId || 1;
-    const totalAmount = packageData ? packageData.price * adults + (children * packageData.price * 0.5) : 0;
-
+    const totalAmount = packageData ? packageData.price * numTravelers : 0;
     try {
       const bookingData = {
         userId: userId,
@@ -66,15 +89,15 @@ const BookingPage = () => {
         startDate: startDate,
         endDate: new Date(new Date(startDate).getTime() + (packageData?.duration || 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: 'PENDING',
-        adults: adults || 0,
-        children: children || 0,
-        infants: infants || 0,
-        contactFullName: fullName || '',
+        adults: numTravelers,
+        children: 0,
+        infants: 0,
+        contactFullName: travelerNames[0] || '',
         contactEmail: email || '',
         contactPhone: phoneNumber || '',
-        travelerNames: fullName || '',
+        travelerNames: travelerNames.join(', '),
         hasInsurance: hasInsurance || false,
-        insurancePlan: null // Always send this field
+        insurancePlan: null
       };
 
       console.log('Creating booking with data:', bookingData);
@@ -125,31 +148,28 @@ const BookingPage = () => {
                   required 
                 />
               </div>
-              <div className="flex gap-4">
-                <div>
-                  <Label>Adults</Label>
-                  <Input type="number" min={1} value={adults} onChange={e => setAdults(Number(e.target.value))} required />
-                </div>
-                <div>
-                  <Label>Children</Label>
-                  <Input type="number" min={0} value={children} onChange={e => setChildren(Number(e.target.value))} />
-                </div>
-                <div>
-                  <Label>Infants</Label>
-                  <Input type="number" min={0} value={infants} onChange={e => setInfants(Number(e.target.value))} />
-                </div>
-              </div>
               <div>
-                <Label>Full Name</Label>
-                <Input value={fullName} onChange={e => setFullName(e.target.value)} required />
+                <Label>Number of Travelers</Label>
+                <Input type="number" min={1} max={4} value={numTravelers} onChange={e => {
+                  const n = Math.max(1, Math.min(4, Number(e.target.value)));
+                  setNumTravelers(n);
+                  setTravelerNames(Array(n).fill(''));
+                }} required />
               </div>
+              {Array.from({ length: numTravelers }).map((_, idx) => (
+                <div key={idx}>
+                  <Label>{`Traveler ${idx + 1} Name`}</Label>
+                  <Input value={travelerNames[idx] || ''} onChange={e => handleTravelerNameChange(idx, e.target.value)} required />
+                </div>
+              ))}
               <div>
                 <Label>Email</Label>
                 <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
               <div>
                 <Label>Phone Number</Label>
-                <Input value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} required />
+                <Input value={phoneNumber} onChange={e => handlePhoneChange(e.target.value)} required maxLength={10} pattern="[6-9]{1}[0-9]{9}" />
+                {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox id="addInsurance" checked={hasInsurance} onCheckedChange={checked => setHasInsurance(!!checked)} />

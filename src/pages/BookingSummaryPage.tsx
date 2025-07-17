@@ -80,7 +80,7 @@ const BookingSummaryPage = () => {
                 </div>
               </div>
             )}
-            {/* Insurance Details */}
+            {/* Insurance Details - Always Show */}
             <div>
               <h4 className="font-semibold text-md mb-1">Insurance</h4>
               {insurance ? (

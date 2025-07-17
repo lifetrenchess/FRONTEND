@@ -29,9 +29,6 @@ const PackageManagement = () => {
 
   useEffect(() => {
     loadPackages();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(loadPackages, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const loadPackages = async () => {
