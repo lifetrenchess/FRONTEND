@@ -37,10 +37,17 @@ const MockPaymentPage = () => {
   const handlePay = async () => {
     setIsPaying(true);
     setShowOverlay(true);
-    // Mark booking as PAID in backend
-    updateBookingStatus(bookingId, 'PAID').catch(() => {
+    
+    try {
+      // Mark booking as PAID in backend
+      await updateBookingStatus(bookingId, 'PAID');
+      console.log('Booking status updated to PAID successfully');
+    } catch (error) {
+      console.error('Failed to update booking status:', error);
       toast.error('Failed to update payment status in backend.');
-    });
+      // Still continue to confirmation page even if backend update fails
+    }
+    
     setTimeout(() => {
       navigate('/confirmation', {
         state: { bookingId, paymentId: 'MOCKPAY' + bookingId, amount: totalAmount },
@@ -103,7 +110,9 @@ const MockPaymentPage = () => {
       {showOverlay && (
         <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(255,255,255,0.95)',zIndex:1000,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
           <div style={{marginBottom:32,display:'flex',flexDirection:'column',alignItems:'center'}}>
-            <AventraLogo size={64} className="mockpay-spin" />
+            <div className="mockpay-spin">
+              <AventraLogo size={64} />
+            </div>
             <div style={{fontWeight:600,fontSize:22,marginTop:16,color:'#1B9AAA'}}>Processing your payment...</div>
           </div>
           <div style={{width:320,maxWidth:'80vw',height:12,background:'linear-gradient(90deg,#1B9AAA,#FF8800,#1B9AAA)',borderRadius:8,overflow:'hidden',boxShadow:'0 2px 8px #0001'}}>

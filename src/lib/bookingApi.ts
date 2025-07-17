@@ -119,10 +119,19 @@ export const getAllBookings = async (): Promise<BookingResponse[]> => {
 // Update booking status
 export const updateBookingStatus = async (bookingId: number, status: string): Promise<BookingResponse> => {
   try {
-    const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}/status`), {
+    // First get the current booking to preserve other fields
+    const currentBooking = await getBookingById(bookingId);
+    
+    // Update only the status field
+    const updatedBooking = {
+      ...currentBooking,
+      status: status
+    };
+    
+    const response = await fetch(getApiUrl('BOOKING_SERVICE', `/${bookingId}`), {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(updatedBooking),
     });
 
     if (!response.ok) {

@@ -36,6 +36,8 @@ export const API_CONFIG = {
       BASE_URL: 'http://localhost:9999/api/bookings',
       ENDPOINTS: {
         BOOKINGS: '',
+        BY_ID: '/{id}',
+        BY_USER: '/user/{userId}',
       }
     },
     
