@@ -1,21 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Calendar, 
   MapPin, 
-  Star, 
-  TrendingUp, 
   Clock, 
-  Plane,
+  Package, 
+  Plane, 
+  Award, 
+  Star, 
   Heart,
-  Award,
-  Package
+  Users,
+  TrendingUp,
+  IndianRupee,
+  CheckCircle
 } from 'lucide-react';
 import { fetchAllPackages, TravelPackageDto } from '@/lib/packagesApi';
 import { getBookingsByUser, BookingResponse } from '@/lib/bookingApi';
 import { useBookingAuth } from '@/hooks/useBookingAuth';
+import ReviewForm from '@/components/reviews/ReviewForm';
 import Login from '@/components/Login';
 
 interface UserData {
@@ -34,6 +39,8 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
   const [packagesLoading, setPackagesLoading] = useState(true);
   const [bookings, setBookings] = useState<BookingResponse[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
   const { handleBookNow, showLoginDialog, setShowLoginDialog, onAuthSuccess } = useBookingAuth();
 
   // Get current user ID from localStorage
@@ -64,6 +71,37 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
       });
   }, [userId]);
 
+  const handleWriteReview = (packageId: number) => {
+    setSelectedPackageId(packageId);
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSubmitted = () => {
+    setShowReviewModal(false);
+    setSelectedPackageId(null);
+    // Refresh bookings to show updated data
+    const fetchData = async () => {
+      try {
+        setBookingsLoading(true); // Use setBookingsLoading for consistency
+        
+        // Fetch bookings and packages in parallel
+        const [bookingsData, packagesData] = await Promise.all([
+          getBookingsByUser(userId),
+          fetchAllPackages()
+        ]);
+
+        setBookings(bookingsData);
+        setPackages(packagesData);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setBookingsLoading(false); // Use setBookingsLoading for consistency
+      }
+    };
+
+    fetchData();
+  };
+
   // Calculate stats from real data
   const totalBookings = bookings.length;
   const confirmedBookings = bookings.filter(b => b.status === 'CONFIRMED').length;
@@ -80,35 +118,6 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
       })
   ).size;
 
-  // Calculate total spent
-  const totalSpent = bookings
-    .filter(b => b.status === 'COMPLETED' || b.status === 'CONFIRMED')
-    .reduce((sum, b) => {
-      const packageData = packages.find(p => p.packageId === b.packageId);
-      return sum + (packageData?.price || 0);
-    }, 0);
-
-  // Get upcoming trips (confirmed bookings with future dates)
-  const upcomingTrips = bookings
-    .filter(b => b.status === 'CONFIRMED' && new Date(b.startDate) > new Date())
-    .slice(0, 1) // Show only the next upcoming trip
-    .map(b => {
-      const packageData = packages.find(p => p.packageId === b.packageId);
-      const startDate = new Date(b.startDate);
-      const daysLeft = Math.ceil((startDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-      
-      return {
-        destination: packageData?.destination || 'Unknown Destination',
-        date: startDate.toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric' 
-        }),
-        daysLeft: Math.max(0, daysLeft),
-        image: packageData?.mainImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'
-      };
-    });
-
   // Get recent bookings (last 3)
   const recentBookings = bookings
     .slice(0, 3)
@@ -119,6 +128,7 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
       
       return {
         id: b.bookingId,
+        packageId: b.packageId,
         destination: packageData?.destination || 'Unknown Destination',
         date: `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
         status: b.status,
@@ -135,36 +145,22 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
   const wishlistedIds = getWishlist();
   const wishlistedPackages = packages.filter(pkg => wishlistedIds.includes(pkg.packageId));
 
-  const stats = [
-    {
-      title: 'Total Bookings',
-      value: totalBookings.toString(),
-      change: `+${pendingBookings} pending`,
-      icon: Calendar,
-      color: 'text-palette-teal'
-    },
-    {
-      title: 'Visited Countries',
-      value: visitedDestinations.toString(),
-      change: `${confirmedBookings} confirmed`,
-      icon: MapPin,
-      color: 'text-palette-orange'
-    },
-    {
-      title: 'Total Spent',
-      value: `₹${totalSpent.toLocaleString()}`,
-      change: `${completedBookings} completed`,
-      icon: Star,
-      color: 'text-yellow-500'
-    },
-    {
-      title: 'Upcoming Trips',
-      value: upcomingTrips.length.toString(),
-      change: `${upcomingTrips.length > 0 ? `${upcomingTrips[0].daysLeft} days left` : 'No upcoming trips'}`,
-      icon: Plane,
-      color: 'text-blue-500'
-    }
-  ];
+  // Get upcoming trips (confirmed bookings with future dates)
+  const upcomingTrips = bookings
+    .filter(b => b.status === 'CONFIRMED' && new Date(b.startDate) > new Date())
+    .slice(0, 2)
+    .map(b => {
+      const packageData = packages.find(p => p.packageId === b.packageId);
+      const startDate = new Date(b.startDate);
+      const daysLeft = Math.ceil((startDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      
+      return {
+        destination: packageData?.destination || 'Unknown Destination',
+        date: startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        daysLeft,
+        image: packageData?.mainImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'
+      };
+    });
 
   return (
     <>
@@ -179,26 +175,65 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className={`w-4 h-4 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                  <p className="text-xs text-green-600 flex items-center mt-1">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    {stat.change}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {/* Total Bookings */}
+          <Card className="bg-gradient-to-br from-palette-teal/10 to-palette-teal/5 border-palette-teal/20">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full bg-palette-teal/20">
+                  <Calendar className="w-5 h-5 text-palette-teal" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Bookings</p>
+                  <p className="text-2xl font-bold text-palette-teal">{totalBookings}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Confirmed Bookings */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full bg-green-200">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Confirmed</p>
+                  <p className="text-2xl font-bold text-green-600">{confirmedBookings}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending Bookings */}
+          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full bg-yellow-200">
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Pending</p>
+                  <p className="text-2xl font-bold text-yellow-600">{pendingBookings}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Destinations Visited */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full bg-blue-200">
+                  <MapPin className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Destinations</p>
+                  <p className="text-2xl font-bold text-blue-600">{visitedDestinations}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -224,8 +259,10 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
                       <p className="text-sm text-gray-500">{booking.date}</p>
                       <div className="flex items-center space-x-2 mt-1">
                         <span className={`text-xs px-2 py-1 rounded-full ${
-                          booking.status === 'Confirmed' 
+                          booking.status === 'CONFIRMED' 
                             ? 'bg-green-100 text-green-700' 
+                            : booking.status === 'COMPLETED'
+                            ? 'bg-blue-100 text-blue-700'
                             : 'bg-yellow-100 text-yellow-700'
                         }`}>
                           {booking.status}
@@ -233,6 +270,17 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
                         <span className="text-sm font-medium text-palette-teal">{booking.amount}</span>
                       </div>
                     </div>
+                    {booking.status === 'COMPLETED' && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-palette-teal hover:text-palette-teal/80"
+                        onClick={() => handleWriteReview(booking.packageId)}
+                      >
+                        <Star className="w-4 h-4 mr-1" />
+                        Review
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -444,6 +492,17 @@ const DashboardOverview = ({ user }: DashboardOverviewProps) => {
       {/* Login Dialog for Booking Authentication */}
       {showLoginDialog && (
         <Login isOpen={showLoginDialog} onClose={() => setShowLoginDialog(false)} onAuthSuccess={onAuthSuccess} />
+      )}
+      {/* Review Form Modal */}
+      {showReviewModal && selectedPackageId && (
+        <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Write a Review for {packages.find(p => p.packageId === selectedPackageId)?.title || 'this package'}</DialogTitle>
+            </DialogHeader>
+            <ReviewForm packageId={selectedPackageId} onReviewSubmitted={handleReviewSubmitted} />
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );

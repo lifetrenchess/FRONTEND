@@ -5,11 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle, CreditCard, ArrowLeft, Shield, IndianRupee, Smartphone, Building2, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, CreditCard, ArrowLeft, Shield, IndianRupee, Smartphone, Building2, AlertCircle, Loader2, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { getCurrentUserFromStorage } from '@/lib/auth';
 import { getApiUrl } from '@/lib/apiConfig';
 import styles from '@/styles/PaymentPage.module.css';
+
+// Extend Window interface for Razorpay
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface PaymentFormData {
   cardNumber: string;
@@ -23,16 +30,25 @@ interface PaymentFormData {
   ifscCode: string;
 }
 
+interface RazorpayOrderResponse {
+  orderId: string;
+  currency: string;
+  amount: number;
+  keyId: string;
+}
+
 const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  let { bookingId, totalAmount, userId } = (location.state || {}) as {
+  let { bookingId, totalAmount, userId, insurance, packageData } = (location.state || {}) as {
     bookingId?: number;
     totalAmount?: number;
     userId?: number;
+    insurance?: any;
+    packageData?: any;
   };
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'upi' | 'netbanking'>('card');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'upi' | 'netbanking' | 'razorpay'>('card');
   const [formData, setFormData] = useState<PaymentFormData>({
     cardNumber: '',
     expiryMonth: '',
@@ -48,12 +64,31 @@ const PaymentPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  // Minimal localStorage fallback for refreshes
+  // Get current user
+  const currentUser = getCurrentUserFromStorage();
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => setRazorpayLoaded(true);
+    script.onerror = () => setRazorpayLoaded(false);
+    document.body.appendChild(script);
+    return () => {
+      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+    };
+  }, []);
+
+  // Fallback for missing data
   useEffect(() => {
     if (bookingId && userId && totalAmount) {
-      localStorage.setItem('paymentInfo', JSON.stringify({ bookingId, userId, totalAmount }));
+      localStorage.setItem('paymentInfo', JSON.stringify({ bookingId, userId, totalAmount, insurance, packageData }));
     }
-  }, [bookingId, userId, totalAmount]);
+  }, [bookingId, userId, totalAmount, insurance, packageData]);
 
   if (!bookingId || !userId || !totalAmount) {
     const stored = localStorage.getItem('paymentInfo');
@@ -63,6 +98,8 @@ const PaymentPage = () => {
         bookingId = data.bookingId;
         userId = data.userId;
         totalAmount = data.totalAmount;
+        insurance = data.insurance;
+        packageData = data.packageData;
       } catch {}
     }
   }
@@ -72,18 +109,6 @@ const PaymentPage = () => {
     navigate('/');
     return null;
   }
-
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => setRazorpayLoaded(true);
-    script.onerror = () => setRazorpayLoaded(false);
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   const formatIndianRupees = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -138,7 +163,107 @@ const PaymentPage = () => {
     }
   };
 
+  const handleRazorpayPayment = async () => {
+    if (!razorpayLoaded) {
+      toast.error('Payment gateway is loading. Please wait a moment and try again.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Create payment order
+      const orderRequest = {
+        userId: userId,
+        bookingId: bookingId,
+        amount: totalAmount,
+        currency: 'INR',
+        paymentMethod: 'RAZORPAY'
+      };
+
+      const response = await fetch(getApiUrl('BOOKING_SERVICE', '/payments'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderRequest),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const orderData: RazorpayOrderResponse = await response.json();
+
+      // Initialize Razorpay
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount * 100, // Convert to paisa
+        currency: orderData.currency,
+        name: 'Aventra Travel',
+        description: `Booking #${bookingId}`,
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            // Verify payment
+            const verifyResponse = await fetch(getApiUrl('BOOKING_SERVICE', '/payments/verify'), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            if (verifyResponse.ok) {
+              toast.success('Payment successful!');
+              navigate('/confirmation', { 
+                state: { 
+                  bookingId, 
+                  totalAmount, 
+                  userId,
+                  insurance,
+                  packageData,
+                  razorpayPaymentId: response.razorpay_payment_id 
+                } 
+              });
+            } else {
+              throw new Error('Payment verification failed');
+            }
+          } catch (error) {
+            toast.error('Payment verification failed. Please contact support.');
+            console.error('Payment verification error:', error);
+          }
+        },
+        prefill: {
+          name: currentUser?.fullName || '',
+          email: currentUser?.email || '',
+        },
+        theme: {
+          color: '#01E8B2'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Payment initialization failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePayNow = async () => {
+    if (selectedPaymentMethod === 'razorpay') {
+      await handleRazorpayPayment();
+      return;
+    }
+
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
       return;
@@ -146,10 +271,9 @@ const PaymentPage = () => {
 
     setIsLoading(true);
     
-    // For demo purposes, always use mock payment
-    // In production, you would integrate with actual payment gateways
+    // For demo purposes, use mock payment for other methods
     setTimeout(() => {
-      navigate('/mock-payment', { state: { bookingId, totalAmount, userId } });
+      navigate('/mock-payment', { state: { bookingId, totalAmount, userId, insurance, packageData } });
     }, 100);
   };
 
@@ -162,14 +286,14 @@ const PaymentPage = () => {
         <div className="mb-8">
           <Button 
             variant="ghost" 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate(-1)}
             className="mb-4 text-palette-teal hover:text-palette-teal/80"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Booking
           </Button>
           <h1 className="text-3xl font-bold text-gray-900 text-center">Complete Your Payment</h1>
-          <p className="text-gray-600 text-center mt-2">Secure payment powered by Razorpay</p>
+          <p className="text-gray-600 text-center mt-2">Choose your preferred payment method</p>
         </div>
 
         {/* Payment Summary */}
@@ -187,6 +311,12 @@ const PaymentPage = () => {
                 <span className="text-gray-600">Amount:</span>
                 <span className="font-semibold text-gray-900">{formatIndianRupees(totalAmount)}</span>
               </div>
+              {insurance && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Insurance:</span>
+                  <span className="font-semibold text-gray-900">{insurance.planName} (₹{insurance.price})</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between items-center text-lg">
                 <span className="font-bold text-gray-900">Total:</span>
@@ -202,19 +332,19 @@ const PaymentPage = () => {
             <CardTitle className="text-xl font-bold text-gray-900">Select Payment Method</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-2 gap-3 mb-6">
               <Button
                 variant={selectedPaymentMethod === 'card' ? 'default' : 'outline'}
                 onClick={() => setSelectedPaymentMethod('card')}
-                className={`h-12 ${selectedPaymentMethod === 'card' ? 'bg-palette-teal hover:bg-palette-teal/90' : ''}`}
+                className={`h-12 ${selectedPaymentMethod === 'card' ? 'bg-palette-teal text-white' : 'border-palette-teal text-palette-teal hover:bg-palette-teal hover:text-white'}`}
               >
                 <CreditCard className="w-4 h-4 mr-2" />
-                Card
+                Credit/Debit Card
               </Button>
               <Button
                 variant={selectedPaymentMethod === 'upi' ? 'default' : 'outline'}
                 onClick={() => setSelectedPaymentMethod('upi')}
-                className={`h-12 ${selectedPaymentMethod === 'upi' ? 'bg-palette-teal hover:bg-palette-teal/90' : ''}`}
+                className={`h-12 ${selectedPaymentMethod === 'upi' ? 'bg-palette-teal text-white' : 'border-palette-teal text-palette-teal hover:bg-palette-teal hover:text-white'}`}
               >
                 <Smartphone className="w-4 h-4 mr-2" />
                 UPI
@@ -222,10 +352,18 @@ const PaymentPage = () => {
               <Button
                 variant={selectedPaymentMethod === 'netbanking' ? 'default' : 'outline'}
                 onClick={() => setSelectedPaymentMethod('netbanking')}
-                className={`h-12 ${selectedPaymentMethod === 'netbanking' ? 'bg-palette-teal hover:bg-palette-teal/90' : ''}`}
+                className={`h-12 ${selectedPaymentMethod === 'netbanking' ? 'bg-palette-teal text-white' : 'border-palette-teal text-palette-teal hover:bg-palette-teal hover:text-white'}`}
               >
                 <Building2 className="w-4 h-4 mr-2" />
                 Net Banking
+              </Button>
+              <Button
+                variant={selectedPaymentMethod === 'razorpay' ? 'default' : 'outline'}
+                onClick={() => setSelectedPaymentMethod('razorpay')}
+                className={`h-12 ${selectedPaymentMethod === 'razorpay' ? 'bg-blue-600 text-white' : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'}`}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Razorpay
               </Button>
             </div>
 
@@ -370,6 +508,23 @@ const PaymentPage = () => {
                 </div>
               </div>
             )}
+
+            {selectedPaymentMethod === 'razorpay' && (
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Click "Pay Now" to proceed with secure Razorpay payment gateway
+                  </p>
+                </div>
+                <div className="text-sm text-gray-600">
+                  <p>• Accepts all major credit/debit cards</p>
+                  <p>• UPI payments (Google Pay, PhonePe, Paytm)</p>
+                  <p>• Net banking from 50+ banks</p>
+                  <p>• Wallets and other payment methods</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -389,7 +544,7 @@ const PaymentPage = () => {
         <Button 
           onClick={handlePayNow} 
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white font-bold py-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-gradient-to-r from-palette-teal to-palette-teal/90 hover:from-palette-teal/90 hover:to-palette-teal text-white font-bold py-4 rounded-lg transition-all duration-200 ease-in-out hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           size="lg"
         >
           {isLoading ? (

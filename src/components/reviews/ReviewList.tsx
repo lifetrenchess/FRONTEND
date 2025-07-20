@@ -24,9 +24,6 @@ const ReviewList: React.FC = () => {
 
   useEffect(() => {
     fetchReviews();
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(fetchReviews, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const fetchReviews = async () => {
